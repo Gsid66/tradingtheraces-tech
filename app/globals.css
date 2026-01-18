@@ -373,3 +373,8 @@ footer p {
     grid-template-columns:  1fr;
   }
 }
+/* ==================== GOLD BUTTON HOVER ==================== */
+.gold-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(251, 191, 36, 0.5) !important;
+}

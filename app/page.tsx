@@ -1,4 +1,4 @@
-import { FaGift, FaCalendarDay, FaChartLine, FaMapMarkedAlt, FaGem } from 'react-icons/fa'
+import { FaGift, FaCalendarDay, FaChartLine, FaMapMarkedAlt, FaCrown } from 'react-icons/fa'
 
 export default function Home() {
   return (
@@ -26,41 +26,42 @@ export default function Home() {
 
       {/* Feature Cards Grid */}
       <div className="quick-links-grid" style={{ marginTop: '2rem' }}>
-        <a href="/today" className="quick-link-card">
+        <div className="quick-link-card">
           <div className="quick-link-icon">
             <FaCalendarDay />
           </div>
           <h3>Today's Races</h3>
           <p>View all races scheduled for today</p>
-        </a>
+        </div>
 
-        <a href="/results" className="quick-link-card">
+        <div className="quick-link-card">
           <div className="quick-link-icon">
             <FaChartLine />
           </div>
           <h3>Recent Results</h3>
           <p>Check latest race results</p>
-        </a>
+        </div>
 
-        <a href="/tracks" className="quick-link-card">
+        <div className="quick-link-card">
           <div className="quick-link-icon">
             <FaMapMarkedAlt />
           </div>
           <h3>Track Information</h3>
           <p>View track details and conditions</p>
-        </a>
+        </div>
       </div>
 
-      {/* Premium Banner */}
+      {/* Premium Banner - GOLD/PURPLE GRADIENT */}
       <div 
         className="info-banner" 
         style={{ 
-          background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)', 
-          marginTop: '2rem' 
+          background: 'linear-gradient(135deg, #9333ea 0%, #7c3aed 100%)',
+          border: '2px solid #fbbf24',
+          marginTop:  '2rem' 
         }}
       >
-        <div className="info-banner-icon">
-          <FaGem />
+        <div className="info-banner-icon" style={{ color: '#fbbf24' }}>
+          <FaCrown />
         </div>
         <div className="info-banner-content">
           <h3>Want More Premium Content?</h3>
@@ -70,20 +71,23 @@ export default function Home() {
         </div>
       </div>
 
-      <div style={{ textAlign:  'center', marginTop: '1.5rem' }}>
+      {/* CTA Button - GOLD THEME */}
+      <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
         <a 
           href="/members" 
+          className="gold-button"
           style={{
             display: 'inline-block',
-            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-            color: 'white',
+            background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+            color: '#1a0033',
             padding: '1rem 2rem',
             borderRadius: '8px',
-            textDecoration:  'none',
-            fontWeight: 600,
-            fontSize:  '1.1rem',
-            boxShadow: '0 4px 12px rgba(245,87,108,0.3)',
-            transition: 'transform 0.2s ease'
+            textDecoration: 'none',
+            fontWeight: 700,
+            fontSize: '1.1rem',
+            boxShadow: '0 4px 12px rgba(251, 191, 36, 0.4)',
+            transition: 'transform 0.2s ease',
+            border: '2px solid #fbbf24'
           }}
         >
           Access Members Portal →
