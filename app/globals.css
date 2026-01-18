@@ -13,23 +13,24 @@
 
 * {
   margin: 0;
-  padding: 0;
+  padding:  0;
   box-sizing: border-box;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background:  linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #333;
-  line-height:  1.6;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background:  linear-gradient(135deg, #1a0033 0%, #000000 100%);
+  color: #ffffff;
+  line-height: 1.6;
   min-height: 100vh;
 }
 
-/* ==================== QUICK LINKS NAVIGATION ==================== */
+/* ==================== QUICK LINKS NAVIGATION (DARK) ==================== */
 .quick-links-section {
-  background: white;
-  padding: 2rem 20px 1.5rem 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  background: rgba(0, 0, 0, 0.7);
+  padding: 2rem 20px 1. 5rem 20px;
+  border-bottom: 2px solid var(--purple-main);
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.2);
 }
 
 .quick-links-grid {
@@ -41,13 +42,14 @@ body {
 }
 
 .quick-link-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, rgba(107, 33, 168, 0.3), rgba(139, 92, 246, 0.2));
+  border: 2px solid var(--purple-main);
   padding: 1.25rem;
-  border-radius:  8px;
+  border-radius:  12px;
   text-decoration: none;
   color: white;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 2px 8px rgba(102,126,234,0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -56,188 +58,124 @@ body {
 }
 
 .quick-link-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.5);
+  border-color: var(--purple-light);
+  background: linear-gradient(135deg, rgba(107, 33, 168, 0.5), rgba(139, 92, 246, 0.4));
 }
 
 .quick-link-icon {
-  font-size: 2.5rem;
+  font-size: 2. 5rem;
   margin-bottom: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--purple-lighter);
 }
 
 .quick-link-card h3 {
-  font-size: 1rem;
+  font-size:  1rem;
   margin-bottom: 0.25rem;
   font-weight: 600;
+  color: var(--purple-lighter);
 }
 
 .quick-link-card p {
-  font-size:0.85rem;
-  opacity:0.95;
+  font-size: 0.85rem;
+  opacity: 0.95;
+  color: var(--purple-light);
 }
 
-/* PURPLE THEME VARIATIONS */
+/* PURPLE THEME VARIATIONS FOR DARK MODE */
 .quick-link-card:nth-child(1) {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, rgba(240, 147, 251, 0.2), rgba(245, 87, 108, 0.2));
+  border-color: #f093fb;
+}
+
+.quick-link-card:nth-child(1):hover {
+  background: linear-gradient(135deg, rgba(240, 147, 251, 0.3), rgba(245, 87, 108, 0.3));
+  border-color: #f5576c;
 }
 
 .quick-link-card:nth-child(3) {
-  background: linear-gradient(135deg, #8b9aee 0%, #9370ba 100%);
+  background: linear-gradient(135deg, rgba(139, 154, 238, 0.2), rgba(147, 112, 186, 0.2));
 }
 
 .quick-link-card:nth-child(4) {
-  background: linear-gradient(135deg, #7c8ee8 0%, #8559a8 100%);
+  background: linear-gradient(135deg, rgba(124, 142, 232, 0.2), rgba(133, 89, 168, 0.2));
 }
 
 .quick-link-card:nth-child(5) {
-  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  background: linear-gradient(135deg, rgba(90, 103, 216, 0.2), rgba(107, 70, 193, 0.2));
 }
 
 /* ==================== CONTAINER ==================== */
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding:  2rem 20px;
+  padding: 2rem 20px;
 }
 
-/* ==================== PAGE HEADER ==================== */
+.content-box {
+  background: rgba(0, 0, 0, 0.7);
+  border:  2px solid var(--purple-main);
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
+}
+
+/* ==================== PAGE HEADER (DARK) ==================== */
 .page-header {
-  background:white;
+  background: rgba(0, 0, 0, 0.5);
+  border:  2px solid var(--purple-main);
   padding: 2.5rem;
-  border-radius: 8px;
-  box-shadow:  0 1px 3px rgba(0,0,0,0.1);
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
   margin-bottom: 2rem;
-  text-align:center;
+  text-align: center;
 }
 
 .page-header h1 {
-  color: #2d3748;
+  color: var(--purple-lighter);
   font-size: 2.2rem;
   margin-bottom:  0.5rem;
   font-weight: 600;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 .page-subtitle {
-  color: #718096;
-  font-size:  1.05rem;
+  color: var(--purple-light);
+  font-size: 1.05rem;
 }
 
-/* ==================== INFO BANNER ==================== */
+/* ==================== INFO BANNER (DARK) ==================== */
 .info-banner {
-  background:  linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--purple-deep), var(--purple-main));
   color: white;
-  padding:  1.5rem;
-  border-radius: 8px;
+  padding: 1.5rem;
+  border-radius: 10px;
+  border: 2px solid var(--purple-light);
   margin-bottom: 2rem;
   display: flex;
   align-items: center;
   gap: 1rem;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
 }
 
 .info-banner-icon {
-  font-size: 2.5rem;
+  font-size:  2.5rem;
   display: flex;
   align-items: center;
 }
 
 .info-banner-content h3 {
-  font-size: 1.1rem;
+  font-size:  1.1rem;
   margin-bottom:  0.25rem;
 }
 
 .info-banner-content p {
   font-size: 0.9rem;
   opacity: 0.95;
-}
-
-/* ==================== RACE CARDS ==================== */
-.race-card {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  padding: 25px;
-  margin:  25px 0;
-  transition:  all 0.3s ease;
-}
-
-.race-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.race-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #667eea;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.race-title {
-  font-size: 1.8em;
-  color: #2d3748;
-  font-weight: bold;
-}
-
-.race-details {
-  color: #718096;
-  font-size:  0.95em;
-}
-
-.runner {
-  background: rgba(102, 126, 234, 0.1);
-  border-left: 4px solid #667eea;
-  padding: 15px;
-  margin:  10px 0;
-  border-radius: 5px;
-  transition: all 0.3s ease;
-}
-
-.runner:hover {
-  background: rgba(102, 126, 234, 0.2);
-  border-left-width: 6px;
-}
-
-.runner-name {
-  font-weight: bold;
-  color: #2d3748;
-  font-size: 1.1em;
-}
-
-.favorite {
-  border-left-color: #fbbf24;
-  background: rgba(251, 191, 36, 0.1);
-}
-
-.verdict {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 15px;
-  border-radius: 8px;
-  margin-top:  15px;
-  font-weight: bold;
-  color: white;
-}
-
-.badge {
-  display: inline-block;
-  background: #667eea;
-  color: white;
-  padding: 5px 12px;
-  border-radius:  20px;
-  font-size: 0.85em;
-  font-weight: bold;
-  margin-left: 10px;
-}
-
-.gear-change {
-  color: #fbbf24;
-  font-style: italic;
 }
 
 /* ==================== MEETING INFO ==================== */
@@ -247,9 +185,9 @@ body {
   gap: 15px;
   margin:  20px 0;
   padding: 20px;
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(139, 92, 246, 0.1);
   border-radius: 8px;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid var(--purple-main);
 }
 
 .info-item {
@@ -257,17 +195,143 @@ body {
 }
 
 .info-item strong {
-  color: #667eea;
+  color: var(--purple-light);
 }
 
-/* ==================== FOOTER ==================== */
+/* ==================== RACE CARDS (DARK) ==================== */
+.race-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid var(--purple-deep);
+  border-radius: 10px;
+  padding: 25px;
+  margin:  25px 0;
+  transition: all 0.3s ease;
+}
+
+.race-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 25px rgba(139, 92, 246, 0.5);
+  border-color: var(--purple-main);
+}
+
+.race-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid var(--purple-main);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.race-title {
+  font-size: 1.8em;
+  color: var(--purple-light);
+  font-weight: bold;
+}
+
+.race-details {
+  color: #d8b4fe;
+  font-size: 0.95em;
+}
+
+h3 {
+  color: #a78bfa;
+  margin:  20px 0 10px 0;
+  font-size: 1.3em;
+  border-left: 4px solid var(--purple-main);
+  padding-left: 10px;
+}
+
+.runner {
+  background: rgba(139, 92, 246, 0.1);
+  border-left: 4px solid var(--purple-main);
+  padding: 15px;
+  margin:  10px 0;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.runner:hover {
+  background: rgba(139, 92, 246, 0.2);
+  border-left-width: 6px;
+}
+
+.runner-name {
+  font-weight: bold;
+  color: var(--purple-lighter);
+  font-size: 1.1em;
+}
+
+.favorite {
+  border-left-color: var(--gold);
+  background: rgba(251, 191, 36, 0.1);
+}
+
+.verdict {
+  background: linear-gradient(135deg, var(--purple-deep), var(--purple-main));
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+  font-weight: bold;
+  border:  1px solid var(--purple-light);
+}
+
+.badge {
+  display: inline-block;
+  background: var(--purple-main);
+  color: #000000;
+  padding: 5px 12px;
+  border-radius:  20px;
+  font-size: 0.85em;
+  font-weight:  bold;
+  margin-left: 10px;
+}
+
+.gear-change {
+  color: var(--gold);
+  font-style: italic;
+}
+
+.summary {
+  background: linear-gradient(135deg, #000000, var(--purple-dark));
+  border: 3px solid var(--purple-main);
+  border-radius: 15px;
+  padding: 30px;
+  margin-top: 40px;
+}
+
+.summary h2 {
+  color: var(--purple-lighter);
+  font-size: 2em;
+  text-align: center;
+  margin-bottom: 25px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.best-bet {
+  background: rgba(139, 92, 246, 0.15);
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 8px;
+  border-left: 6px solid var(--purple-main);
+}
+
+.best-bet strong {
+  color: var(--gold);
+  font-size: 1.2em;
+}
+
+/* ==================== FOOTER (DARK) ==================== */
 footer {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--purple-deep), var(--purple-main));
   color: white;
   text-align: center;
   padding: 2.5rem 20px;
   margin-top:  3rem;
   width: 100%;
+  border-top: 3px solid var(--purple-light);
 }
 
 footer p {
@@ -278,7 +342,7 @@ footer p {
   color: white;
   text-decoration: none;
   font-weight: 600;
-  border-bottom: 2px solid rgba(255,255,255,0.3);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
   transition: border-color 0.2s ease;
 }
 
@@ -287,7 +351,7 @@ footer p {
 }
 
 /* ==================== RESPONSIVE ==================== */
-@media (max-width:  768px) {
+@media (max-width: 768px) {
   .page-header h1 {
     font-size: 1.6rem;
   }
