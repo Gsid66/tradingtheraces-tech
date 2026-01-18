@@ -1,65 +1,94 @@
-import Image from "next/image";
+import { FaGift, FaCalendarDay, FaChartLine, FaMapMarkedAlt, FaGem } from 'react-icons/fa'
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <>
+      {/* Page Header */}
+      <div className="page-header">
+        <h1>Welcome to Trading the Races</h1>
+        <p className="page-subtitle">
+          Professional racing data, ratings, and analysis for horse and greyhound racing
+        </p>
+      </div>
+
+      {/* Info Banner */}
+      <div className="info-banner">
+        <div className="info-banner-icon">
+          <FaGift />
+        </div>
+        <div className="info-banner-content">
+          <h3>Real-Time Racing Data Platform</h3>
+          <p>
+            Access live race ratings, comprehensive analysis, and professional betting tools
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+
+      {/* Feature Cards Grid */}
+      <div className="quick-links-grid" style={{ marginTop: '2rem' }}>
+        <a href="/today" className="quick-link-card">
+          <div className="quick-link-icon">
+            <FaCalendarDay />
+          </div>
+          <h3>Today's Races</h3>
+          <p>View all races scheduled for today</p>
+        </a>
+
+        <a href="/results" className="quick-link-card">
+          <div className="quick-link-icon">
+            <FaChartLine />
+          </div>
+          <h3>Recent Results</h3>
+          <p>Check latest race results</p>
+        </a>
+
+        <a href="/tracks" className="quick-link-card">
+          <div className="quick-link-icon">
+            <FaMapMarkedAlt />
+          </div>
+          <h3>Track Information</h3>
+          <p>View track details and conditions</p>
+        </a>
+      </div>
+
+      {/* Premium Banner */}
+      <div 
+        className="info-banner" 
+        style={{ 
+          background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)', 
+          marginTop: '2rem' 
+        }}
+      >
+        <div className="info-banner-icon">
+          <FaGem />
         </div>
-      </main>
-    </div>
-  );
+        <div className="info-banner-content">
+          <h3>Want More Premium Content?</h3>
+          <p>
+            Join our Members Portal for exclusive race reports, advanced tools, and comprehensive lessons
+          </p>
+        </div>
+      </div>
+
+      <div style={{ textAlign:  'center', marginTop: '1.5rem' }}>
+        <a 
+          href="/members" 
+          style={{
+            display: 'inline-block',
+            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            color: 'white',
+            padding: '1rem 2rem',
+            borderRadius: '8px',
+            textDecoration:  'none',
+            fontWeight: 600,
+            fontSize:  '1.1rem',
+            boxShadow: '0 4px 12px rgba(245,87,108,0.3)',
+            transition: 'transform 0.2s ease'
+          }}
+        >
+          Access Members Portal →
+        </a>
+      </div>
+    </>
+  )
 }

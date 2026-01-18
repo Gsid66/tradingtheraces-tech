@@ -1,26 +1,311 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --purple-dark: #1a0033;
+  --purple-main: #8b5cf6;
+  --purple-deep: #6b21a8;
+  --purple-light: #c4b5fd;
+  --purple-lighter: #e9d5ff;
+  --gold:  #fbbf24;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background:  linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #333;
+  line-height:  1.6;
+  min-height: 100vh;
+}
+
+/* ==================== QUICK LINKS NAVIGATION ==================== */
+.quick-links-section {
+  background: white;
+  padding: 2rem 20px 1.5rem 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.quick-links-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.quick-link-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1.25rem;
+  border-radius:  8px;
+  text-decoration: none;
+  color: white;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(102,126,234,0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+}
+
+.quick-link-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+}
+
+.quick-link-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-link-card h3 {
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+.quick-link-card p {
+  font-size:0.85rem;
+  opacity:0.95;
+}
+
+/* PURPLE THEME VARIATIONS */
+.quick-link-card:nth-child(1) {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.quick-link-card:nth-child(3) {
+  background: linear-gradient(135deg, #8b9aee 0%, #9370ba 100%);
+}
+
+.quick-link-card:nth-child(4) {
+  background: linear-gradient(135deg, #7c8ee8 0%, #8559a8 100%);
+}
+
+.quick-link-card:nth-child(5) {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+}
+
+/* ==================== CONTAINER ==================== */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding:  2rem 20px;
+}
+
+/* ==================== PAGE HEADER ==================== */
+.page-header {
+  background:white;
+  padding: 2.5rem;
+  border-radius: 8px;
+  box-shadow:  0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+  text-align:center;
+}
+
+.page-header h1 {
+  color: #2d3748;
+  font-size: 2.2rem;
+  margin-bottom:  0.5rem;
+  font-weight: 600;
+}
+
+.page-subtitle {
+  color: #718096;
+  font-size:  1.05rem;
+}
+
+/* ==================== INFO BANNER ==================== */
+.info-banner {
+  background:  linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding:  1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.info-banner-icon {
+  font-size: 2.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.info-banner-content h3 {
+  font-size: 1.1rem;
+  margin-bottom:  0.25rem;
+}
+
+.info-banner-content p {
+  font-size: 0.9rem;
+  opacity: 0.95;
+}
+
+/* ==================== RACE CARDS ==================== */
+.race-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  padding: 25px;
+  margin:  25px 0;
+  transition:  all 0.3s ease;
+}
+
+.race-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.race-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #667eea;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.race-title {
+  font-size: 1.8em;
+  color: #2d3748;
+  font-weight: bold;
+}
+
+.race-details {
+  color: #718096;
+  font-size:  0.95em;
+}
+
+.runner {
+  background: rgba(102, 126, 234, 0.1);
+  border-left: 4px solid #667eea;
+  padding: 15px;
+  margin:  10px 0;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.runner:hover {
+  background: rgba(102, 126, 234, 0.2);
+  border-left-width: 6px;
+}
+
+.runner-name {
+  font-weight: bold;
+  color: #2d3748;
+  font-size: 1.1em;
+}
+
+.favorite {
+  border-left-color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+}
+
+.verdict {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 15px;
+  border-radius: 8px;
+  margin-top:  15px;
+  font-weight: bold;
+  color: white;
+}
+
+.badge {
+  display: inline-block;
+  background: #667eea;
+  color: white;
+  padding: 5px 12px;
+  border-radius:  20px;
+  font-size: 0.85em;
+  font-weight: bold;
+  margin-left: 10px;
+}
+
+.gear-change {
+  color: #fbbf24;
+  font-style: italic;
+}
+
+/* ==================== MEETING INFO ==================== */
+.meeting-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin:  20px 0;
+  padding: 20px;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.info-item {
+  padding: 10px;
+}
+
+.info-item strong {
+  color: #667eea;
+}
+
+/* ==================== FOOTER ==================== */
+footer {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-align: center;
+  padding: 2.5rem 20px;
+  margin-top:  3rem;
+  width: 100%;
+}
+
+footer p {
+  margin:  0.5rem 0;
+}
+
+.footer-link {
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  border-bottom: 2px solid rgba(255,255,255,0.3);
+  transition: border-color 0.2s ease;
+}
+
+.footer-link:hover {
+  border-bottom-color: white;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width:  768px) {
+  .page-header h1 {
+    font-size: 1.6rem;
+  }
+
+  .race-title {
+    font-size: 1.4em;
+  }
+
+  .race-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .quick-links-section {
+    padding: 1.5rem 15px 1rem 15px;
+  }
+
+  .quick-links-grid {
+    grid-template-columns:  1fr;
+  }
 }
