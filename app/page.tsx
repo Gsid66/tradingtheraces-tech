@@ -1,4 +1,5 @@
-import { FaGift, FaCalendarDay, FaChartLine, FaMapMarkedAlt, FaCrown } from 'react-icons/fa'
+import { FaGift, FaCrown } from 'react-icons/fa'
+import RaceCarousel from './components/RaceCarousel'
 
 export default function Home() {
   return (
@@ -24,40 +25,36 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Feature Cards Grid */}
-      <div className="quick-links-grid" style={{ marginTop: '2rem' }}>
-        <div className="quick-link-card">
-          <div className="quick-link-icon">
-            <FaCalendarDay />
-          </div>
-          <h3>Today's Races</h3>
-          <p>View all races scheduled for today</p>
-        </div>
+      {/* RACE CAROUSEL - THE MAIN FEATURE */}
+      <RaceCarousel />
 
-        <div className="quick-link-card">
-          <div className="quick-link-icon">
-            <FaChartLine />
-          </div>
-          <h3>Recent Results</h3>
-          <p>Check latest race results</p>
+      {/* Coming Soon Cards */}
+      <div className="coming-soon-grid">
+        <div className="coming-soon-card">
+          <h4>Coming Soon</h4>
+          <p>More features</p>
         </div>
-
-        <div className="quick-link-card">
-          <div className="quick-link-icon">
-            <FaMapMarkedAlt />
-          </div>
-          <h3>Track Information</h3>
-          <p>View track details and conditions</p>
+        <div className="coming-soon-card">
+          <h4>Coming Soon</h4>
+          <p>More features</p>
+        </div>
+        <div className="coming-soon-card">
+          <h4>Coming Soon</h4>
+          <p>More features</p>
+        </div>
+        <div className="coming-soon-card">
+          <h4>Coming Soon</h4>
+          <p>More features</p>
         </div>
       </div>
 
-      {/* Premium Banner - GOLD/PURPLE GRADIENT */}
+      {/* Premium Banner */}
       <div 
         className="info-banner" 
         style={{ 
           background: 'linear-gradient(135deg, #9333ea 0%, #7c3aed 100%)',
           border: '2px solid #fbbf24',
-          marginTop:  '2rem' 
+          marginTop: '2rem' 
         }}
       >
         <div className="info-banner-icon" style={{ color: '#fbbf24' }}>
@@ -71,7 +68,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* CTA Button - GOLD THEME */}
+      {/* CTA Button */}
       <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
         <a 
           href="/members" 

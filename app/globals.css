@@ -6,28 +6,28 @@
   --purple-dark: #1a0033;
   --purple-main: #8b5cf6;
   --purple-deep: #6b21a8;
-  --purple-light: #c4b5fd;
+  --purple-light:  #c4b5fd;
   --purple-lighter: #e9d5ff;
-  --gold:  #fbbf24;
+  --gold:   #fbbf24;
 }
 
 * {
   margin: 0;
-  padding:  0;
+  padding:   0;
   box-sizing: border-box;
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background:  linear-gradient(135deg, #1a0033 0%, #000000 100%);
-  color: #ffffff;
+  font-family:  'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background:   linear-gradient(135deg, #1a0033 0%, #000000 100%);
+  color:  #ffffff;
   line-height: 1.6;
   min-height: 100vh;
 }
 
 /* ==================== QUICK LINKS NAVIGATION (DARK) ==================== */
 .quick-links-section {
-  background: rgba(0, 0, 0, 0.7);
+  background: linear-gradient(135deg, var(--purple-deep), var(--purple-main));
   padding: 2.5rem 20px 2rem 20px;
   border-bottom: 2px solid var(--purple-main);
   box-shadow: 0 4px 20px rgba(139, 92, 246, 0.2);
@@ -42,13 +42,13 @@ body {
 }
 
 .quick-link-card {
-  background: linear-gradient(135deg, rgba(107, 33, 168, 0.3), rgba(139, 92, 246, 0.2));
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.85), rgba(10, 0, 20, 0.9));
   border: 2px solid var(--purple-main);
   padding: 1.75rem 1.5rem;
   border-radius: 12px;
   text-decoration: none;
   color: white;
-  transition: all 0.3s ease;
+  transition:  all 0.3s ease;
   box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
   display: flex;
   flex-direction: column;
@@ -63,12 +63,12 @@ body {
   transform: translateY(-5px);
   box-shadow: 0 8px 25px rgba(139, 92, 246, 0.5);
   border-color: var(--purple-light);
-  background: linear-gradient(135deg, rgba(107, 33, 168, 0.5), rgba(139, 92, 246, 0.4));
+  background: linear-gradient(135deg, rgba(26, 0, 51, 0.95), rgba(107, 33, 168, 0.8));
 }
 
 .quick-link-icon {
-  font-size: 2.8rem;
-  margin-bottom:  1rem;
+  font-size: 2. 8rem;
+  margin-bottom:   1rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -77,7 +77,7 @@ body {
 
 .quick-link-card h3 {
   font-size: 1.05rem;
-  margin-bottom:  0.4rem;
+  margin-bottom:   0.4rem;
   font-weight: 600;
   color: var(--purple-lighter);
   line-height: 1.3;
@@ -90,29 +90,6 @@ body {
   line-height: 1.4;
 }
 
-/* PURPLE THEME VARIATIONS FOR DARK MODE */
-.quick-link-card:nth-child(1) {
-  background: linear-gradient(135deg, rgba(240, 147, 251, 0.2), rgba(245, 87, 108, 0.2));
-  border-color: #f093fb;
-}
-
-.quick-link-card:nth-child(1):hover {
-  background: linear-gradient(135deg, rgba(240, 147, 251, 0.3), rgba(245, 87, 108, 0.3));
-  border-color: #f5576c;
-}
-
-.quick-link-card:nth-child(3) {
-  background: linear-gradient(135deg, rgba(139, 154, 238, 0.2), rgba(147, 112, 186, 0.2));
-}
-
-.quick-link-card:nth-child(4) {
-  background: linear-gradient(135deg, rgba(124, 142, 232, 0.2), rgba(133, 89, 168, 0.2));
-}
-
-.quick-link-card:nth-child(5) {
-  background: linear-gradient(135deg, rgba(90, 103, 216, 0.2), rgba(107, 70, 193, 0.2));
-}
-
 /* ==================== CONTAINER ==================== */
 .container {
   max-width: 1200px;
@@ -122,7 +99,7 @@ body {
 
 .content-box {
   background: rgba(0, 0, 0, 0.7);
-  border:  2px solid var(--purple-main);
+  border:   2px solid var(--purple-main);
   border-radius: 15px;
   padding: 30px;
   box-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
@@ -130,19 +107,19 @@ body {
 
 /* ==================== PAGE HEADER (DARK) ==================== */
 .page-header {
-  background: rgba(0, 0, 0, 0.5);
-  border:  2px solid var(--purple-main);
-  padding: 2.5rem;
-  border-radius: 15px;
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  background: linear-gradient(135deg, var(--purple-deep), var(--purple-main));
+  border: 2px solid var(--purple-main);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align:  center;
+  box-shadow:  0 4px 12px rgba(139, 92, 246, 0.3);
   margin-bottom: 2rem;
-  text-align: center;
 }
 
 .page-header h1 {
   color: var(--purple-lighter);
   font-size: 2.2rem;
-  margin-bottom:  0.5rem;
+  margin-bottom:   0.5rem;
   font-weight: 600;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
 }
@@ -167,14 +144,14 @@ body {
 }
 
 .info-banner-icon {
-  font-size:  2.5rem;
+  font-size:   2.5rem;
   display: flex;
   align-items: center;
 }
 
 .info-banner-content h3 {
-  font-size:  1.1rem;
-  margin-bottom:  0.25rem;
+  font-size:   1.1rem;
+  margin-bottom:   0.25rem;
 }
 
 .info-banner-content p {
@@ -187,7 +164,7 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 15px;
-  margin:  20px 0;
+  margin:   20px 0;
   padding: 20px;
   background: rgba(139, 92, 246, 0.1);
   border-radius: 8px;
@@ -208,7 +185,7 @@ body {
   border: 2px solid var(--purple-deep);
   border-radius: 10px;
   padding: 25px;
-  margin:  25px 0;
+  margin:   25px 0;
   transition: all 0.3s ease;
 }
 
@@ -223,7 +200,7 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  padding-bottom: 15px;
+  padding-bottom:  15px;
   border-bottom: 2px solid var(--purple-main);
   flex-wrap: wrap;
   gap: 10px;
@@ -242,7 +219,7 @@ body {
 
 h3 {
   color: #a78bfa;
-  margin:  20px 0 10px 0;
+  margin:   20px 0 10px 0;
   font-size: 1.3em;
   border-left: 4px solid var(--purple-main);
   padding-left: 10px;
@@ -252,7 +229,7 @@ h3 {
   background: rgba(139, 92, 246, 0.1);
   border-left: 4px solid var(--purple-main);
   padding: 15px;
-  margin:  10px 0;
+  margin:   10px 0;
   border-radius: 5px;
   transition: all 0.3s ease;
 }
@@ -279,7 +256,7 @@ h3 {
   border-radius: 8px;
   margin-top: 15px;
   font-weight: bold;
-  border:  1px solid var(--purple-light);
+  border:   1px solid var(--purple-light);
 }
 
 .badge {
@@ -287,9 +264,9 @@ h3 {
   background: var(--purple-main);
   color: #000000;
   padding: 5px 12px;
-  border-radius:  20px;
+  border-radius:   20px;
   font-size: 0.85em;
-  font-weight:  bold;
+  font-weight:   bold;
   margin-left: 10px;
 }
 
@@ -303,7 +280,7 @@ h3 {
   border: 3px solid var(--purple-main);
   border-radius: 15px;
   padding: 30px;
-  margin-top: 40px;
+  margin-top:  40px;
 }
 
 .summary h2 {
@@ -315,7 +292,7 @@ h3 {
 }
 
 .best-bet {
-  background: rgba(139, 92, 246, 0.15);
+  background:  rgba(139, 92, 246, 0.15);
   padding: 15px;
   margin: 15px 0;
   border-radius: 8px;
@@ -333,7 +310,7 @@ footer {
   color: white;
   text-align: center;
   padding: 2.5rem 20px;
-  margin-top:  3rem;
+  margin-top:   3rem;
   width: 100%;
   border-top: 3px solid var(--purple-light);
 }
@@ -346,7 +323,7 @@ footer p {
   color: white;
   text-decoration: none;
   font-weight: 600;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  border-bottom:  2px solid rgba(255, 255, 255, 0.3);
   transition: border-color 0.2s ease;
 }
 
@@ -374,11 +351,296 @@ footer p {
   }
 
   .quick-links-grid {
-    grid-template-columns:  1fr;
+    grid-template-columns:   1fr;
   }
 }
+
 /* ==================== GOLD BUTTON HOVER ==================== */
 .gold-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(251, 191, 36, 0.5) !important;
+}
+
+/* ==================== RACE CAROUSEL ==================== */
+.race-carousel-container {
+  background: linear-gradient(135deg, rgba(26, 0, 51, 0.95), rgba(0, 0, 0, 0.95));
+  border:   2px solid var(--purple-main);
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 2rem 0;
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.3);
+}
+
+.race-carousel-loading,
+.race-carousel-error,
+.race-carousel-empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--purple-light);
+}
+
+.spinner {
+  border: 4px solid rgba(139, 92, 246, 0.3);
+  border-top: 4px solid var(--purple-main);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.race-carousel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items:  center;
+  margin-bottom:  1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--purple-main);
+}
+
+.race-carousel-track-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.track-icon {
+  color: var(--gold);
+  font-size: 1.5rem;
+}
+
+.race-carousel-track-info h2 {
+  color:  var(--purple-lighter);
+  margin: 0;
+  font-size: 1.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.race-number {
+  background: var(--purple-deep);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.race-carousel-meta {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.race-time,
+.race-distance {
+  color: var(--purple-light);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.race-carousel-race-name {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1. 5rem;
+}
+
+.race-carousel-race-name h3 {
+  color: white;
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.prize-money {
+  color: var(--gold);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.race-carousel-navigation {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin:   1.5rem 0;
+}
+
+.race-nav-button {
+  background: linear-gradient(135deg, var(--purple-deep), var(--purple-main));
+  border: 2px solid var(--purple-main);
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.race-nav-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--purple-main), var(--purple-light));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.5);
+}
+
+.race-nav-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.runners-table {
+  width: 100%;
+  border-collapse:   collapse;
+  margin: 1.5rem 0;
+}
+
+.runners-table thead {
+  background: rgba(139, 92, 246, 0.2);
+}
+
+.runners-table th {
+  padding: 1rem;
+  text-align:   left;
+  color: var(--purple-lighter);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--purple-main);
+}
+
+.runners-table tbody tr {
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+  transition:background 0.2s ease;
+}
+
+.runners-table tbody tr:hover {
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.runners-table td {
+  padding:   1rem;
+  color:   var(--purple-light);
+}
+
+.runner-number {
+  font-weight: 700;
+  color: var(--gold);
+  font-size: 1.1rem;
+}
+
+.runner-horse {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.runner-horse strong {
+  color: white;
+  font-size: 1.05rem;
+}
+
+.horse-age-sex {
+  color: var(--purple-light);
+  font-size: 0.85rem;
+}
+
+.race-carousel-progress {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(139, 92, 246, 0.3);
+  color: var(--purple-light);
+  font-size: 0.9rem;
+}
+
+/* Coming Soon Cards */
+.coming-soon-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.coming-soon-card {
+  background: linear-gradient(135deg, rgba(107, 33, 168, 0.3), rgba(139, 92, 246, 0.2));
+  border: 2px solid var(--purple-main);
+  padding: 2rem 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+.coming-soon-card h4 {
+  color: var(--purple-lighter);
+  margin:  0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.coming-soon-card p {
+  color: var(--purple-light);
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* TTR Rating Badge */
+.runner-ttr {
+  text-align: center;
+}
+
+.ttr-badge {
+  background:   linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1a0033;
+  padding: 0.3rem 0.6rem;
+  border-radius:  6px;
+  font-weight:   700;
+  font-size: 0.95rem;
+  display: inline-block;
+}
+
+/* Odds Styling */
+.runner-odds-win,
+.runner-odds-place {
+  text-align: center;
+  font-weight: 600;
+}
+
+.odds-value {
+  color: #fbbf24;
+  font-size:   1.05rem;
+}
+
+.no-data {
+  color: rgba(139, 92, 246, 0.4);
+  font-style: italic;
+}
+
+/* Retry Button */
+.retry-button {
+  background: linear-gradient(135deg, var(--purple-deep), var(--purple-main));
+  border: 2px solid var(--purple-main);
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-size:   1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+}
+
+.retry-button:hover {
+  background: linear-gradient(135deg, var(--purple-main), var(--purple-light));
+  transform: translateY(-2px);
 }
