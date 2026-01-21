@@ -43,8 +43,11 @@ export interface PFTrainer {
 }
 
 export interface PFJockey {
-  fullName: string;
   jockeyId: string;
+  fullName:  string;
+  isApprentice?:  boolean;    // ← Add this
+  claim?: number;            // ← Add this
+  ridingWeight?: number;
 }
 
 export interface PFRunner {
