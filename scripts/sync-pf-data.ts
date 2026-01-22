@@ -180,7 +180,7 @@ async function syncPuntingFormData() {
           }
 
           // Insert runner
-          await dbClient.query(`
+                    await dbClient.query(`
             INSERT INTO pf_runners (
               race_id, form_id, horse_id, horse_name, barrier_number,
               original_barrier, tab_number, jockey_id, jockey_name,
@@ -188,6 +188,13 @@ async function syncPuntingFormData() {
               fixed_odds, last_five_starts, emergency_indicator, prep_runs,
               gear_changes, starting_price
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+            ON CONFLICT (race_id, form_id) DO UPDATE SET
+              barrier_number = EXCLUDED.barrier_number,
+              jockey_id = EXCLUDED. jockey_id,
+              jockey_name = EXCLUDED.jockey_name,
+              weight = EXCLUDED.weight,
+              gear_changes = EXCLUDED.gear_changes,
+              updated_at = NOW()
           `, [
             race.raceId,
             runner.formId,
@@ -196,14 +203,14 @@ async function syncPuntingFormData() {
             runner.barrier,
             runner.originalBarrier,
             runner.tabNo,
-            runner.jockey?. jockeyId !== '0' ? runner.jockey?. jockeyId : null,
-            runner.jockey?. fullName?.trim() || null,
-            runner.jockeyClaim,
-            runner. trainer?.trainerId,
+            runner. jockey?. jockeyId !== '0' ? runner.jockey?.jockeyId : null,
+            runner.jockey?.fullName?.trim() || null,
+            runner. jockeyClaim,
+            runner.trainer?.trainerId,
             runner.trainer?.fullName,
             runner.weight,
             runner.handicap,
-            null, // fixedOdds - we'll need to fetch this separately
+            null,
             runner.last10,
             runner.emergencyIndicator,
             runner.prepRuns,
