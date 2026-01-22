@@ -21,6 +21,7 @@ export interface PFMeeting {
   track:  PFTrack;
   meetingDate: string;
   stage: string;
+  startTime: string;
 }
 
 export interface PFJockey {
