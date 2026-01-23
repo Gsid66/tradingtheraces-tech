@@ -69,7 +69,7 @@ export default function RootLayout({ children }) {
           <p style={{ opacity: 0.95 }}>
             Professional Race Analysis & TTR Ratings
           </p>
-          <p style={{ marginTop: '1. 5rem' }}>
+          <p style={{ marginTop: '1.5rem' }}>
             <Link href="/" className="footer-link">Main Website</Link> | 
             <Link href="/race-viewer" className="footer-link">TTR Ratings</Link> |
             <Link href="/members" className="footer-link">Members Portal</Link>
