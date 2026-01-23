@@ -1,29 +1,38 @@
 import { format } from 'date-fns';
 
+// Response wrapper for all Punting Form API calls
 export interface PuntingFormResponse<T> {
   payLoad: T;
   statusCode: number;
-  message: string;
+  status: number;
+  error: string | null;
+  errors: any[] | null;
+  message?: string;
+  processTime?: number;
+  timeStamp?: string;
 }
 
+// Track information
 export interface PFTrack {
-  trackId:  string;
-  name:  string;
+  trackId: string;
+  name: string;
   location: string;
   state: string;
   country: string;
-  abbrev:  string;
+  abbrev: string;
   surface: string;
 }
 
+// Meeting information (simple version for meetingslist endpoint)
 export interface PFMeeting {
   meetingId: string;
-  track:  PFTrack;
+  track: PFTrack;
   meetingDate: string;
   stage: string;
-  startTime: string;
+  startTime?: string;
 }
 
+// Jockey information
 export interface PFJockey {
   jockeyId: string;
   fullName: string;
@@ -32,28 +41,30 @@ export interface PFJockey {
   ridingWeight?: number;
 }
 
+// Trainer information
 export interface PFTrainer {
   trainerId: string;
   fullName: string;
-  location:   string;
+  location: string;
 }
 
+// Runner information
 export interface PFRunner {
-  formId:  string;
-  horseId? :  string;
+  formId: string;
+  horseId?: string;
   horseName?: string;
-  name?:  string;
-  runnerId?:   number;
-  barrierNumber:  number;
-  originalBarrier?:  number;
+  name?: string;
+  runnerId?: number;
+  barrierNumber: number;
+  originalBarrier?: number;
   tabNumber: number;
   tabNo?: number;
   barrier?: number;
-  jockey?:  PFJockey;
+  jockey?: PFJockey;
   jockeyClaim: number;
-  trainer?:  PFTrainer;
+  trainer?: PFTrainer;
   weight: number;
-  handicap:   number;
+  handicap: number;
   handicapWeight?: number;
   fixedOdds?: number;
   lastFiveStarts?: string;
@@ -68,18 +79,19 @@ export interface PFRunner {
   dam?: string;
   sireofDam?: string;
   sireDam?: string;
-  country?:  string;
+  country?: string;
   careerStarts?: number;
-  careerWins?:  number;
-  careerSeconds? :  number;
+  careerWins?: number;
+  careerSeconds?: number;
   careerThirds?: number;
   prizeMoney?: number;
   last10?: string;
   priceSP?: number;
 }
 
+// Race information
 export interface PFRace {
-  raceId:  string;
+  raceId: string;
   number: number;
   name: string;
   providerRaceId: string;
@@ -88,20 +100,35 @@ export interface PFRace {
   jockeyRestrictions?: string;
   sexRestrictions?: string;
   weightType?: string;
-  limitWeight?:  number;
-  raceClass?:  string;
-  prizeMoney:  number;
+  limitWeight?: number;
+  raceClass?: string;
+  prizeMoney: number;
   prizeMoneyBreakDown?: string;
   startTime: string;
   startTimeUTC: string;
   group?: string;
   bonusScheme?: string;
   description?: string;
-  runners?:   PFRunner[];
+  runners?: PFRunner[];
 }
 
+// Fields response payload (from /form/fields endpoint)
 export interface PFRaceFields {
+  track: PFTrack;
   races: PFRace[];
+  meetingId: string;
+  tabMeeting: boolean;
+  railPosition: string;
+  meetingDate: string;
+  stage: string;
+  expectedCondition: string | null;
+  isBarrierTrial: boolean;
+  isJumps: boolean;
+  hasSectionals: boolean;
+  formUpdated: string;
+  resultsUpdated: string | null;
+  sectionalsUpdated: string | null;
+  ratingsUpdated: string;
 }
 
 export class PuntingFormClient {
@@ -143,9 +170,10 @@ export class PuntingFormClient {
 
   /**
    * Get all races and fields for a specific meeting
+   * Uses the /form/fields endpoint which returns full meeting details
    */
-  async getAllRacesForMeeting(meetingId:   string): Promise<PuntingFormResponse<PFRaceFields>> {
-    return this.get(`/form/alltabformguideformeeting?meetingId=${meetingId}`);
+  async getAllRacesForMeeting(meetingId: string): Promise<PuntingFormResponse<PFRaceFields>> {
+    return this.get(`/form/fields?meetingId=${meetingId}`);
   }
 
   /**
@@ -172,14 +200,14 @@ export class PuntingFormClient {
   /**
    * Get runners for a specific race
    */
-  async getRunnersByRace(raceId:  number): Promise<PuntingFormResponse<{ runners: PFRunner[] }>> {
+  async getRunnersByRace(raceId: number): Promise<PuntingFormResponse<{ runners: PFRunner[] }>> {
     return this.get(`/form/runners?raceId=${raceId}`);
   }
 
   /**
    * Get results for a specific date
    */
-  async getResultsByDate(date:  Date): Promise<PuntingFormResponse<any>> {
+  async getResultsByDate(date: Date): Promise<PuntingFormResponse<any>> {
     const formattedDate = format(date, 'dd-MMM-yyyy');
     return this.get(`/form/results?meetingDate=${formattedDate}`);
   }
