@@ -32,7 +32,7 @@ export default async function RacePage({ params }: Props) {
 
   // Get all races for this meeting
   const racesResponse = await pfClient.getAllRacesForMeeting(meeting.meetingId);
-  const races = racesResponse.payLoad?. races || [];
+  const races = (racesResponse.payLoad?.races || []).sort((a, b) => a.number - b.number);
   
   // Find the specific race
   const raceNum = parseInt(raceNumber);

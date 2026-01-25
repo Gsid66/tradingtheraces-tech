@@ -4,10 +4,10 @@ import { useState } from 'react';
 
 const tabs = [
   { id:  'form', label: 'Form', available: true },
-  { id:  'compare-odds', label: 'Compare Odds', available: false },
-  { id: 'predictor', label: 'Predictor', available: false },
-  { id: 'punters-edge', label: "Punters' Edge", available:  false },
-  { id: 'tippers-edge', label: "Tipper's Edge", available: false },
+  { id:  'ratings-odds', label: 'Ratings/Odds', available: false },
+  { id: 'analysis', label: 'Analysis', available: false },
+  { id: 'trading-desk', label: 'Trading Desk', available:  false },
+  { id: 'sherlock-hooves', label: 'Sherlock Hooves AI', available: false },
 ];
 
 export default function RaceTabs() {
