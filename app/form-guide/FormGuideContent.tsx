@@ -133,7 +133,7 @@ export default function FormGuideContent({ meetings }: Props) {
 function MeetingCard({ meeting, index }: { meeting: PFMeeting; index: number }) {
   const [isLoading, setIsLoading] = useState(true);
   const [raceCount, setRaceCount] = useState(0);
-  const [error, setError] = useState<any>(null);
+  const [error, setError] = useState<Error | null>(null);
 
   const trackSlug = meeting.track.name.toLowerCase().replace(/\s+/g, '-');
   
@@ -152,11 +152,18 @@ function MeetingCard({ meeting, index }: { meeting: PFMeeting; index: number }) 
       try {
         setIsLoading(true);
         const response = await fetch(`/api/races/meeting/${meeting.meetingId}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch races: ${response.status}`);
+        }
+        
         const data = await response.json();
         setRaceCount(data.races?.length || 0);
+        setError(null);
       } catch (error) {
         console.error('Failed to fetch races:', error);
-        setError(error);
+        setError(error instanceof Error ? error : new Error('Unknown error'));
+        setRaceCount(0);
       } finally {
         setIsLoading(false);
       }
@@ -215,9 +222,14 @@ function MeetingCard({ meeting, index }: { meeting: PFMeeting; index: number }) 
                 <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 <div className="text-xs font-bold text-white/70 tracking-wider mt-2">LOADING</div>
               </>
+            ) : error ? (
+              <>
+                <div className="text-4xl font-black text-red-300">!</div>
+                <div className="text-xs font-bold text-white/70 tracking-wider">ERROR</div>
+              </>
             ) : (
               <>
-                <div className="text-4xl font-black text-white">{error ? 0 : raceCount}</div>
+                <div className="text-4xl font-black text-white">{raceCount}</div>
                 <div className="text-xs font-bold text-white/70 tracking-wider">RACES</div>
               </>
             )}
