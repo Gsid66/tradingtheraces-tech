@@ -71,7 +71,7 @@ export default async function RacePage({ params }: Props) {
 
         {/* Race Navigation Pills */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {races.map((r) => (
+          {races.sort((a, b) => a.number - b.number).map((r) => (
             <a
               key={r.raceId}
               href={`/form-guide/${trackSlug}/${r.number}`}
