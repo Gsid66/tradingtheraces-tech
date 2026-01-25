@@ -4,6 +4,8 @@ import RaceTabs from './RaceTabs';
 import RaceDetails from './RaceDetails';
 import RunnerList from './RunnerList';
 
+export const dynamic = 'force-dynamic';
+
 interface Props {
   params: {
     trackSlug: string;

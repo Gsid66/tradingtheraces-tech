@@ -2,6 +2,8 @@ import { Suspense } from 'react';
 import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
 import FormGuideContent from './FormGuideContent';
 
+export const dynamic = 'force-dynamic';
+
 export default async function FormGuidePage() {
   const pfClient = getPuntingFormClient();
   
