@@ -7,13 +7,14 @@ import RunnerList from './RunnerList';
 export const dynamic = 'force-dynamic';
 
 interface Props {
-  params: {
+  params: Promise<{
     trackSlug: string;
     raceNumber: string;
-  };
+  }>;
 }
 
 export default async function RacePage({ params }: Props) {
+  const { trackSlug, raceNumber } = await params;
   const pfClient = getPuntingFormClient();
   
   // Get today's meetings to find the right one
@@ -22,7 +23,7 @@ export default async function RacePage({ params }: Props) {
   
   // Find meeting by track slug
   const meeting = meetings.find(m => 
-    m.track.name. toLowerCase().replace(/\s+/g, '-') === params.trackSlug
+    m.track.name.toLowerCase().replace(/\s+/g, '-') === trackSlug
   );
   
   if (!meeting) {
@@ -34,7 +35,7 @@ export default async function RacePage({ params }: Props) {
   const races = racesResponse.payLoad?. races || [];
   
   // Find the specific race
-  const raceNum = parseInt(params.raceNumber);
+  const raceNum = parseInt(raceNumber);
   const race = races.find(r => r.number === raceNum);
   
   if (!race) {
@@ -73,10 +74,10 @@ export default async function RacePage({ params }: Props) {
           {races.map((r) => (
             <a
               key={r.raceId}
-              href={`/form-guide/${params.trackSlug}/${r. number}`}
+              href={`/form-guide/${trackSlug}/${r.number}`}
               className={`flex-shrink-0 px-6 py-3 rounded-full font-medium transition-colors ${
                 r.number === raceNum
-                  ?  'bg-green-700 text-white'
+                  ? 'bg-green-700 text-white'
                   : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
               }`}
             >
