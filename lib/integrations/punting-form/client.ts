@@ -1,4 +1,8 @@
 import { format } from 'date-fns';
+import type { PFMeeting as PFMeetingType } from './types';
+
+// Re-export the complete PFMeeting type
+export type { PFMeetingType as PFMeeting };
 
 // Response wrapper for all Punting Form API calls
 export interface PuntingFormResponse<T> {
@@ -21,15 +25,6 @@ export interface PFTrack {
   country: string;
   abbrev: string;
   surface: string;
-}
-
-// Meeting information (simple version for meetingslist endpoint)
-export interface PFMeeting {
-  meetingId: string;
-  track: PFTrack;
-  meetingDate: string;
-  stage: string;
-  startTime?: string;
 }
 
 // Jockey information
@@ -156,7 +151,7 @@ export class PuntingFormClient {
   /**
    * Get race meetings for a specific date
    */
-  async getMeetingsByDate(date: Date): Promise<PuntingFormResponse<PFMeeting[]>> {
+  async getMeetingsByDate(date: Date): Promise<PuntingFormResponse<PFMeetingType[]>> {
     const formattedDate = format(date, 'dd-MMM-yyyy');
     return this.get(`/form/meetingslist?meetingDate=${formattedDate}&stage=(A)`);
   }
@@ -164,7 +159,7 @@ export class PuntingFormClient {
   /**
    * Get today's race meetings
    */
-  async getTodaysMeetings(): Promise<PuntingFormResponse<PFMeeting[]>> {
+  async getTodaysMeetings(): Promise<PuntingFormResponse<PFMeetingType[]>> {
     return this.getMeetingsByDate(new Date());
   }
 
