@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import type { PFRunner } from '@/lib/integrations/punting-form/client';
 
+const TBA_TEXT = 'TBA';
+
 interface Props {
   runners:  PFRunner[];
 }
@@ -125,9 +127,9 @@ function RunnerRow({ runner, position }: { runner: PFRunner; position: number })
             {/* Jockey */}
             <div className="text-sm text-gray-700 mb-1">
               <span className="font-semibold">Jockey:</span>{' '}
-              {runner.jockey?.fullName || 'TBA'}{' '}
+              {runner.jockey?.fullName || TBA_TEXT}{' '}
               <span className="text-gray-600">
-                ({runner.weight || runner.handicapWeight}kg)
+                ({runner.weight || runner.handicapWeight || 0}kg)
                 {runner.jockey?.isApprentice && runner.jockey?.claim && (
                   <span className="text-blue-600"> (a{runner.jockey.claim})</span>
                 )}
@@ -137,7 +139,7 @@ function RunnerRow({ runner, position }: { runner: PFRunner; position: number })
             {/* Trainer */}
             <div className="text-sm text-gray-700 mb-3">
               <span className="font-semibold">Trainer:</span>{' '}
-              {runner.trainer?.fullName || 'TBA'}
+              {runner.trainer?.fullName || TBA_TEXT}
             </div>
 
             {/* Visual Form Guide */}
