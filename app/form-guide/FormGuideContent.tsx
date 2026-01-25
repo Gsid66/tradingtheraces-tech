@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { PFMeeting } from '@/lib/integrations/punting-form/client';
 
 interface Props {
@@ -131,8 +131,11 @@ export default function FormGuideContent({ meetings }: Props) {
 }
 
 function MeetingCard({ meeting, index }: { meeting: PFMeeting; index: number }) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [raceCount, setRaceCount] = useState(0);
+  const [error, setError] = useState<Error | null>(null);
+
   const trackSlug = meeting.track.name.toLowerCase().replace(/\s+/g, '-');
-  const raceCount = meeting.races ?? 0;
   
   const gradients = [
     'from-purple-500/20 to-pink-500/20',
@@ -143,6 +146,30 @@ function MeetingCard({ meeting, index }: { meeting: PFMeeting; index: number }) 
   ];
   
   const gradient = gradients[index % gradients.length];
+
+  useEffect(() => {
+    async function fetchRaces() {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/races/meeting/${meeting.meetingId}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch races: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setRaceCount(data.races?.length || 0);
+        setError(null);
+      } catch (error) {
+        console.error('Failed to fetch races:', error);
+        setError(error instanceof Error ? error : new Error('Unknown error'));
+        setRaceCount(0);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchRaces();
+  }, [meeting.meetingId]);
 
   // Generate race numbers array
   const raceNumbers = raceCount > 0 ? Array.from({ length: raceCount }, (_, i) => i + 1) : [];
@@ -189,18 +216,50 @@ function MeetingCard({ meeting, index }: { meeting: PFMeeting; index: number }) 
           </div>
           
           {/* Race Count Badge */}
-          {raceCount > 0 && (
-            <div className="flex flex-col items-center justify-center px-6 py-3 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
-              <div className="text-4xl font-black text-white">{raceCount}</div>
-              <div className="text-xs font-bold text-white/70 tracking-wider">RACES</div>
-            </div>
-          )}
+          <div className="flex flex-col items-center justify-center px-6 py-3 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
+            {isLoading ? (
+              <>
+                <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <div className="text-xs font-bold text-white/70 tracking-wider mt-2">LOADING</div>
+              </>
+            ) : error ? (
+              <>
+                <div className="text-4xl font-black text-red-300">!</div>
+                <div className="text-xs font-bold text-white/70 tracking-wider">ERROR</div>
+              </>
+            ) : (
+              <>
+                <div className="text-4xl font-black text-white">{raceCount}</div>
+                <div className="text-xs font-bold text-white/70 tracking-wider">RACES</div>
+              </>
+            )}
+          </div>
         </div>
       </div>
       
       {/* Race Pills Section */}
       <div className="p-6">
-        {raceNumbers.length > 0 ? (
+        {isLoading ? (
+          <>
+            <div className="flex items-center gap-2 mb-4">
+              <svg className="w-5 h-5 text-white/70" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm font-bold text-white/70 uppercase tracking-wide">Select Race</span>
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="px-5 py-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 animate-pulse"
+                >
+                  <span className="text-sm font-bold text-transparent">R{i}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : raceNumbers.length > 0 ? (
           <>
             <div className="flex items-center gap-2 mb-4">
               <svg className="w-5 h-5 text-white/70" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
