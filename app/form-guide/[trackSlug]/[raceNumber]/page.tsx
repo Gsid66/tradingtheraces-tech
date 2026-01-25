@@ -32,7 +32,7 @@ export default async function RacePage({ params }: Props) {
 
   // Get all races for this meeting
   const racesResponse = await pfClient.getAllRacesForMeeting(meeting.meetingId);
-  const races = racesResponse.payLoad?. races || [];
+  const races = (racesResponse.payLoad?.races || []).sort((a, b) => a.number - b.number);
   
   // Find the specific race
   const raceNum = parseInt(raceNumber);
@@ -71,7 +71,7 @@ export default async function RacePage({ params }: Props) {
 
         {/* Race Navigation Pills */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {races.sort((a, b) => a.number - b.number).map((r) => (
+          {races.map((r) => (
             <a
               key={r.raceId}
               href={`/form-guide/${trackSlug}/${r.number}`}
