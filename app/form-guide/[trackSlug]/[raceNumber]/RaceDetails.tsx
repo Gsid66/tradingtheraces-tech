@@ -12,9 +12,13 @@ export default function RaceDetails({ race, meeting }: Props) {
   const timeUntilRace = '-2m';
 
   // Format start time to display format (e.g., "2:05 PM")
+  // Returns empty string if date is invalid to gracefully handle missing or malformed data
   const formatStartTime = (startTime: string) => {
     try {
       const date = new Date(startTime);
+      if (isNaN(date.getTime())) {
+        return '';
+      }
       return date.toLocaleTimeString('en-US', { 
         hour: 'numeric', 
         minute: '2-digit',
