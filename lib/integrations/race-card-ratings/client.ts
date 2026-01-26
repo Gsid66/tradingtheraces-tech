@@ -1,17 +1,25 @@
 export interface TTRRating {
-  horse_name: string;
-  runner_number: number;
-  ttr_rating: number;
-  ttr_price: number;
-  meeting_name: string;
+  race_date: string;
+  track: string;
+  race_name: string;
   race_number: number;
-  meeting_date: string;
+  saddle_cloth: number;
+  horse_name: string;
+  jockey: string | null;
+  trainer: string | null;
+  rating: number | null;
+  price: number | null;
 }
 
 export interface TTRResponse {
   success: boolean;
   data: TTRRating[];
-  count: number;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
 }
 
 export class RaceCardRatingsClient {
@@ -23,45 +31,67 @@ export class RaceCardRatingsClient {
 
   private async get<T>(endpoint: string): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    console.log('🔗 TTR Ratings API URL:', url);
+    console.log('🔗 Race Cards API URL:', url);
 
     const response = await fetch(url, {
       cache: 'no-store',
     });
 
     if (!response.ok) {
-      throw new Error(`TTR Ratings API request failed: ${response.statusText}`);
+      throw new Error(`Race Cards API request failed: ${response.statusText}`);
     }
 
     return response.json();
   }
 
   /**
-   * Get TTR ratings by date
+   * Get ratings by date and track
    */
   async getRatingsByDate(date: string, track?: string): Promise<TTRResponse> {
-    let endpoint = `/api/ratings?date=${date}`;
+    const params = new URLSearchParams();
+    params.set('start_date', date);
+    params.set('end_date', date);
+    params.set('limit', '500');
+    
     if (track) {
-      endpoint += `&track=${track}`;
+      params.set('track', track);
     }
-    return this.get(endpoint);
+    
+    return this.get(`/api/races?${params.toString()}`);
   }
 
   /**
-   * Get TTR ratings for specific race
+   * Get ratings for specific race
    */
-  async getRatingsForRace(date: string, track: string, raceNumber: number): Promise<TTRResponse> {
-    return this.get(`/api/ratings?date=${date}&track=${track}&race=${raceNumber}`);
+  async getRatingsForRace(
+    date: string, 
+    track: string, 
+    raceNumber: number
+  ): Promise<TTRResponse> {
+    const params = new URLSearchParams();
+    params.set('start_date', date);
+    params.set('end_date', date);
+    params.set('track', track);
+    params.set('limit', '500');
+    
+    const response = await this.get<TTRResponse>(`/api/races?${params.toString()}`);
+    
+    // Filter by race number
+    const filteredData = response.data.filter(r => r.race_number === raceNumber);
+    
+    return {
+      ...response,
+      data: filteredData
+    };
   }
 }
 
-export function getRaceCardRatingsClient(): RaceCardRatingsClient {
+export function getRaceCardRatingsClient(): RaceCardRatingsClient | null {
   const apiUrl = process.env.RACE_CARD_RATINGS_API_URL;
 
   if (!apiUrl) {
-    console.warn('RACE_CARD_RATINGS_API_URL environment variable is not set');
-   console.warn('RACE_CARD_RATINGS_API_URL not set - TTR ratings will not be available');
-  return null as any; // Temporary: allow page to load without TTR data 
+    console.warn('⚠️ RACE_CARD_RATINGS_API_URL not set');
+    return null;
   }
 
   return new RaceCardRatingsClient(apiUrl);
