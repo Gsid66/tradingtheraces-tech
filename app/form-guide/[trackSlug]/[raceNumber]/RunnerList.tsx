@@ -2,11 +2,22 @@
 
 import { useState } from 'react';
 import type { PFRunner } from '@/lib/integrations/punting-form/client';
+import HorseOddsRatings from './HorseOddsRatings';
 
 const TBA_TEXT = 'TBA';
 
+// Extended runner interface with TAB and TTR data
+interface EnrichedRunner extends PFRunner {
+  tabFixedWinPrice?: number | null;
+  tabFixedPlacePrice?: number | null;
+  tabFixedWinTimestamp?: string | null;
+  tabFixedPlaceTimestamp?: string | null;
+  ttrRating?: number | null;
+  ttrPrice?: number | null;
+}
+
 interface Props {
-  runners:  PFRunner[];
+  runners:  EnrichedRunner[];
 }
 
 export default function RunnerList({ runners }: Props) {
@@ -28,7 +39,7 @@ export default function RunnerList({ runners }: Props) {
   );
 }
 
-function RunnerRow({ runner, position }: { runner: PFRunner; position: number }) {
+function RunnerRow({ runner, position }: { runner: EnrichedRunner; position: number }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Calculate stats
@@ -191,6 +202,16 @@ function RunnerRow({ runner, position }: { runner: PFRunner; position: number })
       {/* Expanded Details Panel */}
       {isExpanded && (
         <div className="px-6 pb-6 bg-gray-50">
+          {/* TAB Odds and TTR Ratings */}
+          <HorseOddsRatings
+            tabFixedWinPrice={runner.tabFixedWinPrice ?? null}
+            tabFixedPlacePrice={runner.tabFixedPlacePrice ?? null}
+            tabFixedWinTimestamp={runner.tabFixedWinTimestamp ?? null}
+            tabFixedPlaceTimestamp={runner.tabFixedPlaceTimestamp ?? null}
+            ttrRating={runner.ttrRating ?? null}
+            ttrPrice={runner.ttrPrice ?? null}
+          />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
             {/* Left Column */}
             <div className="space-y-4">
