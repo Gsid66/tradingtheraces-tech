@@ -60,7 +60,8 @@ export function getRaceCardRatingsClient(): RaceCardRatingsClient {
 
   if (!apiUrl) {
     console.warn('RACE_CARD_RATINGS_API_URL environment variable is not set');
-    throw new Error('RACE_CARD_RATINGS_API_URL environment variable is not set');
+   console.warn('RACE_CARD_RATINGS_API_URL not set - TTR ratings will not be available');
+  return null as any; // Temporary: allow page to load without TTR data 
   }
 
   return new RaceCardRatingsClient(apiUrl);
