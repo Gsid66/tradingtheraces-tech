@@ -11,6 +11,8 @@ interface Props {
   meetings: MeetingWithRaces[];
 }
 
+type ClosestRace = { time: Date; track: string; raceNumber: number };
+
 export default function FormGuideContent({ meetings }: Props) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -99,7 +101,6 @@ function NextToJumpButton({ meetings, currentTime }: { meetings: MeetingWithRace
   // Calculate next race and countdown
   const { countdown, nextRace } = useMemo(() => {
     // Find the next race across all meetings
-    type ClosestRace = { time: Date; track: string; raceNumber: number };
     let closestRace: ClosestRace | null = null;
     
     meetings.forEach(meeting => {
