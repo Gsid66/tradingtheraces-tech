@@ -182,7 +182,7 @@ function RunnerRow({ runner, position }: { runner: PFRunner; position: number })
             {/* Expandable Toggle Indicator */}
             <div className="mt-3 text-sm text-green-700 font-medium flex items-center gap-1">
               <span>{isExpanded ? '▼' : '▶'}</span>
-              <span>{isExpanded ? 'Hide details' : 'Show full form guide'}</span>
+              <span>{isExpanded ? 'Hide details' : 'Horse Details'}</span>
             </div>
           </div>
         </div>
@@ -266,17 +266,6 @@ function RunnerRow({ runner, position }: { runner: PFRunner; position: number })
                   <div className="bg-blue-50 rounded p-3 text-center border border-blue-200">
                     <div className="text-2xl font-bold text-blue-700">{totalStarts}</div>
                     <div className="text-xs text-gray-600">Total Starts</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Preparation Information */}
-              <div className="bg-white rounded-lg shadow p-4 border">
-                <h4 className="font-bold text-gray-900 mb-3 text-sm">Preparation</h4>
-                <div className="text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Prep Runs:</span>
-                    <span className="font-medium text-gray-900">{runner.prepRuns || 0}</span>
                   </div>
                 </div>
               </div>

@@ -63,7 +63,7 @@ export default async function RacePage({ params }: Props) {
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Track Header */}
         <div className="flex items-center gap-3 mb-6">
-          <h1 className="text-3xl font-bold text-green-700">{meeting.track.name}</h1>
+          <h1 className="text-3xl font-bold text-purple-600">{meeting.track.name}</h1>
           <span className="px-3 py-1 bg-gray-200 text-gray-700 text-sm font-medium rounded">
             {meeting.track.state}
           </span>
@@ -77,7 +77,7 @@ export default async function RacePage({ params }: Props) {
               href={`/form-guide/${trackSlug}/${r.number}`}
               className={`flex-shrink-0 px-6 py-3 rounded-full font-medium transition-colors ${
                 r.number === raceNum
-                  ? 'bg-green-700 text-white'
+                  ? 'bg-purple-600 text-white'
                   : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
               }`}
             >
