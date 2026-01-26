@@ -99,7 +99,8 @@ function NextToJumpButton({ meetings, currentTime }: { meetings: MeetingWithRace
   // Calculate next race and countdown
   const { countdown, nextRace } = useMemo(() => {
     // Find the next race across all meetings
-    let closestRace: { time: Date; track: string; raceNumber: number } | null = null;
+    type ClosestRace = { time: Date; track: string; raceNumber: number };
+    let closestRace: ClosestRace | null = null;
     
     meetings.forEach(meeting => {
       meeting.raceDetails?.forEach(race => {
@@ -119,10 +120,12 @@ function NextToJumpButton({ meetings, currentTime }: { meetings: MeetingWithRace
     });
 
     if (closestRace) {
-      const nextRaceInfo = { track: closestRace.track, raceNumber: closestRace.raceNumber };
+      const raceData = closestRace as ClosestRace;
+      const { track, raceNumber, time } = raceData;
+      const nextRaceInfo = { track, raceNumber };
       
       // Calculate time difference
-      const diff = closestRace.time.getTime() - currentTime.getTime();
+      const diff = time.getTime() - currentTime.getTime();
       const totalSeconds = Math.floor(diff / 1000);
       
       if (totalSeconds > 0) {
@@ -183,8 +186,9 @@ function formatRaceTime(startTime: string) {
 
 function MeetingCard({ meeting, index }: { meeting: MeetingWithRaces; index: number }) {
   const trackSlug = meeting.track.name.toLowerCase().replace(/\s+/g, '-');
-  const raceCount = meeting.races ?? 0;
   const races = meeting.raceDetails || [];
+  const sortedRaces = [...races].sort((a, b) => a.number - b.number);
+  const raceCount = races.length || meeting.races || 0;
 
   const gradients = [
     'from-purple-500/20 to-pink-500/20',
@@ -231,8 +235,8 @@ function MeetingCard({ meeting, index }: { meeting: MeetingWithRaces; index: num
       {/* Race Pills Section */}
       <div className="p-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-          {races.length > 0 ? (
-            races.map((race) => (
+          {sortedRaces.length > 0 ? (
+            sortedRaces.map((race) => (
               <a
                 key={race.raceId}
                 href={`/form-guide/${trackSlug}/${race.number}`}
