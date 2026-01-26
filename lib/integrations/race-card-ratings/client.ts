@@ -95,13 +95,15 @@ export function getRaceCardRatingsClient(): RaceCardRatingsClient | null {
 
   const apiUrl = process.env.RACE_CARD_RATINGS_API_URL;
 
-  // Debug logging to help diagnose issues
-  console.log('🔍 Environment check:', {
-    isServer: typeof window === 'undefined',
-    hasApiUrl: !!apiUrl,
-    apiUrl: apiUrl ? `${apiUrl.substring(0, 20)}...` : 'not set',
-    allEnvKeys: Object.keys(process.env).filter(k => k.includes('RACE'))
-  });
+  // Debug logging to help diagnose issues (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 Environment check:', {
+      isServer: typeof window === 'undefined',
+      hasApiUrl: !!apiUrl,
+      apiUrl: apiUrl ? `${apiUrl.substring(0, Math.min(20, apiUrl.length))}...` : 'not set',
+      allEnvKeys: Object.keys(process.env).filter(k => k.includes('RACE'))
+    });
+  }
 
   if (!apiUrl) {
     console.warn('⚠️ RACE_CARD_RATINGS_API_URL environment variable is not set');
