@@ -1,12 +1,12 @@
 'use client';
 
 interface Props {
-  tabFixedWinPrice: number | null;
-  tabFixedPlacePrice: number | null;
+  tabFixedWinPrice: number | string | null;
+  tabFixedPlacePrice: number | string | null;
   tabFixedWinTimestamp: string | null;
   tabFixedPlaceTimestamp: string | null;
-  ttrRating: number | null;
-  ttrPrice: number | null;
+  ttrRating: number | string | null;
+  ttrPrice: number | string | null;
 }
 
 export default function HorseOddsRatings({
@@ -17,6 +17,20 @@ export default function HorseOddsRatings({
   ttrRating,
   ttrPrice,
 }: Props) {
+  // Helper function to format price
+  const formatPrice = (price: number | string | null | undefined): string => {
+    if (price === null || price === undefined) return '-';
+    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+    return isNaN(numPrice) ? '-' : `$${numPrice.toFixed(2)}`;
+  };
+
+  // Helper function to format rating
+  const formatRating = (rating: number | string | null | undefined): string => {
+    if (rating === null || rating === undefined) return '-';
+    const numRating = typeof rating === 'string' ? parseInt(rating, 10) : rating;
+    return isNaN(numRating) ? '-' : numRating.toString();
+  };
+
   const formatTime = (timestamp: string | null) => {
     if (!timestamp) return '';
     const date = new Date(timestamp);
@@ -29,8 +43,11 @@ export default function HorseOddsRatings({
   };
 
   // Determine if horse is value (TTR price < TAB price)
-  const isValue = ttrPrice && tabFixedWinPrice && ttrPrice < tabFixedWinPrice;
-  const isOvers = ttrPrice && tabFixedWinPrice && ttrPrice > tabFixedWinPrice;
+  const numTtrPrice = ttrPrice ? (typeof ttrPrice === 'string' ? parseFloat(ttrPrice) : ttrPrice) : null;
+  const numTabFixedWinPrice = tabFixedWinPrice ? (typeof tabFixedWinPrice === 'string' ? parseFloat(tabFixedWinPrice) : tabFixedWinPrice) : null;
+  
+  const isValue = numTtrPrice && numTabFixedWinPrice && !isNaN(numTtrPrice) && !isNaN(numTabFixedWinPrice) && numTtrPrice < numTabFixedWinPrice;
+  const isOvers = numTtrPrice && numTabFixedWinPrice && !isNaN(numTtrPrice) && !isNaN(numTabFixedWinPrice) && numTtrPrice > numTabFixedWinPrice;
 
   return (
     <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-green-50 rounded-lg border border-purple-200">
@@ -41,7 +58,7 @@ export default function HorseOddsRatings({
             TAB Fixed Win
           </div>
           <div className="text-2xl font-bold text-purple-600">
-            {tabFixedWinPrice ? `$${tabFixedWinPrice.toFixed(2)}` : <span className="text-gray-400">-</span>}
+            <span className={!tabFixedWinPrice ? 'text-gray-400' : ''}>{formatPrice(tabFixedWinPrice)}</span>
           </div>
           {tabFixedWinTimestamp && (
             <div className="text-xs text-gray-400 mt-1">
@@ -56,7 +73,7 @@ export default function HorseOddsRatings({
             TAB Fixed Place
           </div>
           <div className="text-2xl font-bold text-purple-600">
-            {tabFixedPlacePrice ? `$${tabFixedPlacePrice.toFixed(2)}` : <span className="text-gray-400">-</span>}
+            <span className={!tabFixedPlacePrice ? 'text-gray-400' : ''}>{formatPrice(tabFixedPlacePrice)}</span>
           </div>
           {tabFixedPlaceTimestamp && (
             <div className="text-xs text-gray-400 mt-1">
@@ -71,7 +88,7 @@ export default function HorseOddsRatings({
             TTR Rating
           </div>
           <div className="text-2xl font-bold text-green-600">
-            {ttrRating ? ttrRating : <span className="text-gray-400">-</span>}
+            <span className={!ttrRating ? 'text-gray-400' : ''}>{formatRating(ttrRating)}</span>
           </div>
           <div className="text-xs text-gray-400 mt-1">
             Algorithm
@@ -84,7 +101,7 @@ export default function HorseOddsRatings({
             TTR Price
           </div>
           <div className="text-2xl font-bold text-green-600">
-            {ttrPrice ? `$${ttrPrice.toFixed(2)}` : <span className="text-gray-400">-</span>}
+            <span className={!ttrPrice ? 'text-gray-400' : ''}>{formatPrice(ttrPrice)}</span>
           </div>
           <div className="text-xs text-gray-400 mt-1">
             Model Price

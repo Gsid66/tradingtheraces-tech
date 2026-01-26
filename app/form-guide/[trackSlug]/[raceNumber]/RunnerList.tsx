@@ -8,12 +8,12 @@ const TBA_TEXT = 'TBA';
 
 // Extended runner interface with TAB and TTR data
 interface EnrichedRunner extends PFRunner {
-  tabFixedWinPrice?: number | null;
-  tabFixedPlacePrice?: number | null;
+  tabFixedWinPrice?: number | string | null;
+  tabFixedPlacePrice?: number | string | null;
   tabFixedWinTimestamp?: string | null;
   tabFixedPlaceTimestamp?: string | null;
-  ttrRating?: number | null;
-  ttrPrice?: number | null;
+  ttrRating?: number | string | null;
+  ttrPrice?: number | string | null;
 }
 
 interface Props {
