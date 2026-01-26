@@ -11,6 +11,22 @@ export default function RaceDetails({ race, meeting }: Props) {
   // Calculate time until race (mock for now)
   const timeUntilRace = '-2m';
 
+  // Format start time to display format (e.g., "2:05 PM")
+  const formatStartTime = (startTime: string) => {
+    try {
+      const date = new Date(startTime);
+      return date.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+    } catch {
+      return '';
+    }
+  };
+
+  const startTimeDisplay = race.startTime ? formatStartTime(race.startTime) : '';
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       {/* Race Title Row */}
@@ -24,15 +40,10 @@ export default function RaceDetails({ race, meeting }: Props) {
           {/* Race Name */}
           <div>
             <h2 className="text-xl font-bold text-gray-900">
-              {race.name}
+              {race.name}{startTimeDisplay && ` - ${startTimeDisplay}`}
             </h2>
           </div>
         </div>
-
-        {/* Race Replays Link */}
-        <a href="#" className="text-green-700 hover:text-green-800 font-medium text-sm underline">
-          {meeting.track.name} Replays
-        </a>
       </div>
 
       {/* Race Info Icons */}
