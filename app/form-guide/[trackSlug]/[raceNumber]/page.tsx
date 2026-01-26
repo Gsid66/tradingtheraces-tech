@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { format } from 'date-fns';
 import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
 import { getPostgresAPIClient } from '@/lib/integrations/postgres-api';
 import { getRaceCardRatingsClient } from '@/lib/integrations/race-card-ratings';
@@ -70,8 +71,9 @@ export default async function RacePage({ params }: Props) {
   let ttrData: any = null;
   try {
     const ttrClient = getRaceCardRatingsClient();
-    const dateStr = racesResponse.payLoad?.meetingDate;
-    if (dateStr) {
+    
+    if (ttrClient) {
+      const dateStr = format(new Date(racesResponse.payLoad?.meetingDate || ''), 'yyyy-MM-dd');
       const ttrResponse = await ttrClient.getRatingsForRace(
         dateStr,
         meeting.track.name,
@@ -99,8 +101,8 @@ export default async function RacePage({ params }: Props) {
       tabFixedPlacePrice: tabRunner?.tab_fixed_place_price || null,
       tabFixedWinTimestamp: tabRunner?.tab_fixed_win_timestamp || null,
       tabFixedPlaceTimestamp: tabRunner?.tab_fixed_place_timestamp || null,
-      ttrRating: ttrRunner?.ttr_rating || null,
-      ttrPrice: ttrRunner?.ttr_price || null,
+      ttrRating: ttrRunner?.rating || null,
+      ttrPrice: ttrRunner?.price || null,
     };
   });
 
