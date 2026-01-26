@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { PFMeeting, PFRace } from '@/lib/integrations/punting-form/client';
 
 interface MeetingWithRaces extends PFMeeting {
@@ -58,7 +58,7 @@ export default function FormGuideContent({ meetings }: Props) {
         <div className="sticky top-0 z-20 backdrop-blur-xl bg-white/10 border-b border-white/20 shadow-2xl">
           <div className="max-w-7xl mx-auto px-4 py-6">
             <h1 className="text-4xl font-black text-white mb-3">
-              Today's Australian Horse Racing
+              Today&apos;s Australian Horse Racing
             </h1>
             <div className="flex items-center gap-4 text-white/80 text-lg">
               <span>{aedtDate}</span>
@@ -96,10 +96,8 @@ export default function FormGuideContent({ meetings }: Props) {
 }
 
 function NextToJumpButton({ meetings, currentTime }: { meetings: MeetingWithRaces[]; currentTime: Date }) {
-  const [countdown, setCountdown] = useState('--:--');
-  const [nextRace, setNextRace] = useState<{ track: string; raceNumber: number } | null>(null);
-
-  useEffect(() => {
+  // Calculate next race and countdown
+  const { countdown, nextRace } = useMemo(() => {
     // Find the next race across all meetings
     let closestRace: { time: Date; track: string; raceNumber: number } | null = null;
     
@@ -121,7 +119,7 @@ function NextToJumpButton({ meetings, currentTime }: { meetings: MeetingWithRace
     });
 
     if (closestRace) {
-      setNextRace({ track: closestRace.track, raceNumber: closestRace.raceNumber });
+      const nextRaceInfo = { track: closestRace.track, raceNumber: closestRace.raceNumber };
       
       // Calculate time difference
       const diff = closestRace.time.getTime() - currentTime.getTime();
@@ -132,17 +130,19 @@ function NextToJumpButton({ meetings, currentTime }: { meetings: MeetingWithRace
         const minutes = Math.floor((totalSeconds % 3600) / 60);
         const seconds = totalSeconds % 60;
         
+        let countdownText;
         if (hours > 0) {
-          setCountdown(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+          countdownText = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         } else {
-          setCountdown(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+          countdownText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
         }
+        
+        return { countdown: countdownText, nextRace: nextRaceInfo };
       } else {
-        setCountdown('Starting now');
+        return { countdown: 'Starting now', nextRace: nextRaceInfo };
       }
     } else {
-      setCountdown('--:--');
-      setNextRace(null);
+      return { countdown: '--:--', nextRace: null };
     }
   }, [meetings, currentTime]);
 
