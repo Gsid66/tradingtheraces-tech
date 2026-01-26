@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
+import { getPostgresAPIClient } from '@/lib/integrations/postgres-api';
+import { getRaceCardRatingsClient } from '@/lib/integrations/race-card-ratings';
 import RaceTabs from './RaceTabs';
 import RaceDetails from './RaceDetails';
 import RunnerList from './RunnerList';
@@ -44,6 +46,63 @@ export default async function RacePage({ params }: Props) {
 
   // Get runners
   const runners = race.runners || [];
+
+  // Fetch TAB odds data
+  let tabData: any = null;
+  try {
+    const pgClient = getPostgresAPIClient();
+    const dateStr = racesResponse.payLoad?.meetingDate; // Format: YYYY-MM-DD
+    if (dateStr) {
+      const tabRacesResponse = await pgClient.getRacesByDate(dateStr);
+      
+      // Find matching race
+      tabData = tabRacesResponse.data?.find(
+        (r: any) => 
+          r.meeting_name.toLowerCase().includes(meeting.track.name.toLowerCase()) &&
+          r.race_number === raceNum
+      );
+    }
+  } catch (error) {
+    console.error('Error fetching TAB data:', error);
+  }
+
+  // Fetch TTR ratings data
+  let ttrData: any = null;
+  try {
+    const ttrClient = getRaceCardRatingsClient();
+    const dateStr = racesResponse.payLoad?.meetingDate;
+    if (dateStr) {
+      const ttrResponse = await ttrClient.getRatingsForRace(
+        dateStr,
+        meeting.track.name,
+        raceNum
+      );
+      ttrData = ttrResponse.data;
+    }
+  } catch (error) {
+    console.error('Error fetching TTR ratings:', error);
+  }
+
+  // Merge data into runners (match by horse name)
+  const enrichedRunners = runners.map((runner: any) => {
+    const tabRunner = tabData?.runners?.find(
+      (tr: any) => tr.horse_name.toLowerCase() === (runner.horseName || runner.name)?.toLowerCase()
+    );
+    
+    const ttrRunner = ttrData?.find(
+      (tr: any) => tr.horse_name.toLowerCase() === (runner.horseName || runner.name)?.toLowerCase()
+    );
+
+    return {
+      ...runner,
+      tabFixedWinPrice: tabRunner?.tab_fixed_win_price || null,
+      tabFixedPlacePrice: tabRunner?.tab_fixed_place_price || null,
+      tabFixedWinTimestamp: tabRunner?.tab_fixed_win_timestamp || null,
+      tabFixedPlaceTimestamp: tabRunner?.tab_fixed_place_timestamp || null,
+      ttrRating: ttrRunner?.ttr_rating || null,
+      ttrPrice: ttrRunner?.ttr_price || null,
+    };
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -113,7 +172,7 @@ export default async function RacePage({ params }: Props) {
         </div>
 
         {/* Runner List */}
-        <RunnerList runners={runners} />
+        <RunnerList runners={enrichedRunners} />
       </div>
     </div>
   );

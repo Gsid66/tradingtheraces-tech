@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { PFRunner } from '@/lib/integrations/punting-form/client';
+import HorseOddsRatings from './HorseOddsRatings';
 
 const TBA_TEXT = 'TBA';
 
@@ -191,6 +192,16 @@ function RunnerRow({ runner, position }: { runner: PFRunner; position: number })
       {/* Expanded Details Panel */}
       {isExpanded && (
         <div className="px-6 pb-6 bg-gray-50">
+          {/* TAB Odds and TTR Ratings */}
+          <HorseOddsRatings
+            tabFixedWinPrice={(runner as any).tabFixedWinPrice}
+            tabFixedPlacePrice={(runner as any).tabFixedPlacePrice}
+            tabFixedWinTimestamp={(runner as any).tabFixedWinTimestamp}
+            tabFixedPlaceTimestamp={(runner as any).tabFixedPlaceTimestamp}
+            ttrRating={(runner as any).ttrRating}
+            ttrPrice={(runner as any).ttrPrice}
+          />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
             {/* Left Column */}
             <div className="space-y-4">
