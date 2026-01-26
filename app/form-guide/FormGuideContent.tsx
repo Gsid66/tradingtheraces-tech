@@ -166,6 +166,21 @@ function NextToJumpButton({ meetings, currentTime }: { meetings: MeetingWithRace
   );
 }
 
+// Helper function to format race time in AEDT
+function formatRaceTime(startTime: string) {
+  try {
+    const date = new Date(startTime);
+    return date.toLocaleTimeString('en-AU', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Australia/Sydney'
+    });
+  } catch {
+    return '--:--';
+  }
+}
+
 function MeetingCard({ meeting, index }: { meeting: MeetingWithRaces; index: number }) {
   const trackSlug = meeting.track.name.toLowerCase().replace(/\s+/g, '-');
   const raceCount = meeting.races ?? 0;
@@ -180,21 +195,6 @@ function MeetingCard({ meeting, index }: { meeting: MeetingWithRaces; index: num
   ];
 
   const gradient = gradients[index % gradients.length];
-
-  // Helper function to format race time in AEDT
-  const formatRaceTime = (startTime: string) => {
-    try {
-      const date = new Date(startTime);
-      return date.toLocaleTimeString('en-AU', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-        timeZone: 'Australia/Sydney'
-      });
-    } catch {
-      return '--:--';
-    }
-  };
 
   return (
     <div
