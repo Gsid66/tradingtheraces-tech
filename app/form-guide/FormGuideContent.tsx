@@ -1,10 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { PFMeeting } from '@/lib/integrations/punting-form/client';
+import type { PFMeeting, PFRace } from '@/lib/integrations/punting-form/client';
+
+interface MeetingWithRaces extends PFMeeting {
+  raceDetails?: PFRace[];
+}
 
 interface Props {
-  meetings: PFMeeting[];
+  meetings: MeetingWithRaces[];
 }
 
 export default function FormGuideContent({ meetings }: Props) {
@@ -91,9 +95,56 @@ export default function FormGuideContent({ meetings }: Props) {
   );
 }
 
-function NextToJumpButton({ meetings, currentTime }: { meetings: PFMeeting[]; currentTime: Date }) {
-  // This is a placeholder - we'll implement countdown logic later
+function NextToJumpButton({ meetings, currentTime }: { meetings: MeetingWithRaces[]; currentTime: Date }) {
   const [countdown, setCountdown] = useState('--:--');
+  const [nextRace, setNextRace] = useState<{ track: string; raceNumber: number } | null>(null);
+
+  useEffect(() => {
+    // Find the next race across all meetings
+    let closestRace: { time: Date; track: string; raceNumber: number } | null = null;
+    
+    meetings.forEach(meeting => {
+      meeting.raceDetails?.forEach(race => {
+        if (race.startTime) {
+          const raceTime = new Date(race.startTime);
+          if (raceTime > currentTime) {
+            if (!closestRace || raceTime < closestRace.time) {
+              closestRace = {
+                time: raceTime,
+                track: meeting.track.name,
+                raceNumber: race.number
+              };
+            }
+          }
+        }
+      });
+    });
+
+    if (closestRace) {
+      setNextRace({ track: closestRace.track, raceNumber: closestRace.raceNumber });
+      
+      // Calculate time difference
+      const diff = closestRace.time.getTime() - currentTime.getTime();
+      const totalSeconds = Math.floor(diff / 1000);
+      
+      if (totalSeconds > 0) {
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        
+        if (hours > 0) {
+          setCountdown(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+        } else {
+          setCountdown(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        }
+      } else {
+        setCountdown('Starting now');
+      }
+    } else {
+      setCountdown('--:--');
+      setNextRace(null);
+    }
+  }, [meetings, currentTime]);
 
   return (
     <div className="flex justify-center">
@@ -101,16 +152,24 @@ function NextToJumpButton({ meetings, currentTime }: { meetings: PFMeeting[]; cu
         <span className="text-2xl">⚡</span>
         <div>
           <div className="text-sm font-medium opacity-90">Next To Jump</div>
-          <div className="text-lg font-bold font-mono">{countdown} remaining</div>
+          <div className="text-lg font-bold font-mono">
+            {countdown} remaining
+            {nextRace && (
+              <span className="text-sm ml-2 opacity-75">
+                ({nextRace.track} R{nextRace.raceNumber})
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function MeetingCard({ meeting, index }: { meeting: PFMeeting; index: number }) {
+function MeetingCard({ meeting, index }: { meeting: MeetingWithRaces; index: number }) {
   const trackSlug = meeting.track.name.toLowerCase().replace(/\s+/g, '-');
   const raceCount = meeting.races ?? 0;
+  const races = meeting.raceDetails || [];
 
   const gradients = [
     'from-purple-500/20 to-pink-500/20',
@@ -121,6 +180,21 @@ function MeetingCard({ meeting, index }: { meeting: PFMeeting; index: number }) 
   ];
 
   const gradient = gradients[index % gradients.length];
+
+  // Helper function to format race time in AEDT
+  const formatRaceTime = (startTime: string) => {
+    try {
+      const date = new Date(startTime);
+      return date.toLocaleTimeString('en-AU', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'Australia/Sydney'
+      });
+    } catch {
+      return '--:--';
+    }
+  };
 
   return (
     <div
@@ -136,7 +210,7 @@ function MeetingCard({ meeting, index }: { meeting: PFMeeting; index: number }) 
               className="group/link inline-block"
             >
               <h3 className="text-3xl font-black text-white mb-2 group-hover/link:text-transparent group-hover/link:bg-clip-text group-hover/link:bg-gradient-to-r group-hover/link:from-purple-400 group-hover/link:to-pink-400 transition-all duration-300">
-                {meeting.track.name} ({raceCount} races)
+                {meeting.track.name} ({raceCount} {raceCount === 1 ? 'race' : 'races'})
               </h3>
             </a>
             <div className="flex flex-wrap gap-3 text-sm text-white/70">
@@ -157,21 +231,38 @@ function MeetingCard({ meeting, index }: { meeting: PFMeeting; index: number }) 
       {/* Race Pills Section */}
       <div className="p-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-          {Array.from({ length: raceCount }, (_, i) => i + 1).map((raceNum) => (
-            <a
-              key={raceNum}
-              href={`/form-guide/${trackSlug}/${raceNum}`}
-              className="flex flex-col items-center gap-2 p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg group/race"
-            >
-              <span className="text-xl font-black text-white group-hover/race:text-transparent group-hover/race:bg-clip-text group-hover/race:bg-gradient-to-r group-hover/race:from-purple-400 group-hover/race:to-pink-400">
-                R{raceNum}
-              </span>
-              {/* Placeholder for race time - will be implemented later */}
-              <span className="text-xs text-white/50 font-medium">
-                --:--
-              </span>
-            </a>
-          ))}
+          {races.length > 0 ? (
+            races.map((race) => (
+              <a
+                key={race.raceId}
+                href={`/form-guide/${trackSlug}/${race.number}`}
+                className="flex flex-col items-center gap-2 p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg group/race"
+              >
+                <span className="text-xl font-black text-white group-hover/race:text-transparent group-hover/race:bg-clip-text group-hover/race:bg-gradient-to-r group-hover/race:from-purple-400 group-hover/race:to-pink-400">
+                  R{race.number}
+                </span>
+                <span className="text-xs text-white/70 font-medium">
+                  {race.startTime ? formatRaceTime(race.startTime) : '--:--'}
+                </span>
+              </a>
+            ))
+          ) : (
+            // Fallback if race details aren't loaded
+            Array.from({ length: raceCount }, (_, i) => i + 1).map((raceNum) => (
+              <a
+                key={raceNum}
+                href={`/form-guide/${trackSlug}/${raceNum}`}
+                className="flex flex-col items-center gap-2 p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg group/race"
+              >
+                <span className="text-xl font-black text-white group-hover/race:text-transparent group-hover/race:bg-clip-text group-hover/race:bg-gradient-to-r group-hover/race:from-purple-400 group-hover/race:to-pink-400">
+                  R{raceNum}
+                </span>
+                <span className="text-xs text-white/50 font-medium">
+                  --:--
+                </span>
+              </a>
+            ))
+          )}
         </div>
       </div>
     </div>
