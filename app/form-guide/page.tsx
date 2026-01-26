@@ -11,6 +11,25 @@ export default async function FormGuidePage() {
   const meetingsResponse = await pfClient.getTodaysMeetings();
   const meetings = meetingsResponse.payLoad || [];
 
+  // Fetch race details for each meeting to get start times
+  const meetingsWithRaces = await Promise.all(
+    meetings.map(async (meeting) => {
+      try {
+        const racesResponse = await pfClient.getAllRacesForMeeting(meeting.meetingId);
+        return {
+          ...meeting,
+          raceDetails: racesResponse.payLoad?.races || []
+        };
+      } catch (error) {
+        console.error(`Error fetching races for ${meeting.track.name}:`, error);
+        return {
+          ...meeting,
+          raceDetails: []
+        };
+      }
+    })
+  );
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Suspense fallback={
@@ -21,7 +40,7 @@ export default async function FormGuidePage() {
           </div>
         </div>
       }>
-        <FormGuideContent meetings={meetings} />
+        <FormGuideContent meetings={meetingsWithRaces} />
       </Suspense>
     </div>
   );
