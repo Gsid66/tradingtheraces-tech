@@ -11,9 +11,14 @@ export default async function FormGuidePage() {
   const meetingsResponse = await pfClient.getTodaysMeetings();
   const meetings = meetingsResponse.payLoad || [];
 
+  // Deduplicate meetings by meetingId
+  const uniqueMeetings = meetings.filter((meeting, index, self) =>
+    index === self.findIndex((m) => m.meetingId === meeting.meetingId)
+  );
+
   // Fetch race details for each meeting to get start times
   const meetingsWithRaces = await Promise.all(
-    meetings.map(async (meeting) => {
+    uniqueMeetings.map(async (meeting) => {
       try {
         const racesResponse = await pfClient.getAllRacesForMeeting(meeting.meetingId);
         return {
