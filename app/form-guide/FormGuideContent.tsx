@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { PFMeeting } from '@/lib/integrations/punting-form/client';
 
 interface Props {
@@ -8,36 +8,37 @@ interface Props {
 }
 
 export default function FormGuideContent({ meetings }: Props) {
-  const [selectedDay, setSelectedDay] = useState('today');
-  const [selectedType, setSelectedType] = useState('horses');
-  const [selectedRegion, setSelectedRegion] = useState('australia');
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Debug: Log meetings data
-  console.log('📊 Total meetings:', meetings.length);
-  console.log('📋 Meetings data:', meetings.map(m => ({ 
-    name: m.track.name, 
-    races: m.races,
-    meetingId: m.meetingId 
-  })));
+  // Update clock every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-  const filteredMeetings = meetings.filter(meeting => {
-    if (selectedRegion === 'australia') {
-      return meeting.track.country === 'AUS' || meeting.track.country === 'NZ';
-    }
-    return meeting.track.country !== 'AUS' && meeting.track.country !== 'NZ';
+  // Filter to only Australian meetings (AUS and NZ)
+  const australianMeetings = meetings.filter(meeting => 
+    meeting.track.country === 'AUS' || meeting.track.country === 'NZ'
+  );
+
+  // Format date in AEDT timezone
+  const aedtDate = currentTime.toLocaleDateString('en-AU', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'Australia/Sydney'
   });
 
-  console.log('✅ Filtered meetings:', filteredMeetings.length);
-
-  const days = [
-    { id: 'yesterday', label: 'Yesterday', icon: '◀' },
-    { id: 'next-to-jump', label: 'Next Jump', icon: '⚡' },
-    { id: 'today', label: 'Today', icon: '●' },
-    { id: 'tomorrow', label: 'Tomorrow', icon: '▶' },
-    { id: 'saturday', label: 'Saturday', icon: '📅' },
-    { id: 'sunday', label: 'Sunday', icon: '📅' },
-    { id: 'futures', label: 'Futures', icon: '🔮' }
-  ];
+  // Format time in AEDT timezone
+  const aedtTime = currentTime.toLocaleTimeString('en-AU', {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: 'Australia/Sydney',
+    hour12: true
+  }) + ' AEDT';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -49,87 +50,37 @@ export default function FormGuideContent({ meetings }: Props) {
       </div>
 
       <div className="relative z-10">
+        {/* New Header Section */}
         <div className="sticky top-0 z-20 backdrop-blur-xl bg-white/10 border-b border-white/20 shadow-2xl">
-          <div className="max-w-7xl mx-auto px-4 py-4">
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              {days.map(({ id, label, icon }) => (
-                <button
-                  key={id}
-                  onClick={() => setSelectedDay(id)}
-                  className={`group flex-shrink-0 px-6 py-3 rounded-2xl font-bold text-sm whitespace-nowrap transition-all duration-300 transform hover:scale-105 ${
-                    selectedDay === id
-                      ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 text-white shadow-lg shadow-purple-500/50 scale-105'
-                      : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
-                  }`}
-                >
-                  <span className="mr-2 text-lg">{icon}</span>
-                  {label}
-                </button>
-              ))}
+          <div className="max-w-7xl mx-auto px-4 py-6">
+            <h1 className="text-4xl font-black text-white mb-3">
+              Today's Australian Horse Racing
+            </h1>
+            <div className="flex items-center gap-4 text-white/80 text-lg">
+              <span>{aedtDate}</span>
+              <span className="text-white/40">|</span>
+              <span className="font-mono">{aedtTime}</span>
             </div>
           </div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex flex-wrap items-center justify-between gap-6 mb-8">
-            <div className="flex gap-4">
-              {[
-                { id: 'horses', label: 'Horses', gradient: 'from-emerald-400 to-cyan-400', icon: '🏇' },
-                { id: 'greyhounds', label: 'Greyhounds', gradient: 'from-orange-400 to-red-400', icon: '🐕' },
-                { id: 'harness', label: 'Harness', gradient: 'from-blue-400 to-indigo-400', icon: '🏁' }
-              ].map(({ id, label, gradient, icon }) => (
-                <button
-                  key={id}
-                  onClick={() => setSelectedType(id)}
-                  className={`group relative px-8 py-4 rounded-2xl font-bold text-sm transition-all duration-300 transform hover:scale-110 hover:-rotate-1 ${
-                    selectedType === id
-                      ? `bg-gradient-to-r ${gradient} text-white shadow-2xl`
-                      : 'bg-white/10 text-white/60 hover:bg-white/20'
-                  }`}
-                >
-                  {selectedType === id && (
-                    <div className={`absolute inset-0 bg-gradient-to-r ${gradient} rounded-2xl blur-xl opacity-50 animate-pulse`}></div>
-                  )}
-                  <span className="relative flex items-center gap-2">
-                    <span className="text-xl">{icon}</span>
-                    {label}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <div className="flex gap-2 bg-white/10 p-2 rounded-2xl backdrop-blur-sm">
-              {[
-                { id: 'australia', label: 'Australia', flag: '🇦🇺' },
-                { id: 'international', label: 'International', flag: '🌍' }
-              ].map(({ id, label, flag }) => (
-                <button
-                  key={id}
-                  onClick={() => setSelectedRegion(id)}
-                  className={`px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 ${
-                    selectedRegion === id
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
-                      : 'text-white/60 hover:text-white'
-                  }`}
-                >
-                  <span className="mr-2">{flag}</span>
-                  {label}
-                </button>
-              ))}
-            </div>
+          {/* Next To Jump Section */}
+          <div className="mb-8">
+            <NextToJumpButton meetings={australianMeetings} currentTime={currentTime} />
           </div>
 
-          {filteredMeetings.length === 0 ? (
+          {australianMeetings.length === 0 ? (
             <div className="text-center py-24">
               <div className="inline-block p-8 bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20">
                 <div className="text-6xl mb-4">🏇</div>
                 <p className="text-2xl font-bold text-white mb-2">No Races Today</p>
-                <p className="text-white/60">Check back later for {selectedRegion} racing</p>
+                <p className="text-white/60">Check back later for Australian racing</p>
               </div>
             </div>
           ) : (
             <div className="grid gap-6">
-              {filteredMeetings.map((meeting, index) => (
+              {australianMeetings.map((meeting, index) => (
                 <MeetingCard key={meeting.meetingId} meeting={meeting} index={index} />
               ))}
             </div>
@@ -140,13 +91,27 @@ export default function FormGuideContent({ meetings }: Props) {
   );
 }
 
-function MeetingCard({ meeting, index }:  { meeting: PFMeeting; index: number }) {
+function NextToJumpButton({ meetings, currentTime }: { meetings: PFMeeting[]; currentTime: Date }) {
+  // This is a placeholder - we'll implement countdown logic later
+  const [countdown, setCountdown] = useState('--:--');
+
+  return (
+    <div className="flex justify-center">
+      <div className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 text-white rounded-2xl shadow-lg shadow-purple-500/50">
+        <span className="text-2xl">⚡</span>
+        <div>
+          <div className="text-sm font-medium opacity-90">Next To Jump</div>
+          <div className="text-lg font-bold font-mono">{countdown} remaining</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MeetingCard({ meeting, index }: { meeting: PFMeeting; index: number }) {
   const trackSlug = meeting.track.name.toLowerCase().replace(/\s+/g, '-');
   const raceCount = meeting.races ?? 0;
-  
-  // Debug log
-  console.log(`🏇 ${meeting.track.name}: races = ${meeting.races}, raceCount = ${raceCount}`);
-  
+
   const gradients = [
     'from-purple-500/20 to-pink-500/20',
     'from-blue-500/20 to-cyan-500/20',
@@ -154,11 +119,11 @@ function MeetingCard({ meeting, index }:  { meeting: PFMeeting; index: number })
     'from-orange-500/20 to-red-500/20',
     'from-indigo-500/20 to-purple-500/20'
   ];
-  
+
   const gradient = gradients[index % gradients.length];
 
   return (
-    <div 
+    <div
       className={`group bg-gradient-to-br ${gradient} backdrop-blur-xl rounded-3xl border border-white/20 overflow-hidden hover:border-white/40 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl`}
       style={{ animation: `fadeIn 0.5s ease-out ${index * 0.1}s backwards` }}
     >
@@ -166,17 +131,49 @@ function MeetingCard({ meeting, index }:  { meeting: PFMeeting; index: number })
       <div className="relative p-6 bg-gradient-to-r from-white/10 to-transparent border-b border-white/10">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="flex-1">
-                        <a 
-                          href={`/form-guide/${trackSlug}/1`}
-                          className="group/link inline-block"
-                        >
-                          <h3 className="text-3xl font-black text-white mb-2 group-hover/link:text-transparent group-hover/link:bg-clip-text group-hover/link:bg-gradient-to-r group-hover/link:from-purple-400 group-hover/link:to-pink-400 transition-all duration-300">
-                            {meeting.track.name}
-                          </h3>
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            }
+            <a
+              href={`/form-guide/${trackSlug}/1`}
+              className="group/link inline-block"
+            >
+              <h3 className="text-3xl font-black text-white mb-2 group-hover/link:text-transparent group-hover/link:bg-clip-text group-hover/link:bg-gradient-to-r group-hover/link:from-purple-400 group-hover/link:to-pink-400 transition-all duration-300">
+                {meeting.track.name} ({raceCount} races)
+              </h3>
+            </a>
+            <div className="flex flex-wrap gap-3 text-sm text-white/70">
+              <span className="flex items-center gap-1">
+                <span className="text-white/90 font-semibold">{meeting.track.state}</span>
+              </span>
+              {meeting.railPosition && (
+                <span className="flex items-center gap-1">
+                  <span className="text-white/50">•</span>
+                  <span>Rail: {meeting.railPosition}</span>
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Race Pills Section */}
+      <div className="p-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+          {Array.from({ length: raceCount }, (_, i) => i + 1).map((raceNum) => (
+            <a
+              key={raceNum}
+              href={`/form-guide/${trackSlug}/${raceNum}`}
+              className="flex flex-col items-center gap-2 p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg group/race"
+            >
+              <span className="text-xl font-black text-white group-hover/race:text-transparent group-hover/race:bg-clip-text group-hover/race:bg-gradient-to-r group-hover/race:from-purple-400 group-hover/race:to-pink-400">
+                R{raceNum}
+              </span>
+              {/* Placeholder for race time - will be implemented later */}
+              <span className="text-xs text-white/50 font-medium">
+                --:--
+              </span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
