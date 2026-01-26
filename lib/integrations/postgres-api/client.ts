@@ -45,22 +45,37 @@ export class PostgresAPIClient {
     const url = `${this.baseUrl}${endpoint}`;
     console.log('🔗 Postgres API URL:', url);
 
-    const response = await fetch(url, {
-      cache: 'no-store',
-    });
+    try {
+      const response = await fetch(url, {
+        cache: 'no-store',
+      });
 
-    if (!response.ok) {
-      throw new Error(`Postgres API request failed: ${response.statusText}`);
+      if (!response.ok) {
+        // Get actual error message from API
+        let errorMsg = response.statusText;
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.message || errorData.error || errorMsg;
+        } catch {
+          errorMsg = await response.text().catch(() => errorMsg);
+        }
+        
+        console.error('❌ Postgres API Error:', response.status, errorMsg);
+        throw new Error(`Postgres API (${response.status}): ${errorMsg}`);
+      }
+
+      return response.json();
+    } catch (error: any) {
+      console.error('❌ Postgres API Fetch Failed:', error.message);
+      throw error;
     }
-
-    return response.json();
   }
 
   /**
    * Get races by date
    */
-  async getRacesByDate(date: string): Promise<PostgresAPIResponse<TabRace[]>> {
-    return this.get(`/api/race-data/races?date=${date}`);
+  async getRacesByDate(date: string, venue: string = 'all'): Promise<PostgresAPIResponse<TabRace[]>> {
+    return this.get(`/api/race-data/races?date=${date}&venue=${venue}`);
   }
 
   /**
@@ -78,12 +93,12 @@ export class PostgresAPIClient {
   }
 }
 
-export function getPostgresAPIClient(): PostgresAPIClient {
+export function getPostgresAPIClient(): PostgresAPIClient | null {
   const apiUrl = process.env.POSTGRES_API_URL;
 
   if (!apiUrl) {
-    console.warn('POSTGRES_API_URL environment variable is not set');
-    throw new Error('POSTGRES_API_URL environment variable is not set');
+    console.warn('⚠️ POSTGRES_API_URL not set - TAB odds unavailable');
+    return null;
   }
 
   return new PostgresAPIClient(apiUrl);

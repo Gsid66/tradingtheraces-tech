@@ -48,32 +48,38 @@ export default async function RacePage({ params }: Props) {
   // Get runners
   const runners = race.runners || [];
 
-  // Fetch TAB odds data
+  // Fetch TAB data (don't crash if it fails)
   let tabData: any = null;
   try {
     const pgClient = getPostgresAPIClient();
-    const dateStr = racesResponse.payLoad?.meetingDate; // Format: YYYY-MM-DD
-    if (dateStr) {
+    
+    if (pgClient) {
+      // Format date as YYYY-MM-DD
+      const dateStr = format(new Date(meeting.meetingDate), 'yyyy-MM-dd');
+      
       const tabRacesResponse = await pgClient.getRacesByDate(dateStr);
       
       // Find matching race
-      tabData = tabRacesResponse.data?.find(
-        (r: any) => 
-          r.meeting_name.toLowerCase().includes(meeting.track.name.toLowerCase()) &&
-          r.race_number === raceNum
-      );
+      if (tabRacesResponse.success) {
+        tabData = tabRacesResponse.data?.find(
+          (r: any) => 
+            r.meeting_name?.toLowerCase().includes(meeting.track.name.toLowerCase()) &&
+            r.race_number === raceNum
+        );
+      }
     }
-  } catch (error) {
-    console.error('Error fetching TAB data:', error);
+  } catch (error: any) {
+    console.warn('⚠️ TAB data unavailable:', error.message);
+    // Continue without TAB data
   }
 
-  // Fetch TTR ratings data
+  // Fetch TTR data (don't crash if it fails)
   let ttrData: any = null;
   try {
     const ttrClient = getRaceCardRatingsClient();
     
     if (ttrClient) {
-      const dateStr = format(new Date(racesResponse.payLoad?.meetingDate || ''), 'yyyy-MM-dd');
+      const dateStr = format(new Date(meeting.meetingDate), 'yyyy-MM-dd');
       const ttrResponse = await ttrClient.getRatingsForRace(
         dateStr,
         meeting.track.name,
@@ -81,8 +87,9 @@ export default async function RacePage({ params }: Props) {
       );
       ttrData = ttrResponse.data;
     }
-  } catch (error) {
-    console.error('Error fetching TTR ratings:', error);
+  } catch (error: any) {
+    console.warn('⚠️ TTR data unavailable:', error.message);
+    // Continue without TTR data
   }
 
   // Merge data into runners (match by horse name)
