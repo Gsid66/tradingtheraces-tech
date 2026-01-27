@@ -11,33 +11,36 @@ interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
+// Utility function to format date to YYYY-MM-DD
+function formatDate(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
+// Utility function to get default date range
+function getDefaultDateRange() {
+  const today = new Date();
+  const thirtyDaysAgo = new Date(today);
+  thirtyDaysAgo.setDate(today.getDate() - 30);
+  
+  return {
+    today,
+    thirtyDaysAgo,
+    todayFormatted: formatDate(today),
+    thirtyDaysAgoFormatted: formatDate(thirtyDaysAgo),
+  };
+}
+
 async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
   const raceCardsApiUrl = process.env.RACE_CARD_RATINGS_API_URL || 'https://race-cards-ratings.onrender.com';
-  
-  if (!raceCardsApiUrl) {
-    console.error('❌ RACE_CARD_RATINGS_API_URL is not set');
-    console.error('Set it to: https://race-cards-ratings.onrender.com');
-    return {
-      data: [],
-      total: 0,
-      page: 1,
-      perPage: 50,
-      totalPages: 0
-    };
-  }
 
   try {
-    // Calculate default dates for API call
-    const today = new Date();
-    const thirtyDaysAgo = new Date(today);
-    thirtyDaysAgo.setDate(today.getDate() - 30);
-    const formatDate = (date: Date) => date.toISOString().split('T')[0];
+    const { thirtyDaysAgoFormatted, todayFormatted } = getDefaultDateRange();
 
     const params = new URLSearchParams();
     
     // Required date range
-    params.append('start_date', filters.dateFrom || formatDate(thirtyDaysAgo));
-    params.append('end_date', filters.dateTo || formatDate(today));
+    params.append('start_date', filters.dateFrom || thirtyDaysAgoFormatted);
+    params.append('end_date', filters.dateTo || todayFormatted);
 
     // Optional filters
     if (filters.meeting_name) params.append('track', filters.meeting_name);
@@ -91,17 +94,13 @@ async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
 export default async function RaceViewerPage({ searchParams }: PageProps) {
   const params = await searchParams;
   
-  // Calculate default dates
-  const today = new Date();
-  const thirtyDaysAgo = new Date(today);
-  thirtyDaysAgo.setDate(today.getDate() - 30);
-  
-  const formatDate = (date: Date) => date.toISOString().split('T')[0];
+  // Get default dates using utility function
+  const { thirtyDaysAgoFormatted, todayFormatted } = getDefaultDateRange();
 
   // Extract filter params from URL
   const filters: FilterParams = {
-    dateFrom: typeof params.dateFrom === 'string' ? params.dateFrom : formatDate(thirtyDaysAgo),
-    dateTo: typeof params.dateTo === 'string' ? params.dateTo : formatDate(today),
+    dateFrom: typeof params.dateFrom === 'string' ? params.dateFrom : thirtyDaysAgoFormatted,
+    dateTo: typeof params.dateTo === 'string' ? params.dateTo : todayFormatted,
     meeting_name: typeof params.meeting_name === 'string' ? params.meeting_name : undefined,
     state: typeof params.state === 'string' ? params.state : undefined,
     race_number: typeof params.race_number === 'string' ? parseInt(params.race_number) : undefined,
