@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { FiMenu, FiX } from 'react-icons/fi';
 
@@ -31,10 +32,19 @@ export default function Navigation() {
           {/* Logo/Brand */}
           <Link 
             href="/" 
-            className="flex items-center gap-2 text-white font-bold text-xl hover:text-purple-200 transition-colors"
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
           >
-            <span>Trading the Races</span>
-            <span>🏇</span>
+            <div className="bg-white rounded-lg p-1">
+              <Image
+                src="/images/ttr-logo.png"
+                alt="Trading the Races Logo"
+                width={40}
+                height={40}
+                className="w-10 h-10 object-contain"
+              />
+            </div>
+            <span className="text-xl font-bold text-white hidden sm:inline">Trading the Races</span>
+            <span className="text-xl font-bold text-white sm:hidden">TTR</span>
           </Link>
 
           {/* Desktop Navigation */}
