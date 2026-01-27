@@ -30,71 +30,31 @@ export default function FormGuideContent({ meetings }: Props) {
     meeting.track.country === 'AUS' || meeting.track.country === 'NZ'
   );
 
-  // Format date in AEDT timezone
-  const aedtDate = currentTime.toLocaleDateString('en-AU', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'Australia/Sydney'
-  });
-
-  // Format time in AEDT timezone
-  const aedtTime = currentTime.toLocaleTimeString('en-AU', {
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZone: 'Australia/Sydney',
-    hour12: true
-  }) + ' AEDT';
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      <div className="fixed inset-0 opacity-5">
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-          backgroundSize: '40px 40px'
-        }}></div>
-      </div>
-
-      <div className="relative z-10">
-        {/* New Header Section */}
-        <div className="sticky top-0 z-20 backdrop-blur-xl bg-white/10 border-b border-white/20 shadow-2xl">
-          <div className="max-w-7xl mx-auto px-4 py-6">
-            <h1 className="text-4xl font-black text-white mb-3">
-              Today&apos;s Australian Horse Racing
-            </h1>
-            <div className="flex items-center gap-4 text-white/80 text-lg">
-              <span>{aedtDate}</span>
-              <span className="text-white/40">|</span>
-              <span className="font-mono">{aedtTime}</span>
-            </div>
-          </div>
+    <>
+      {/* Next To Jump Section */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="mb-8">
+          <NextToJumpButton meetings={australianMeetings} currentTime={currentTime} />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          {/* Next To Jump Section */}
-          <div className="mb-8">
-            <NextToJumpButton meetings={australianMeetings} currentTime={currentTime} />
+        {australianMeetings.length === 0 ? (
+          <div className="text-center py-24">
+            <div className="inline-block p-8 bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20">
+              <div className="text-6xl mb-4">🏇</div>
+              <p className="text-2xl font-bold text-gray-800 mb-2">No Races Today</p>
+              <p className="text-gray-600">Check back later for Australian racing</p>
+            </div>
           </div>
-
-          {australianMeetings.length === 0 ? (
-            <div className="text-center py-24">
-              <div className="inline-block p-8 bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20">
-                <div className="text-6xl mb-4">🏇</div>
-                <p className="text-2xl font-bold text-white mb-2">No Races Today</p>
-                <p className="text-white/60">Check back later for Australian racing</p>
-              </div>
-            </div>
-          ) : (
-            <div className="grid gap-6">
-              {australianMeetings.map((meeting, index) => (
-                <MeetingCard key={meeting.meetingId} meeting={meeting} index={index} />
-              ))}
-            </div>
-          )}
-        </div>
+        ) : (
+          <div className="grid gap-6">
+            {australianMeetings.map((meeting, index) => (
+              <MeetingCard key={meeting.meetingId} meeting={meeting} index={index} />
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 }
 
@@ -192,40 +152,27 @@ function MeetingCard({ meeting, index }: { meeting: MeetingWithRaces; index: num
   const sortedRaces = [...races].sort((a, b) => a.number - b.number);
   const raceCount = races.length || meeting.races || 0;
 
-  const gradients = [
-    'from-purple-500/20 to-pink-500/20',
-    'from-blue-500/20 to-cyan-500/20',
-    'from-emerald-500/20 to-teal-500/20',
-    'from-orange-500/20 to-red-500/20',
-    'from-indigo-500/20 to-purple-500/20'
-  ];
-
-  const gradient = gradients[index % gradients.length];
-
   return (
-    <div
-      className={`group bg-gradient-to-br ${gradient} backdrop-blur-xl rounded-3xl border border-white/20 overflow-hidden hover:border-white/40 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl`}
-      style={{ animation: `fadeIn 0.5s ease-out ${index * 0.1}s backwards` }}
-    >
+    <div className="mb-8 bg-white rounded-lg shadow-lg overflow-hidden">
       {/* Header Section */}
-      <div className="relative p-6 bg-gradient-to-r from-white/10 to-transparent border-b border-white/10">
+      <div className="p-4 md:p-6 bg-gradient-to-r from-purple-600 to-purple-700 text-white">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="flex-1">
             <Link
               href={`/form-guide/${trackSlug}/1`}
               className="group/link inline-block"
             >
-              <h3 className="text-3xl font-black text-white mb-2 group-hover/link:text-transparent group-hover/link:bg-clip-text group-hover/link:bg-gradient-to-r group-hover/link:from-purple-400 group-hover/link:to-pink-400 transition-all duration-300">
+              <h2 className="text-xl md:text-2xl font-bold mb-2 group-hover/link:text-purple-200 transition-colors">
                 {meeting.track.name} ({raceCount} {raceCount === 1 ? 'race' : 'races'})
-              </h3>
+              </h2>
             </Link>
-            <div className="flex flex-wrap gap-3 text-sm text-white/70">
+            <div className="flex flex-wrap gap-3 text-sm">
               <span className="flex items-center gap-1">
-                <span className="text-white/90 font-semibold">{meeting.track.state}</span>
+                <span className="font-semibold">{meeting.track.state}</span>
               </span>
               {meeting.railPosition && (
                 <span className="flex items-center gap-1">
-                  <span className="text-white/50">•</span>
+                  <span className="opacity-50">•</span>
                   <span>Rail: {meeting.railPosition}</span>
                 </span>
               )}
@@ -234,22 +181,23 @@ function MeetingCard({ meeting, index }: { meeting: MeetingWithRaces; index: num
         </div>
       </div>
 
-      {/* Race Pills Section */}
-      <div className="p-6">
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+      {/* Race Cards Grid - Responsive */}
+      <div className="p-4 md:p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {sortedRaces.length > 0 ? (
             sortedRaces.map((race) => (
               <Link
                 key={race.raceId}
                 href={`/form-guide/${trackSlug}/${race.number}`}
-                className="flex flex-col items-center gap-2 p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50 cursor-pointer group/race border border-transparent hover:border-purple-400"
               >
-                <span className="text-xl font-black text-white group-hover/race:text-transparent group-hover/race:bg-clip-text group-hover/race:bg-gradient-to-r group-hover/race:from-purple-400 group-hover/race:to-pink-400">
-                  R{race.number}
-                </span>
-                <span className="text-xs text-white/70 font-medium">
-                  {race.startTime ? formatRaceTime(race.startTime) : '--:--'}
-                </span>
+                <div className="border rounded-lg p-4 hover:bg-purple-50 hover:border-purple-500 transition-all cursor-pointer">
+                  <div className="text-lg font-bold text-purple-600 mb-1">
+                    Race {race.number}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {race.startTime ? formatRaceTime(race.startTime) : '--:--'}
+                  </div>
+                </div>
               </Link>
             ))
           ) : (
@@ -258,14 +206,15 @@ function MeetingCard({ meeting, index }: { meeting: MeetingWithRaces; index: num
               <Link
                 key={raceNum}
                 href={`/form-guide/${trackSlug}/${raceNum}`}
-                className="flex flex-col items-center gap-2 p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50 cursor-pointer group/race border border-transparent hover:border-purple-400"
               >
-                <span className="text-xl font-black text-white group-hover/race:text-transparent group-hover/race:bg-clip-text group-hover/race:bg-gradient-to-r group-hover/race:from-purple-400 group-hover/race:to-pink-400">
-                  R{raceNum}
-                </span>
-                <span className="text-xs text-white/50 font-medium">
-                  --:--
-                </span>
+                <div className="border rounded-lg p-4 hover:bg-purple-50 hover:border-purple-500 transition-all cursor-pointer">
+                  <div className="text-lg font-bold text-purple-600 mb-1">
+                    Race {raceNum}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    --:--
+                  </div>
+                </div>
               </Link>
             ))
           )}
