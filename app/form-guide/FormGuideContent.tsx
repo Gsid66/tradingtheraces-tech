@@ -40,7 +40,7 @@ export default function FormGuideContent({ meetings }: Props) {
 
         {australianMeetings.length === 0 ? (
           <div className="text-center py-24">
-            <div className="inline-block p-8 bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20">
+            <div className="inline-block p-8 bg-gray-100 rounded-3xl border border-gray-200 shadow-lg">
               <div className="text-6xl mb-4">🏇</div>
               <p className="text-2xl font-bold text-gray-800 mb-2">No Races Today</p>
               <p className="text-gray-600">Check back later for Australian racing</p>
@@ -48,8 +48,8 @@ export default function FormGuideContent({ meetings }: Props) {
           </div>
         ) : (
           <div className="grid gap-6">
-            {australianMeetings.map((meeting, index) => (
-              <MeetingCard key={meeting.meetingId} meeting={meeting} index={index} />
+            {australianMeetings.map((meeting) => (
+              <MeetingCard key={meeting.meetingId} meeting={meeting} />
             ))}
           </div>
         )}
@@ -146,7 +146,7 @@ function formatRaceTime(startTime: string) {
   }
 }
 
-function MeetingCard({ meeting }: { meeting: MeetingWithRaces; index: number }) {
+function MeetingCard({ meeting }: { meeting: MeetingWithRaces }) {
   const trackSlug = meeting.track.name.toLowerCase().replace(/\s+/g, '-');
   const races = meeting.raceDetails || [];
   const sortedRaces = [...races].sort((a, b) => a.number - b.number);
