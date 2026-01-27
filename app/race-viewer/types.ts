@@ -1,16 +1,16 @@
 // TypeScript interfaces for Race Viewer
 
 export interface RaceCardData {
-  date: string; // "2026-01-28"
+  race_date: string; // "2026-01-28T00:00:00.000Z"
   track: string; // Changed from meeting_name
   race_number: number;
   race_name: string;
-  saddle_number: number;
+  saddle_cloth: number;
   horse_name: string;
   jockey: string;
   trainer: string;
   rating: number | null;
-  price: number | null;
+  price: string | number | null;
   tab_fixed_win?: number | null;
   tab_fixed_place?: number | null;
 }
@@ -32,6 +32,14 @@ export interface FilterParams {
 
 export interface ApiResponse {
   data: RaceCardData[];
+  pagination?: {
+    // API response structure
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
+  // Normalized pagination fields used by the app
   total: number;
   page: number;
   perPage: number;

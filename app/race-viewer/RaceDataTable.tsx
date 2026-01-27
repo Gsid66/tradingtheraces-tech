@@ -37,6 +37,17 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
       if (aVal === null || aVal === undefined) return 1;
       if (bVal === null || bVal === undefined) return -1;
 
+      // Special handling for price field which can be string or number
+      if (sortField === 'price') {
+        const aNum = typeof aVal === 'string' ? parseFloat(aVal) : aVal;
+        const bNum = typeof bVal === 'string' ? parseFloat(bVal) : bVal;
+        
+        if (isNaN(aNum as number)) return 1;
+        if (isNaN(bNum as number)) return -1;
+        
+        return sortDirection === 'asc' ? (aNum as number) - (bNum as number) : (bNum as number) - (aNum as number);
+      }
+
       if (typeof aVal === 'string' && typeof bVal === 'string') {
         return sortDirection === 'asc' 
           ? aVal.localeCompare(bVal)
@@ -61,6 +72,14 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
   };
 
   const formatPrice = (value: any): string => {
+    // Handle string price values by parsing to number
+    if (typeof value === 'string') {
+      const parsed = parseFloat(value);
+      if (isNaN(parsed)) {
+        return '-';
+      }
+      return `$${parsed.toFixed(2)}`;
+    }
     if (value == null || typeof value !== 'number' || isNaN(value)) {
       return '-';
     }
@@ -81,10 +100,10 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
     ];
     
     const rows = sortedData.map(row => [
-      formatDate(row.date),
+      formatDate(row.race_date),
       row.track,
       `Race ${row.race_number}`,
-      row.saddle_number,
+      row.saddle_cloth,
       row.horse_name,
       row.jockey,
       row.trainer,
@@ -170,11 +189,11 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
             <tr>
               <th 
                 className="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-purple-700"
-                onClick={() => handleSort('date')}
-                aria-sort={sortField === 'date' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                onClick={() => handleSort('race_date')}
+                aria-sort={sortField === 'race_date' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
               >
                 <div className="flex items-center gap-2">
-                  Date <SortIcon field="date" sortField={sortField} sortDirection={sortDirection} />
+                  Date <SortIcon field="race_date" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
               <th 
@@ -260,7 +279,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
           <tbody>
             {sortedData.map((row, index) => {
               // Create a unique composite key
-              const rowKey = `${row.date}-${row.track}-${row.race_number}-${row.saddle_number}`;
+              const rowKey = `${row.race_date}-${row.track}-${row.race_number}-${row.saddle_cloth}`;
               return (
                 <tr 
                   key={rowKey}
@@ -268,7 +287,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                   style={{ backgroundColor: index % 2 === 0 ? 'white' : '#fafafa' }}
                 >
                 <td className="px-4 py-3 text-sm text-gray-700">
-                  {formatDate(row.date)}
+                  {formatDate(row.race_date)}
                 </td>
                 <td className="px-4 py-3">
                   <span className="inline-block bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
@@ -280,7 +299,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                   <div className="text-xs text-gray-500">{row.race_name}</div>
                 </td>
                 <td className="px-4 py-3 text-center text-sm font-semibold text-gray-800">
-                  {row.saddle_number}
+                  {row.saddle_cloth}
                 </td>
                 <td className="px-4 py-3 text-sm font-bold text-gray-900">
                   {row.horse_name}

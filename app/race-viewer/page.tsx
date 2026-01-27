@@ -19,14 +19,10 @@ function formatDate(date: Date): string {
 // Utility function to get default date range
 function getDefaultDateRange() {
   const today = new Date();
-  const thirtyDaysAgo = new Date(today);
-  thirtyDaysAgo.setDate(today.getDate() - 30);
   
   return {
     today,
-    thirtyDaysAgo,
     todayFormatted: formatDate(today),
-    thirtyDaysAgoFormatted: formatDate(thirtyDaysAgo),
   };
 }
 
@@ -34,12 +30,12 @@ async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
   const raceCardsApiUrl = process.env.RACE_CARD_RATINGS_API_URL || 'https://race-cards-ratings.onrender.com';
 
   try {
-    const { thirtyDaysAgoFormatted, todayFormatted } = getDefaultDateRange();
+    const { todayFormatted } = getDefaultDateRange();
 
     const params = new URLSearchParams();
     
     // Required date range
-    params.append('start_date', filters.dateFrom || thirtyDaysAgoFormatted);
+    params.append('start_date', filters.dateFrom || todayFormatted);
     params.append('end_date', filters.dateTo || todayFormatted);
 
     // Optional filters
@@ -72,12 +68,15 @@ async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
 
     const responseData = await response.json();
 
+    // Extract total from pagination object if available, otherwise use data.total
+    const total = responseData.pagination?.total || responseData.total || 0;
+
     return {
       data: responseData.data || [],
-      total: responseData.total || 0,
+      total: total,
       page: filters.page || 1,
       perPage: filters.perPage || 50,
-      totalPages: Math.ceil((responseData.total || 0) / (filters.perPage || 50))
+      totalPages: Math.ceil(total / (filters.perPage || 50))
     };
   } catch (error) {
     console.error('Error fetching race cards:', error);
@@ -95,11 +94,11 @@ export default async function RaceViewerPage({ searchParams }: PageProps) {
   const params = await searchParams;
   
   // Get default dates using utility function
-  const { thirtyDaysAgoFormatted, todayFormatted } = getDefaultDateRange();
+  const { todayFormatted } = getDefaultDateRange();
 
   // Extract filter params from URL
   const filters: FilterParams = {
-    dateFrom: typeof params.dateFrom === 'string' ? params.dateFrom : thirtyDaysAgoFormatted,
+    dateFrom: typeof params.dateFrom === 'string' ? params.dateFrom : todayFormatted,
     dateTo: typeof params.dateTo === 'string' ? params.dateTo : todayFormatted,
     meeting_name: typeof params.meeting_name === 'string' ? params.meeting_name : undefined,
     state: typeof params.state === 'string' ? params.state : undefined,
