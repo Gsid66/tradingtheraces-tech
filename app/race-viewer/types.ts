@@ -33,11 +33,13 @@ export interface FilterParams {
 export interface ApiResponse {
   data: RaceCardData[];
   pagination?: {
+    // API response structure
     total: number;
     page: number;
     limit: number;
     pages: number;
   };
+  // Normalized pagination fields used by the app
   total: number;
   page: number;
   perPage: number;

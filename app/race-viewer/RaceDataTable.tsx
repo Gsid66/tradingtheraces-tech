@@ -37,6 +37,17 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
       if (aVal === null || aVal === undefined) return 1;
       if (bVal === null || bVal === undefined) return -1;
 
+      // Special handling for price field which can be string or number
+      if (sortField === 'price') {
+        const aNum = typeof aVal === 'string' ? parseFloat(aVal) : aVal;
+        const bNum = typeof bVal === 'string' ? parseFloat(bVal) : bVal;
+        
+        if (isNaN(aNum as number)) return 1;
+        if (isNaN(bNum as number)) return -1;
+        
+        return sortDirection === 'asc' ? (aNum as number) - (bNum as number) : (bNum as number) - (aNum as number);
+      }
+
       if (typeof aVal === 'string' && typeof bVal === 'string') {
         return sortDirection === 'asc' 
           ? aVal.localeCompare(bVal)
