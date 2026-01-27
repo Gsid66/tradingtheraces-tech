@@ -1,15 +1,15 @@
-function formatPrice(value) {
-    return value != null ? value.toFixed(2) : '-';
+function formatPrice(value: any): string {
+    if (value == null || typeof value !== 'number' || isNaN(value)) {
+        return '-';
+    }
+    return `$${value.toFixed(2)}`;
 }
 
-function formatRating(value) {
-    return value != null ? value.toFixed(1) : 'N/A';
+function formatRating(value: any): string {
+    if (value == null || typeof value !== 'number' || isNaN(value)) {
+        return '-';
+    }
+    return value.toString();
 }
 
-// Example usage in RaceDataTable.tsx
-if (price != null) {
-    formattedPrice = formatPrice(price);
-}
-if (rating != null) {
-    formattedRating = formatRating(rating);
-}
+export { formatPrice, formatRating };

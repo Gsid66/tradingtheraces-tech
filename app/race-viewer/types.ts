@@ -9,8 +9,8 @@ export interface RaceCardData {
   horse_name: string;
   jockey: string;
   trainer: string;
-  rating: number;
-  price: number;
+  rating: number | null;
+  price: number | null;
   tab_fixed_win?: number | null;
   tab_fixed_place?: number | null;
 }
