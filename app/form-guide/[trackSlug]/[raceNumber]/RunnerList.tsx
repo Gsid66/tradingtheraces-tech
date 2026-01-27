@@ -56,9 +56,6 @@ function RunnerRow({ runner, position }: { runner: EnrichedRunner; position: num
   
   const winPercent = totalStarts > 0 ? Math.round((wins / totalStarts) * 100) : 0;
   const placePercent = totalStarts > 0 ? Math.round((places / totalStarts) * 100) : 0;
-  const avgPrize = runner.prizeMoney && totalStarts > 0 
-    ? Math.round(runner.prizeMoney / totalStarts) 
-    : 0;
 
   // Generate color based on tab number for visual variety
   const colors = [
@@ -71,7 +68,7 @@ function RunnerRow({ runner, position }: { runner: EnrichedRunner; position: num
     'from-indigo-400 to-indigo-600',
     'from-orange-400 to-orange-600',
   ];
-  const colorClass = colors[(runner.tabNumber || position - 1) % colors.length];
+  const colorClass = colors[(runner.tabNumber ?? runner.tabNo ?? position - 1) % colors.length];
 
   // Parse last 10 form positions for visual display
   const formPositions = (runner.last10 || runner.lastFiveStarts || '')
@@ -90,12 +87,9 @@ function RunnerRow({ runner, position }: { runner: EnrichedRunner; position: num
   return (
     <div className="border-b hover:bg-gray-50 transition-colors">
       {/* Main Runner Card */}
-      <div 
-        className="px-6 py-4 cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
+      <div className="px-6 py-4">
         <div className="flex items-start gap-4">
-          {/* Silks Icon - Larger */}
+          {/* Silks Icon */}
           <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-lg`}>
             {runner.tabNumber ?? runner.tabNo ?? position}
           </div>
@@ -178,7 +172,7 @@ function RunnerRow({ runner, position }: { runner: EnrichedRunner; position: num
             </div>
 
             {/* Career Statistics Summary */}
-            <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-4 text-sm mb-3">
               <div>
                 <span className="text-gray-600">Career:</span>{' '}
                 <span className="font-semibold text-gray-900">
@@ -195,8 +189,21 @@ function RunnerRow({ runner, position }: { runner: EnrichedRunner; position: num
               </div>
             </div>
 
+            {/* TAB Odds and TTR Ratings - MOVED HERE (outside dropdown) */}
+            <HorseOddsRatings
+              tabFixedWinPrice={runner.tabFixedWinPrice ?? null}
+              tabFixedPlacePrice={runner.tabFixedPlacePrice ?? null}
+              tabFixedWinTimestamp={runner.tabFixedWinTimestamp ?? null}
+              tabFixedPlaceTimestamp={runner.tabFixedPlaceTimestamp ?? null}
+              ttrRating={runner.ttrRating ?? null}
+              ttrPrice={runner.ttrPrice ?? null}
+            />
+
             {/* Expandable Toggle Indicator */}
-            <div className="mt-3 text-sm text-green-700 font-medium flex items-center gap-1">
+            <div 
+              className="mt-3 text-sm text-green-700 font-medium flex items-center gap-1 cursor-pointer"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
               <span>{isExpanded ? '▼' : '▶'}</span>
               <span>{isExpanded ? 'Hide details' : 'Horse Details'}</span>
             </div>
@@ -207,16 +214,6 @@ function RunnerRow({ runner, position }: { runner: EnrichedRunner; position: num
       {/* Expanded Details Panel */}
       {isExpanded && (
         <div className="px-6 pb-6 bg-gray-50">
-          {/* TAB Odds and TTR Ratings */}
-          <HorseOddsRatings
-            tabFixedWinPrice={runner.tabFixedWinPrice ?? null}
-            tabFixedPlacePrice={runner.tabFixedPlacePrice ?? null}
-            tabFixedWinTimestamp={runner.tabFixedWinTimestamp ?? null}
-            tabFixedPlaceTimestamp={runner.tabFixedPlaceTimestamp ?? null}
-            ttrRating={runner.ttrRating ?? null}
-            ttrPrice={runner.ttrPrice ?? null}
-          />
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
             {/* Left Column */}
             <div className="space-y-4">
@@ -264,7 +261,7 @@ function RunnerRow({ runner, position }: { runner: EnrichedRunner; position: num
                   <div className="flex justify-between">
                     <span className="text-gray-600">Average per Start:</span>
                     <span className="font-medium text-gray-900">
-                      ${avgPrize.toLocaleString()}
+                      ${Math.round((runner.prizeMoney || 0) / (totalStarts || 1)).toLocaleString()}
                     </span>
                   </div>
                 </div>

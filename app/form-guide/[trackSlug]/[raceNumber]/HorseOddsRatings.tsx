@@ -42,13 +42,6 @@ export default function HorseOddsRatings({
     });
   };
 
-  // Determine if horse is value (TTR price < TAB price)
-  const numTtrPrice = ttrPrice ? (typeof ttrPrice === 'string' ? parseFloat(ttrPrice) : ttrPrice) : null;
-  const numTabFixedWinPrice = tabFixedWinPrice ? (typeof tabFixedWinPrice === 'string' ? parseFloat(tabFixedWinPrice) : tabFixedWinPrice) : null;
-  
-  const isValue = numTtrPrice && numTabFixedWinPrice && !isNaN(numTtrPrice) && !isNaN(numTabFixedWinPrice) && numTtrPrice < numTabFixedWinPrice;
-  const isOvers = numTtrPrice && numTabFixedWinPrice && !isNaN(numTtrPrice) && !isNaN(numTabFixedWinPrice) && numTtrPrice > numTabFixedWinPrice;
-
   return (
     <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-green-50 rounded-lg border border-purple-200">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -108,21 +101,6 @@ export default function HorseOddsRatings({
           </div>
         </div>
       </div>
-
-      {/* Value Indicator */}
-      {(isValue || isOvers) && (
-        <div className="mt-3 text-center">
-          <span
-            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
-              isValue
-                ? 'bg-green-100 text-green-800 border border-green-300'
-                : 'bg-red-100 text-red-800 border border-red-300'
-            }`}
-          >
-            {isValue ? '✓ POTENTIAL VALUE' : '✗ POTENTIAL OVERS'}
-          </span>
-        </div>
-      )}
     </div>
   );
 }
