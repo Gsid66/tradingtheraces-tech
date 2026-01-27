@@ -146,7 +146,7 @@ function formatRaceTime(startTime: string) {
   }
 }
 
-function MeetingCard({ meeting, index }: { meeting: MeetingWithRaces; index: number }) {
+function MeetingCard({ meeting }: { meeting: MeetingWithRaces; index: number }) {
   const trackSlug = meeting.track.name.toLowerCase().replace(/\s+/g, '-');
   const races = meeting.raceDetails || [];
   const sortedRaces = [...races].sort((a, b) => a.number - b.number);
