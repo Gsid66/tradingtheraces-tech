@@ -1,6 +1,7 @@
 import './globals.css'
 import Link from 'next/link'
 import { FaHome, FaChartLine, FaCalendarAlt, FaCalculator, FaClipboardList } from 'react-icons/fa'
+import Navigation from '@/components/Navigation'
 
 export const metadata = {
   title: 'Trading the Races - Horse & Greyhound Racing Data Platform',
@@ -15,10 +16,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        {/* Top Navigation Bar */}
+        <Navigation />
+        
         {/* Card-Based Navigation */}
         <div className="quick-links-section">
           <div className="quick-links-grid">
-            <Link href="/" className="quick-link-card">
+            <Link href="/" className="quick-link-card quick-link-card-active">
               <div className="quick-link-icon">
                 <FaHome />
               </div>
@@ -26,7 +30,7 @@ export default function RootLayout({
               <p>Return to main site</p>
             </Link>
 
-            <Link href="/race-viewer" className="quick-link-card">
+            <Link href="/form-guide" className="quick-link-card">
               <div className="quick-link-icon">
                 <FaChartLine />
               </div>
@@ -34,29 +38,29 @@ export default function RootLayout({
               <p>Real-time race ratings</p>
             </Link>
 
-            <Link href="/race-fields" className="quick-link-card">
+            <div className="quick-link-card quick-link-card-coming-soon">
               <div className="quick-link-icon">
                 <FaClipboardList />
               </div>
               <h3>Race Fields Hub</h3>
-              <p>Official fields & guides</p>
-            </Link>
+              <p>Coming Soon</p>
+            </div>
 
-            <Link href="/tab-meetings" className="quick-link-card">
+            <div className="quick-link-card quick-link-card-coming-soon">
               <div className="quick-link-icon">
                 <FaCalendarAlt />
               </div>
               <h3>TAB Meetings</h3>
-              <p>Today's meetings</p>
-            </Link>
+              <p>Coming Soon</p>
+            </div>
 
-            <Link href="/calculator" className="quick-link-card">
+            <div className="quick-link-card quick-link-card-coming-soon">
               <div className="quick-link-icon">
                 <FaCalculator />
               </div>
               <h3>Betting Calculator</h3>
-              <p>Calculate returns</p>
-            </Link>
+              <p>Coming Soon</p>
+            </div>
           </div>
         </div>
 

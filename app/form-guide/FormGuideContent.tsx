@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import type { PFMeeting, PFRace } from '@/lib/integrations/punting-form/client';
 
 interface MeetingWithRaces extends PFMeeting {
@@ -210,14 +211,14 @@ function MeetingCard({ meeting, index }: { meeting: MeetingWithRaces; index: num
       <div className="relative p-6 bg-gradient-to-r from-white/10 to-transparent border-b border-white/10">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="flex-1">
-            <a
+            <Link
               href={`/form-guide/${trackSlug}/1`}
               className="group/link inline-block"
             >
               <h3 className="text-3xl font-black text-white mb-2 group-hover/link:text-transparent group-hover/link:bg-clip-text group-hover/link:bg-gradient-to-r group-hover/link:from-purple-400 group-hover/link:to-pink-400 transition-all duration-300">
                 {meeting.track.name} ({raceCount} {raceCount === 1 ? 'race' : 'races'})
               </h3>
-            </a>
+            </Link>
             <div className="flex flex-wrap gap-3 text-sm text-white/70">
               <span className="flex items-center gap-1">
                 <span className="text-white/90 font-semibold">{meeting.track.state}</span>
@@ -238,10 +239,10 @@ function MeetingCard({ meeting, index }: { meeting: MeetingWithRaces; index: num
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
           {sortedRaces.length > 0 ? (
             sortedRaces.map((race) => (
-              <a
+              <Link
                 key={race.raceId}
                 href={`/form-guide/${trackSlug}/${race.number}`}
-                className="flex flex-col items-center gap-2 p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg group/race"
+                className="flex flex-col items-center gap-2 p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50 cursor-pointer group/race border border-transparent hover:border-purple-400"
               >
                 <span className="text-xl font-black text-white group-hover/race:text-transparent group-hover/race:bg-clip-text group-hover/race:bg-gradient-to-r group-hover/race:from-purple-400 group-hover/race:to-pink-400">
                   R{race.number}
@@ -249,15 +250,15 @@ function MeetingCard({ meeting, index }: { meeting: MeetingWithRaces; index: num
                 <span className="text-xs text-white/70 font-medium">
                   {race.startTime ? formatRaceTime(race.startTime) : '--:--'}
                 </span>
-              </a>
+              </Link>
             ))
           ) : (
             // Fallback if race details aren't loaded
             Array.from({ length: raceCount }, (_, i) => i + 1).map((raceNum) => (
-              <a
+              <Link
                 key={raceNum}
                 href={`/form-guide/${trackSlug}/${raceNum}`}
-                className="flex flex-col items-center gap-2 p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg group/race"
+                className="flex flex-col items-center gap-2 p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50 cursor-pointer group/race border border-transparent hover:border-purple-400"
               >
                 <span className="text-xl font-black text-white group-hover/race:text-transparent group-hover/race:bg-clip-text group-hover/race:bg-gradient-to-r group-hover/race:from-purple-400 group-hover/race:to-pink-400">
                   R{raceNum}
@@ -265,7 +266,7 @@ function MeetingCard({ meeting, index }: { meeting: MeetingWithRaces; index: num
                 <span className="text-xs text-white/50 font-medium">
                   --:--
                 </span>
-              </a>
+              </Link>
             ))
           )}
         </div>
