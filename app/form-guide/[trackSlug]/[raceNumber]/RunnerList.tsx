@@ -21,16 +21,21 @@ interface Props {
 }
 
 export default function RunnerList({ runners }: Props) {
+  // Sort runners by tabNumber (saddle cloth number)
+  const sortedRunners = runners
+    .slice()
+    .sort((a, b) => (a.tabNumber ?? a.tabNo ?? 999) - (b.tabNumber ?? b.tabNo ?? 999));
+
   return (
     <div className="bg-white rounded-b-lg shadow-sm">
       {/* Runner Rows */}
       <div className="divide-y">
-        {runners.length === 0 ? (
+        {sortedRunners.length === 0 ? (
           <div className="px-6 py-12 text-center text-gray-500">
             No runners available for this race
           </div>
         ) : (
-          runners.map((runner, index) => (
+          sortedRunners.map((runner, index) => (
             <RunnerRow key={runner.formId} runner={runner} position={index + 1} />
           ))
         )}

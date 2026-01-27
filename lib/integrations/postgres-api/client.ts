@@ -74,9 +74,12 @@ export class PostgresAPIClient {
   /**
    * Get races by date
    */
-  async getRacesByDate(date: string, venue: string = 'all'): Promise<PostgresAPIResponse<TabRace[]>> {
-    return this.get(`/api/race-data/races?date=${date}&venue=${venue}`);
-  }
+  async getRacesByDate(date: string, venue?: string): Promise<PostgresAPIResponse<TabRace[]>> {
+  // Only add venue parameter if a specific venue is provided
+  // Omitting it returns all venues (API default behavior)
+  const venueParam = venue ? `&venue=${encodeURIComponent(venue)}` : '';
+  return this.get(`/api/race-data/races?date=${date}${venueParam}`);
+}
 
   /**
    * Get specific race with runners and TAB odds
