@@ -65,7 +65,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
     return `$${price.toFixed(2)}`;
   };
 
-  const exportToCSV = () => {
+  const prepareExportData = () => {
     const headers = [
       'Date', 'Track', 'Race', 'Saddle', 'Horse', 'Jockey', 'Trainer', 
       'Rating', 'Price', 'TAB Win', 'TAB Place'
@@ -84,6 +84,12 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
       row.tab_fixed_win_price ? row.tab_fixed_win_price.toFixed(2) : '-',
       row.tab_fixed_place_price ? row.tab_fixed_place_price.toFixed(2) : '-'
     ]);
+
+    return { headers, rows };
+  };
+
+  const exportToCSV = () => {
+    const { headers, rows } = prepareExportData();
 
     const csv = [headers, ...rows]
       .map(row => row.map(cell => `"${cell}"`).join(','))
@@ -101,27 +107,10 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
   };
 
   const exportToExcel = () => {
-    // For simplicity, we'll create a CSV with .xlsx extension
-    // In a production app, you'd use a library like xlsx or exceljs
-    const headers = [
-      'Date', 'Track', 'Race', 'Saddle', 'Horse', 'Jockey', 'Trainer', 
-      'Rating', 'Price', 'TAB Win', 'TAB Place'
-    ];
-    
-    const rows = sortedData.map(row => [
-      formatDate(row.date),
-      row.meeting_name,
-      `Race ${row.race_number}`,
-      row.saddle_number,
-      row.horse_name,
-      row.jockey,
-      row.trainer,
-      row.rating,
-      row.price.toFixed(2),
-      row.tab_fixed_win_price ? row.tab_fixed_win_price.toFixed(2) : '-',
-      row.tab_fixed_place_price ? row.tab_fixed_place_price.toFixed(2) : '-'
-    ]);
+    const { headers, rows } = prepareExportData();
 
+    // Note: This creates a CSV file with Excel-compatible format
+    // For true Excel files, consider using a library like 'xlsx' or 'exceljs'
     const csv = [headers, ...rows]
       .map(row => row.map(cell => `"${cell}"`).join(','))
       .join('\n');
@@ -173,6 +162,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
               <th 
                 className="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-purple-700"
                 onClick={() => handleSort('date')}
+                aria-sort={sortField === 'date' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
               >
                 <div className="flex items-center gap-2">
                   Date <SortIcon field="date" sortField={sortField} sortDirection={sortDirection} />
@@ -181,6 +171,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
               <th 
                 className="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-purple-700"
                 onClick={() => handleSort('meeting_name')}
+                aria-sort={sortField === 'meeting_name' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
               >
                 <div className="flex items-center gap-2">
                   Track <SortIcon field="meeting_name" sortField={sortField} sortDirection={sortDirection} />
@@ -189,6 +180,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
               <th 
                 className="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-purple-700"
                 onClick={() => handleSort('race_number')}
+                aria-sort={sortField === 'race_number' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
               >
                 <div className="flex items-center gap-2">
                   Race <SortIcon field="race_number" sortField={sortField} sortDirection={sortDirection} />
@@ -203,6 +195,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
               <th 
                 className="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-purple-700"
                 onClick={() => handleSort('jockey')}
+                aria-sort={sortField === 'jockey' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
               >
                 <div className="flex items-center gap-2">
                   Jockey <SortIcon field="jockey" sortField={sortField} sortDirection={sortDirection} />
@@ -211,6 +204,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
               <th 
                 className="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-purple-700"
                 onClick={() => handleSort('trainer')}
+                aria-sort={sortField === 'trainer' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
               >
                 <div className="flex items-center gap-2">
                   Trainer <SortIcon field="trainer" sortField={sortField} sortDirection={sortDirection} />
@@ -219,6 +213,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
               <th 
                 className="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-purple-700"
                 onClick={() => handleSort('rating')}
+                aria-sort={sortField === 'rating' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
               >
                 <div className="flex items-center gap-2">
                   Rating <SortIcon field="rating" sortField={sortField} sortDirection={sortDirection} />
@@ -227,6 +222,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
               <th 
                 className="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-purple-700"
                 onClick={() => handleSort('price')}
+                aria-sort={sortField === 'price' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
               >
                 <div className="flex items-center gap-2">
                   Price <SortIcon field="price" sortField={sortField} sortDirection={sortDirection} />
@@ -235,6 +231,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
               <th 
                 className="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-purple-700"
                 onClick={() => handleSort('tab_fixed_win_price')}
+                aria-sort={sortField === 'tab_fixed_win_price' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
               >
                 <div className="flex items-center gap-2">
                   TAB Win <SortIcon field="tab_fixed_win_price" sortField={sortField} sortDirection={sortDirection} />
@@ -243,6 +240,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
               <th 
                 className="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-purple-700"
                 onClick={() => handleSort('tab_fixed_place_price')}
+                aria-sort={sortField === 'tab_fixed_place_price' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
               >
                 <div className="flex items-center gap-2">
                   TAB Place <SortIcon field="tab_fixed_place_price" sortField={sortField} sortDirection={sortDirection} />
@@ -251,12 +249,15 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
             </tr>
           </thead>
           <tbody>
-            {sortedData.map((row, index) => (
-              <tr 
-                key={index}
-                className="border-b border-gray-200 hover:bg-purple-50 transition-colors"
-                style={{ backgroundColor: index % 2 === 0 ? 'white' : '#fafafa' }}
-              >
+            {sortedData.map((row, index) => {
+              // Create a unique composite key
+              const rowKey = `${row.date}-${row.meeting_name}-${row.race_number}-${row.saddle_number}`;
+              return (
+                <tr 
+                  key={rowKey}
+                  className="border-b border-gray-200 hover:bg-purple-50 transition-colors"
+                  style={{ backgroundColor: index % 2 === 0 ? 'white' : '#fafafa' }}
+                >
                 <td className="px-4 py-3 text-sm text-gray-700">
                   {formatDate(row.date)}
                 </td>
@@ -310,7 +311,8 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                   )}
                 </td>
               </tr>
-            ))}
+            );
+            })}
           </tbody>
         </table>
       </div>

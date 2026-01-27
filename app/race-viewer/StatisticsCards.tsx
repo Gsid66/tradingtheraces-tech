@@ -22,9 +22,9 @@ export default function StatisticsCards({
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      {stats.map((stat, index) => (
+      {stats.map((stat) => (
         <div 
-          key={index}
+          key={stat.title}
           className="bg-white rounded-lg shadow-md p-6 border-2 border-purple-100 hover:border-purple-300 transition-colors"
         >
           <h3 className="text-gray-600 text-sm font-medium mb-2">{stat.title}</h3>
