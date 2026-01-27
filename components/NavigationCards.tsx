@@ -1,49 +1,35 @@
 import Link from 'next/link'
-import { FaHome, FaChartLine, FaCalendarAlt, FaCalculator, FaClipboardList } from 'react-icons/fa'
 
 export default function NavigationCards() {
   return (
-    <div className="quick-links-section">
-      <div className="quick-links-grid">
-        <Link href="/" className="quick-link-card quick-link-card-active">
-          <div className="quick-link-icon">
-            <FaHome />
+    <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        
+        {/* Live TTR Ratings Card - ACTIVE */}
+        <Link href="/form-guide">
+          <div className="bg-black/60 rounded-lg p-8 text-center hover:bg-black/80 hover:border-2 hover:border-purple-400 hover:shadow-lg hover:shadow-purple-500/50 transition-all cursor-pointer border-2 border-purple-500 shadow-lg shadow-purple-500/30">
+            <div className="text-white text-5xl mb-4" role="img" aria-label="Chart trending upward icon">📈</div>
+            <h2 className="text-white text-xl font-semibold mb-2">Live TTR Ratings</h2>
+            <p className="text-gray-300 text-sm">Real-time race ratings</p>
           </div>
-          <h3>Home Page</h3>
-          <p>Return to main site</p>
         </Link>
 
-        <Link href="/form-guide" className="quick-link-card">
-          <div className="quick-link-icon">
-            <FaChartLine />
-          </div>
-          <h3>Live TTR Ratings</h3>
-          <p>Real-time race ratings</p>
-        </Link>
-
-        <div className="quick-link-card quick-link-card-coming-soon">
-          <div className="quick-link-icon">
-            <FaClipboardList />
-          </div>
-          <h3>Race Fields Hub</h3>
-          <p>Coming Soon</p>
+        {/* Race Fields Hub Card - Coming Soon */}
+        <div className="bg-black/40 rounded-lg p-8 text-center opacity-60 cursor-not-allowed border-2 border-transparent" role="button" aria-disabled="true">
+          <div className="text-white text-5xl mb-4" role="img" aria-label="Clipboard icon">📋</div>
+          <h2 className="text-white text-xl font-semibold mb-2">Race Fields Hub</h2>
+          <p className="text-gray-300 text-sm">Official fields &amp; guides</p>
+          <p className="text-purple-300 text-xs mt-2 font-semibold">Coming Soon</p>
         </div>
 
-        <div className="quick-link-card quick-link-card-coming-soon">
-          <div className="quick-link-icon">
-            <FaCalendarAlt />
-          </div>
-          <h3>TAB Meetings</h3>
-          <p>Coming Soon</p>
+        {/* Betting Calculator Card - Coming Soon */}
+        <div className="bg-black/40 rounded-lg p-8 text-center opacity-60 cursor-not-allowed border-2 border-transparent" role="button" aria-disabled="true">
+          <div className="text-white text-5xl mb-4" role="img" aria-label="Calculator icon">🧮</div>
+          <h2 className="text-white text-xl font-semibold mb-2">Betting Calculator</h2>
+          <p className="text-gray-300 text-sm">Calculate returns</p>
+          <p className="text-purple-300 text-xs mt-2 font-semibold">Coming Soon</p>
         </div>
 
-        <div className="quick-link-card quick-link-card-coming-soon">
-          <div className="quick-link-icon">
-            <FaCalculator />
-          </div>
-          <h3>Betting Calculator</h3>
-          <p>Coming Soon</p>
-        </div>
       </div>
     </div>
   )
