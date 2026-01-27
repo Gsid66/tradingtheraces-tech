@@ -4,8 +4,12 @@ import { FaHome, FaChartLine, FaCalendarAlt, FaCalculator, FaClipboardList } fro
 import Navigation from '@/components/Navigation'
 
 export const metadata = {
-  title: 'Trading the Races - Horse & Greyhound Racing Data Platform',
-  description: 'Real-time racing data, ratings, and analysis for horse and greyhound racing',
+  title: 'Trading the Races - Unlock Winning Strategies',
+  description: 'Professional racing data, ratings, and analysis for horse and greyhound racing',
+  icons: {
+    icon: '/images/ttr-logo.png',
+    apple: '/images/ttr-logo.png',
+  },
 }
 
 export default function RootLayout({

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { FaGift, FaCrown } from 'react-icons/fa'
 import RaceCarousel from './components/RaceCarousel'
 
@@ -6,6 +7,18 @@ export default function Home() {
     <>
       {/* Page Header */}
       <div className="page-header">
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <Image
+            src="/images/ttr-logo.png"
+            alt="Trading the Races Logo"
+            width={200}
+            height={200}
+            className="w-32 h-32 md:w-48 md:h-48 object-contain"
+            priority
+          />
+        </div>
+        
         <h1>Welcome to Trading the Races</h1>
         <p className="page-subtitle">
           Professional racing data, ratings, and analysis for horse and greyhound racing
