@@ -57,19 +57,60 @@ export default async function RacePage({ params }: Props) {
       // Format date as YYYY-MM-DD
       const dateStr = format(new Date(meeting.meetingDate), 'yyyy-MM-dd');
       
+      console.log('🔍 Fetching TAB data:', {
+        date: dateStr,
+        trackName: meeting.track.name,
+        raceNumber: raceNum
+      });
+      
       const tabRacesResponse = await pgClient.getRacesByDate(dateStr);
+      
+      console.log('📊 TAB API Response:', {
+        success: tabRacesResponse.success,
+        count: tabRacesResponse.data?.length || 0,
+        races: tabRacesResponse.data?.map((r: any) => ({
+          meeting: r.meeting_name,
+          raceNum: r.race_number,
+          runnerCount: r.runners?.length || 0
+        }))
+      });
       
       // Find matching race
       if (tabRacesResponse.success) {
         tabData = tabRacesResponse.data?.find(
-          (r: any) => 
-            r.meeting_name?.toLowerCase().includes(meeting.track.name.toLowerCase()) &&
-            r.race_number === raceNum
+          (r: any) => {
+            const meetingMatch = r.meeting_name?.toLowerCase().includes(meeting.track.name.toLowerCase());
+            const raceMatch = r.race_number === raceNum;
+            
+            console.log('🔍 Checking race match:', {
+              apiMeeting: r.meeting_name,
+              targetMeeting: meeting.track.name,
+              meetingMatch,
+              apiRaceNum: r.race_number,
+              targetRaceNum: raceNum,
+              raceMatch,
+              overallMatch: meetingMatch && raceMatch
+            });
+            
+            return meetingMatch && raceMatch;
+          }
         );
+        
+        console.log('✅ TAB Race Match Result:', {
+          found: !!tabData,
+          raceData: tabData ? {
+            meeting: tabData.meeting_name,
+            raceNumber: tabData.race_number,
+            runnerCount: tabData.runners?.length || 0,
+            runners: tabData.runners?.map((r: any) => r.horse_name)
+          } : null
+        });
       }
+    } else {
+      console.warn('⚠️ Postgres API client not available');
     }
   } catch (error: any) {
-    console.warn('⚠️ TAB data unavailable:', error.message);
+    console.error('❌ TAB data fetch failed:', error.message);
     // Continue without TAB data
   }
 
@@ -94,15 +135,32 @@ export default async function RacePage({ params }: Props) {
 
   // Merge data into runners (match by horse name)
   const enrichedRunners = runners.map((runner: any) => {
+    const runnerName = (runner.horseName || runner.name)?.toLowerCase();
+    
+    console.log('🐴 Matching runner:', {
+      punting: runnerName,
+      tabRunners: tabData?.runners?.map((tr: any) => tr.horse_name.toLowerCase()) || []
+    });
+    
     const tabRunner = tabData?.runners?.find(
-      (tr: any) => tr.horse_name.toLowerCase() === (runner.horseName || runner.name)?.toLowerCase()
+      (tr: any) => {
+        const match = tr.horse_name.toLowerCase() === runnerName;
+        console.log('  🔍 TAB Runner Match:', {
+          tabHorse: tr.horse_name.toLowerCase(),
+          puntingHorse: runnerName,
+          match,
+          tabWinPrice: tr.tab_fixed_win_price,
+          tabPlacePrice: tr.tab_fixed_place_price
+        });
+        return match;
+      }
     );
     
     const ttrRunner = ttrData?.find(
-      (tr: any) => tr.horse_name.toLowerCase() === (runner.horseName || runner.name)?.toLowerCase()
+      (tr: any) => tr.horse_name.toLowerCase() === runnerName
     );
 
-    return {
+    const enriched = {
       ...runner,
       tabFixedWinPrice: tabRunner?.tab_fixed_win_price || null,
       tabFixedPlacePrice: tabRunner?.tab_fixed_place_price || null,
@@ -111,6 +169,18 @@ export default async function RacePage({ params }: Props) {
       ttrRating: ttrRunner?.rating || null,
       ttrPrice: ttrRunner?.price || null,
     };
+    
+    console.log('✅ Enriched Runner:', {
+      name: runnerName,
+      hasTabData: !!tabRunner,
+      tabWinPrice: enriched.tabFixedWinPrice,
+      tabPlacePrice: enriched.tabFixedPlacePrice,
+      hasTtrData: !!ttrRunner,
+      ttrRating: enriched.ttrRating,
+      ttrPrice: enriched.ttrPrice
+    });
+    
+    return enriched;
   });
 
   return (
