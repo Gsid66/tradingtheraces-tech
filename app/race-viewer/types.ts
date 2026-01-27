@@ -2,7 +2,7 @@
 
 export interface RaceCardData {
   date: string; // "2026-01-28"
-  meeting_name: string;
+  track: string; // Changed from meeting_name
   race_number: number;
   race_name: string;
   saddle_number: number;
@@ -11,8 +11,8 @@ export interface RaceCardData {
   trainer: string;
   rating: number;
   price: number;
-  tab_fixed_win_price?: number | null;
-  tab_fixed_place_price?: number | null;
+  tab_fixed_win?: number | null;
+  tab_fixed_place?: number | null;
 }
 
 export interface FilterParams {

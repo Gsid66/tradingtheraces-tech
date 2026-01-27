@@ -12,10 +12,11 @@ interface PageProps {
 }
 
 async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
-  const postgresApiUrl = process.env.POSTGRES_API_URL;
+  const raceCardsApiUrl = process.env.RACE_CARD_RATINGS_API_URL || 'https://race-cards-ratings.onrender.com';
   
-  if (!postgresApiUrl) {
-    console.error('POSTGRES_API_URL environment variable is not set');
+  if (!raceCardsApiUrl) {
+    console.error('❌ RACE_CARD_RATINGS_API_URL is not set');
+    console.error('Set it to: https://race-cards-ratings.onrender.com');
     return {
       data: [],
       total: 0,
@@ -26,23 +27,33 @@ async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
   }
 
   try {
+    // Calculate default dates for API call
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    const formatDate = (date: Date) => date.toISOString().split('T')[0];
+
     const params = new URLSearchParams();
     
-    if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
-    if (filters.dateTo) params.append('dateTo', filters.dateTo);
-    if (filters.meeting_name) params.append('meeting_name', filters.meeting_name);
-    if (filters.state) params.append('state', filters.state);
-    if (filters.horse_name) params.append('horse_name', filters.horse_name);
+    // Required date range
+    params.append('start_date', filters.dateFrom || formatDate(thirtyDaysAgo));
+    params.append('end_date', filters.dateTo || formatDate(today));
+
+    // Optional filters
+    if (filters.meeting_name) params.append('track', filters.meeting_name);
+    if (filters.race_number) params.append('race_number', filters.race_number.toString());
+    if (filters.horse_name) params.append('horse', filters.horse_name);
     if (filters.jockey) params.append('jockey', filters.jockey);
     if (filters.trainer) params.append('trainer', filters.trainer);
-    if (filters.race_number) params.append('race_number', filters.race_number.toString());
-    if (filters.minRating) params.append('minRating', filters.minRating.toString());
-    if (filters.maxRating) params.append('maxRating', filters.maxRating.toString());
-    if (filters.page) params.append('page', filters.page.toString());
-    if (filters.perPage) params.append('perPage', filters.perPage.toString());
 
-    const url = `${postgresApiUrl}/api/race-cards?${params.toString()}`;
-    console.log('Fetching from:', url);
+    // Pagination
+    const limit = filters.perPage || 50;
+    const offset = ((filters.page || 1) - 1) * limit;
+    params.append('limit', limit.toString());
+    params.append('offset', offset.toString());
+
+    const url = `${raceCardsApiUrl}/api/races?${params.toString()}`;
+    console.log('🔍 Fetching from race-cards-ratings API:', url);
 
     const response = await fetch(url, {
       cache: 'no-store',
@@ -56,38 +67,15 @@ async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
       throw new Error(`API responded with status ${response.status}`);
     }
 
-    const data = await response.json();
-    
-    // Handle different possible response formats
-    if (Array.isArray(data)) {
-      // If API returns array directly
-      const perPage = filters.perPage || 50;
-      return {
-        data: data,
-        total: data.length,
-        page: filters.page || 1,
-        perPage: perPage,
-        totalPages: Math.ceil(data.length / perPage)
-      };
-    } else if (data.data && Array.isArray(data.data)) {
-      // If API returns object with data property
-      return {
-        data: data.data,
-        total: data.total || data.data.length,
-        page: data.page || filters.page || 1,
-        perPage: data.perPage || filters.perPage || 50,
-        totalPages: data.totalPages || Math.ceil((data.total || data.data.length) / (data.perPage || filters.perPage || 50))
-      };
-    } else {
-      // Fallback
-      return {
-        data: [],
-        total: 0,
-        page: 1,
-        perPage: 50,
-        totalPages: 0
-      };
-    }
+    const responseData = await response.json();
+
+    return {
+      data: responseData.data || [],
+      total: responseData.total || 0,
+      page: filters.page || 1,
+      perPage: filters.perPage || 50,
+      totalPages: Math.ceil((responseData.total || 0) / (filters.perPage || 50))
+    };
   } catch (error) {
     console.error('Error fetching race cards:', error);
     return {
