@@ -1,10 +1,14 @@
 import Image from 'next/image'
 import { FaGift, FaCrown } from 'react-icons/fa'
 import RaceCarousel from './components/RaceCarousel'
+import NavigationCards from '@/components/NavigationCards'
 
 export default function Home() {
   return (
     <>
+      {/* Navigation Cards */}
+      <NavigationCards />
+
       {/* Page Header */}
       <div className="page-header">
         {/* Logo */}
