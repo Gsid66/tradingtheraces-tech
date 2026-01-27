@@ -60,9 +60,18 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
     });
   };
 
-  const formatPrice = (price: number | null | undefined) => {
-    if (price === null || price === undefined) return '-';
-    return `$${price.toFixed(2)}`;
+  const formatPrice = (value: any): string => {
+    if (value == null || typeof value !== 'number' || isNaN(value)) {
+      return '-';
+    }
+    return `$${value.toFixed(2)}`;
+  };
+
+  const formatRating = (value: any): string => {
+    if (value == null || typeof value !== 'number' || isNaN(value)) {
+      return '-';
+    }
+    return value.toString();
   };
 
   const prepareExportData = () => {
@@ -79,10 +88,10 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
       row.horse_name,
       row.jockey,
       row.trainer,
-      row.rating,
-      row.price.toFixed(2),
-      row.tab_fixed_win ? row.tab_fixed_win.toFixed(2) : '-',
-      row.tab_fixed_place ? row.tab_fixed_place.toFixed(2) : '-'
+      formatRating(row.rating),
+      formatPrice(row.price).replace('$', ''),
+      row.tab_fixed_win ? formatPrice(row.tab_fixed_win).replace('$', '') : '-',
+      row.tab_fixed_place ? formatPrice(row.tab_fixed_place).replace('$', '') : '-'
     ]);
 
     return { headers, rows };
@@ -284,7 +293,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                 </td>
                 <td className="px-4 py-3 text-center">
                   <span className="inline-block bg-cyan-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                    {row.rating}
+                    {formatRating(row.rating)}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-center">
