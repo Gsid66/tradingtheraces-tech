@@ -54,7 +54,6 @@ export default async function RacePage({ params }: Props) {
     const pgClient = getPostgresAPIClient();
     
     if (pgClient) {
-      // Format date as YYYY-MM-DD
       const dateStr = format(new Date(meeting.meetingDate), 'yyyy-MM-dd');
       
       console.log('🔍 Fetching TAB data:', {
@@ -65,19 +64,25 @@ export default async function RacePage({ params }: Props) {
       
       const tabRacesResponse = await pgClient.getRacesByDate(dateStr);
       
+      // Log the RAW response first
+      console.log('📊 TAB API Raw Response:', tabRacesResponse);
+      
+      // Then log structured info
       console.log('📊 TAB API Response:', {
         success: tabRacesResponse.success,
-        count: tabRacesResponse.data?.length || 0,
-        races: tabRacesResponse.data?.map((r: any) => ({
+        hasData: !!tabRacesResponse.data,
+        isArray: Array.isArray(tabRacesResponse.data),
+        count: Array.isArray(tabRacesResponse.data) ? tabRacesResponse.data.length : 0,
+        races: Array.isArray(tabRacesResponse.data) ? tabRacesResponse.data.map((r: any) => ({
           meeting: r.meeting_name,
           raceNum: r.race_number,
           runnerCount: r.runners?.length || 0
-        }))
+        })) : 'NOT AN ARRAY'
       });
       
       // Find matching race
-      if (tabRacesResponse.success) {
-        tabData = tabRacesResponse.data?.find(
+      if (tabRacesResponse.success && Array.isArray(tabRacesResponse.data)) {
+        tabData = tabRacesResponse.data.find(
           (r: any) => {
             const meetingMatch = r.meeting_name?.toLowerCase().includes(meeting.track.name.toLowerCase());
             const raceMatch = r.race_number === raceNum;
@@ -89,7 +94,9 @@ export default async function RacePage({ params }: Props) {
               apiRaceNum: r.race_number,
               targetRaceNum: raceNum,
               raceMatch,
-              overallMatch: meetingMatch && raceMatch
+              overallMatch: meetingMatch && raceMatch,
+              hasRunners: !!r.runners,
+              runnerCount: r.runners?.length || 0
             });
             
             return meetingMatch && raceMatch;
@@ -101,17 +108,15 @@ export default async function RacePage({ params }: Props) {
           raceData: tabData ? {
             meeting: tabData.meeting_name,
             raceNumber: tabData.race_number,
+            hasRunners: !!tabData.runners,
             runnerCount: tabData.runners?.length || 0,
-            runners: tabData.runners?.map((r: any) => r.horse_name)
+            firstRunner: tabData.runners?.[0] || null
           } : null
         });
       }
-    } else {
-      console.warn('⚠️ Postgres API client not available');
     }
   } catch (error: any) {
     console.error('❌ TAB data fetch failed:', error.message);
-    // Continue without TAB data
   }
 
   // Fetch TTR data (don't crash if it fails)
