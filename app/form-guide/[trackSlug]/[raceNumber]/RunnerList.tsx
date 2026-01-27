@@ -92,7 +92,7 @@ function RunnerRow({ runner, position }: { runner: EnrichedRunner; position: num
         <div className="flex items-start gap-4">
           {/* Silks Icon - Larger */}
           <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-lg`}>
-            {runner.tabNumber || position}
+            {runner.tabNumber ?? runner.tabNo ?? position}
           </div>
 
           <div className="flex-1 min-w-0">
