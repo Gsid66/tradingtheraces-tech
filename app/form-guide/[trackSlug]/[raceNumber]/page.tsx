@@ -1,4 +1,6 @@
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { FiArrowLeft } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
 import { getPostgresAPIClient } from '@/lib/integrations/postgres-api';
@@ -190,13 +192,26 @@ export default async function RacePage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Header with Back Button */}
+      <div className="bg-gradient-to-r from-purple-900 to-purple-700 text-white py-4 px-4 shadow-lg">
+        <div className="max-w-7xl mx-auto">
+          <Link 
+            href="/form-guide" 
+            className="inline-flex items-center gap-2 text-purple-200 hover:text-white transition-colors"
+          >
+            <FiArrowLeft size={20} />
+            <span>Back to All Meetings</span>
+          </Link>
+        </div>
+      </div>
+      
       {/* Breadcrumb */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center gap-2 text-sm text-gray-600">
-            <a href="/" className="hover:text-gray-900">Home</a>
+            <Link href="/" className="hover:text-gray-900">Home</Link>
             <span>›</span>
-            <a href="/form-guide" className="hover: text-gray-900">Form Guide</a>
+            <Link href="/form-guide" className="hover:text-gray-900">Form Guide</Link>
             <span>›</span>
             <span className="text-gray-900 font-medium">{meeting.track.name}</span>
           </div>
@@ -215,7 +230,7 @@ export default async function RacePage({ params }: Props) {
         {/* Race Navigation Pills */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
           {races.map((r) => (
-            <a
+            <Link
               key={r.raceId}
               href={`/form-guide/${trackSlug}/${r.number}`}
               className={`flex-shrink-0 px-6 py-3 rounded-full font-medium transition-colors ${
@@ -225,7 +240,7 @@ export default async function RacePage({ params }: Props) {
               }`}
             >
               R{r.number}
-            </a>
+            </Link>
           ))}
         </div>
 
