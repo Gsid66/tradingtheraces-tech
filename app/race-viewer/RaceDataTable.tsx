@@ -8,6 +8,12 @@ interface RaceDataTableProps {
   data: RaceCardData[];
 }
 
+// Sort icon component
+function SortIcon({ field, sortField, sortDirection }: { field: SortField; sortField: SortField | null; sortDirection: SortDirection }) {
+  if (sortField !== field) return null;
+  return sortDirection === 'asc' ? <FiArrowUp /> : <FiArrowDown />;
+}
+
 export default function RaceDataTable({ data }: RaceDataTableProps) {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -131,11 +137,6 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
     URL.revokeObjectURL(url);
   };
 
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return null;
-    return sortDirection === 'asc' ? <FiArrowUp /> : <FiArrowDown />;
-  };
-
   if (data.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-lg p-12 text-center border-2 border-purple-100">
@@ -174,7 +175,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                 onClick={() => handleSort('date')}
               >
                 <div className="flex items-center gap-2">
-                  Date <SortIcon field="date" />
+                  Date <SortIcon field="date" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
               <th 
@@ -182,7 +183,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                 onClick={() => handleSort('meeting_name')}
               >
                 <div className="flex items-center gap-2">
-                  Track <SortIcon field="meeting_name" />
+                  Track <SortIcon field="meeting_name" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
               <th 
@@ -190,7 +191,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                 onClick={() => handleSort('race_number')}
               >
                 <div className="flex items-center gap-2">
-                  Race <SortIcon field="race_number" />
+                  Race <SortIcon field="race_number" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
               <th className="px-4 py-3 text-center text-sm font-semibold">
@@ -204,7 +205,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                 onClick={() => handleSort('jockey')}
               >
                 <div className="flex items-center gap-2">
-                  Jockey <SortIcon field="jockey" />
+                  Jockey <SortIcon field="jockey" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
               <th 
@@ -212,7 +213,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                 onClick={() => handleSort('trainer')}
               >
                 <div className="flex items-center gap-2">
-                  Trainer <SortIcon field="trainer" />
+                  Trainer <SortIcon field="trainer" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
               <th 
@@ -220,7 +221,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                 onClick={() => handleSort('rating')}
               >
                 <div className="flex items-center gap-2">
-                  Rating <SortIcon field="rating" />
+                  Rating <SortIcon field="rating" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
               <th 
@@ -228,7 +229,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                 onClick={() => handleSort('price')}
               >
                 <div className="flex items-center gap-2">
-                  Price <SortIcon field="price" />
+                  Price <SortIcon field="price" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
               <th 
@@ -236,7 +237,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                 onClick={() => handleSort('tab_fixed_win_price')}
               >
                 <div className="flex items-center gap-2">
-                  TAB Win <SortIcon field="tab_fixed_win_price" />
+                  TAB Win <SortIcon field="tab_fixed_win_price" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
               <th 
@@ -244,7 +245,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                 onClick={() => handleSort('tab_fixed_place_price')}
               >
                 <div className="flex items-center gap-2">
-                  TAB Place <SortIcon field="tab_fixed_place_price" />
+                  TAB Place <SortIcon field="tab_fixed_place_price" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
             </tr>
