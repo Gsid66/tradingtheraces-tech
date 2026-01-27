@@ -11,38 +11,52 @@ interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
-  const postgresApiUrl = process.env.POSTGRES_API_URL;
+// Utility function to format date to YYYY-MM-DD
+function formatDate(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
+// Utility function to get default date range
+function getDefaultDateRange() {
+  const today = new Date();
+  const thirtyDaysAgo = new Date(today);
+  thirtyDaysAgo.setDate(today.getDate() - 30);
   
-  if (!postgresApiUrl) {
-    console.error('POSTGRES_API_URL environment variable is not set');
-    return {
-      data: [],
-      total: 0,
-      page: 1,
-      perPage: 50,
-      totalPages: 0
-    };
-  }
+  return {
+    today,
+    thirtyDaysAgo,
+    todayFormatted: formatDate(today),
+    thirtyDaysAgoFormatted: formatDate(thirtyDaysAgo),
+  };
+}
+
+async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
+  const raceCardsApiUrl = process.env.RACE_CARD_RATINGS_API_URL || 'https://race-cards-ratings.onrender.com';
 
   try {
+    const { thirtyDaysAgoFormatted, todayFormatted } = getDefaultDateRange();
+
     const params = new URLSearchParams();
     
-    if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
-    if (filters.dateTo) params.append('dateTo', filters.dateTo);
-    if (filters.meeting_name) params.append('meeting_name', filters.meeting_name);
-    if (filters.state) params.append('state', filters.state);
-    if (filters.horse_name) params.append('horse_name', filters.horse_name);
+    // Required date range
+    params.append('start_date', filters.dateFrom || thirtyDaysAgoFormatted);
+    params.append('end_date', filters.dateTo || todayFormatted);
+
+    // Optional filters
+    if (filters.meeting_name) params.append('track', filters.meeting_name);
+    if (filters.race_number) params.append('race_number', filters.race_number.toString());
+    if (filters.horse_name) params.append('horse', filters.horse_name);
     if (filters.jockey) params.append('jockey', filters.jockey);
     if (filters.trainer) params.append('trainer', filters.trainer);
-    if (filters.race_number) params.append('race_number', filters.race_number.toString());
-    if (filters.minRating) params.append('minRating', filters.minRating.toString());
-    if (filters.maxRating) params.append('maxRating', filters.maxRating.toString());
-    if (filters.page) params.append('page', filters.page.toString());
-    if (filters.perPage) params.append('perPage', filters.perPage.toString());
 
-    const url = `${postgresApiUrl}/api/race-cards?${params.toString()}`;
-    console.log('Fetching from:', url);
+    // Pagination
+    const limit = filters.perPage || 50;
+    const offset = ((filters.page || 1) - 1) * limit;
+    params.append('limit', limit.toString());
+    params.append('offset', offset.toString());
+
+    const url = `${raceCardsApiUrl}/api/races?${params.toString()}`;
+    console.log('🔍 Fetching from race-cards-ratings API:', url);
 
     const response = await fetch(url, {
       cache: 'no-store',
@@ -56,38 +70,15 @@ async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
       throw new Error(`API responded with status ${response.status}`);
     }
 
-    const data = await response.json();
-    
-    // Handle different possible response formats
-    if (Array.isArray(data)) {
-      // If API returns array directly
-      const perPage = filters.perPage || 50;
-      return {
-        data: data,
-        total: data.length,
-        page: filters.page || 1,
-        perPage: perPage,
-        totalPages: Math.ceil(data.length / perPage)
-      };
-    } else if (data.data && Array.isArray(data.data)) {
-      // If API returns object with data property
-      return {
-        data: data.data,
-        total: data.total || data.data.length,
-        page: data.page || filters.page || 1,
-        perPage: data.perPage || filters.perPage || 50,
-        totalPages: data.totalPages || Math.ceil((data.total || data.data.length) / (data.perPage || filters.perPage || 50))
-      };
-    } else {
-      // Fallback
-      return {
-        data: [],
-        total: 0,
-        page: 1,
-        perPage: 50,
-        totalPages: 0
-      };
-    }
+    const responseData = await response.json();
+
+    return {
+      data: responseData.data || [],
+      total: responseData.total || 0,
+      page: filters.page || 1,
+      perPage: filters.perPage || 50,
+      totalPages: Math.ceil((responseData.total || 0) / (filters.perPage || 50))
+    };
   } catch (error) {
     console.error('Error fetching race cards:', error);
     return {
@@ -103,17 +94,13 @@ async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
 export default async function RaceViewerPage({ searchParams }: PageProps) {
   const params = await searchParams;
   
-  // Calculate default dates
-  const today = new Date();
-  const thirtyDaysAgo = new Date(today);
-  thirtyDaysAgo.setDate(today.getDate() - 30);
-  
-  const formatDate = (date: Date) => date.toISOString().split('T')[0];
+  // Get default dates using utility function
+  const { thirtyDaysAgoFormatted, todayFormatted } = getDefaultDateRange();
 
   // Extract filter params from URL
   const filters: FilterParams = {
-    dateFrom: typeof params.dateFrom === 'string' ? params.dateFrom : formatDate(thirtyDaysAgo),
-    dateTo: typeof params.dateTo === 'string' ? params.dateTo : formatDate(today),
+    dateFrom: typeof params.dateFrom === 'string' ? params.dateFrom : thirtyDaysAgoFormatted,
+    dateTo: typeof params.dateTo === 'string' ? params.dateTo : todayFormatted,
     meeting_name: typeof params.meeting_name === 'string' ? params.meeting_name : undefined,
     state: typeof params.state === 'string' ? params.state : undefined,
     race_number: typeof params.race_number === 'string' ? parseInt(params.race_number) : undefined,
