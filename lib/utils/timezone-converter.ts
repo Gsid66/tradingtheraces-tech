@@ -84,7 +84,14 @@ const TRACK_TO_STATE: Record<string, string> = {
 
 export function getStateFromTrackName(trackName: string): string {
   const normalized = trackName.toLowerCase().trim();
-  return TRACK_TO_STATE[normalized] || 'NSW'; // Default to NSW/AEDT
+  const state = TRACK_TO_STATE[normalized];
+  
+  if (!state) {
+    console.warn(`Track '${trackName}' not found in timezone mapping, defaulting to NSW/AEDT`);
+    return 'NSW'; // Default to NSW/AEDT
+  }
+  
+  return state;
 }
 
 export function convertToAEDT(timeStr: string, state: string): string {
@@ -106,29 +113,92 @@ export function convertToAEDT(timeStr: string, state: string): string {
       if (period === 'am' && hour === 12) hour = 0;
     }
     
-    const today = new Date().toISOString().split('T')[0];
-    const dateStr = `${today}T${hour.toString().padStart(2, '0')}:${minutes}:00`;
-    
-    // Parse in venue timezone and format to AEDT
-    const formatter = new Intl.DateTimeFormat('en-AU', {
+    // Get today's date in the venue's timezone
+    const venueDate = new Date().toLocaleString('en-US', { 
       timeZone: venueTimezone,
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    const [month, day, year] = venueDate.split(',')[0].split('/');
+    
+    // Create a date string in the venue's timezone
+    const dateStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour.toString().padStart(2, '0')}:${minutes}:00`;
+    
+    // Parse the date as if it's in the venue timezone by using toLocaleString
+    // We create a formatter that will interpret the time in the venue timezone
+    const venueDateObj = new Date(dateStr + 'Z'); // Treat as UTC first
+    
+    // Get the offset difference between venue timezone and UTC
+    const venueOffsetStr = venueDateObj.toLocaleString('en-US', {
+      timeZone: venueTimezone,
+      timeZoneName: 'short'
     });
     
-    const date = new Date(dateStr);
-    const venueTime = date.toLocaleString('en-US', { timeZone: venueTimezone });
-    const venueDate = new Date(venueTime);
+    // Now create the actual time in the venue timezone
+    // by using a more reliable method: create ISO string and parse in venue timezone
+    const testDate = new Date();
+    testDate.setHours(hour, parseInt(minutes), 0, 0);
     
-    const aedtTime = venueDate.toLocaleTimeString('en-AU', {
+    // Format the time in AEDT
+    const aedtTime = testDate.toLocaleTimeString('en-AU', {
       timeZone: 'Australia/Sydney',
       hour: 'numeric',
       minute: '2-digit',
-      hour12: true
+      hour12: true,
+      timeZoneName: undefined
     });
     
-    return aedtTime;
+    // Get UTC offsets to calculate the time difference
+    const venueFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: venueTimezone,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    const aedtFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Australia/Sydney',
+      hour: '2-digit',
+      minute: '2-digit', 
+      hour12: false
+    });
+    
+    // Create a reference date to calculate offset
+    const refDate = new Date('2024-01-15T12:00:00Z'); // Mid-summer date when DST is active
+    const venueTime24 = venueFormatter.format(refDate);
+    const aedtTime24 = aedtFormatter.format(refDate);
+    
+    // Calculate hour offset
+    const [venueHour, venueMin] = venueTime24.split(':').map(Number);
+    const [aedtHour, aedtMin] = aedtTime24.split(':').map(Number);
+    const offsetHours = aedtHour - venueHour;
+    const offsetMins = aedtMin - venueMin;
+    
+    // Apply offset to the race time
+    let resultHour = hour + offsetHours;
+    let resultMin = parseInt(minutes) + offsetMins;
+    
+    // Handle minute overflow
+    if (resultMin >= 60) {
+      resultHour += 1;
+      resultMin -= 60;
+    } else if (resultMin < 0) {
+      resultHour -= 1;
+      resultMin += 60;
+    }
+    
+    // Handle hour overflow
+    if (resultHour >= 24) {
+      resultHour -= 24;
+    } else if (resultHour < 0) {
+      resultHour += 24;
+    }
+    
+    // Format back to 12-hour time
+    const ampm = resultHour >= 12 ? 'pm' : 'am';
+    const display12Hour = resultHour % 12 || 12;
+    
+    return `${display12Hour}:${resultMin.toString().padStart(2, '0')} ${ampm}`;
   } catch (error) {
     console.error('Error converting time:', error);
     return timeStr;

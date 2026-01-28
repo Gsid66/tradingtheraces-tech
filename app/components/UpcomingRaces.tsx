@@ -27,6 +27,7 @@ interface Race {
   race_name: string
   race_type?: string
   race_time?: string
+  race_time_local?: string
   distance?: number
   prize_money?: number
   runner_count: number
