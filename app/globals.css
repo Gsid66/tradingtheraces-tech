@@ -787,6 +787,48 @@ footer p {
   box-shadow: 0 4px 12px rgba(139, 92, 246, 0.5);
 }
 
+/* All Races Complete state */
+.upcoming-races-complete-container {
+  display: flex;
+  justify-content: center;
+}
+
+.upcoming-races-complete-card {
+  background: linear-gradient(135deg, rgba(26, 0, 51, 0.95), rgba(0, 0, 0, 0.95));
+  border: 2px solid var(--purple-main);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+}
+
+.upcoming-races-complete-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.upcoming-races-complete-heading {
+  color: var(--purple-lighter);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.upcoming-races-complete-text {
+  color: var(--purple-light);
+  font-size: 1.1rem;
+  margin: 0.5rem 0;
+}
+
+.upcoming-races-complete-subtext {
+  color: var(--purple-light);
+  font-size: 0.95rem;
+  opacity: 0.8;
+  margin: 0.5rem 0 0 0;
+}
+
 /* Coming Soon Cards */
 .coming-soon-grid {
   display: grid;
@@ -847,23 +889,4 @@ footer p {
 .no-data {
   color: rgba(139, 92, 246, 0.4);
   font-style: italic;
-}
-
-/* Retry Button */
-.retry-button {
-  background: linear-gradient(135deg, var(--purple-deep), var(--purple-main));
-  border: 2px solid var(--purple-main);
-  color: white;
-  padding: 0.8rem 1.5rem;
-  border-radius: 8px;
-  font-size:   1rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 1rem;
-  transition: all 0.3s ease;
-}
-
-.retry-button:hover {
-  background: linear-gradient(135deg, var(--purple-main), var(--purple-light));
-  transform: translateY(-2px);
 }
