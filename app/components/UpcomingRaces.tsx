@@ -202,12 +202,7 @@ export default function UpcomingRaces() {
       const next4Races = sortedRaces.slice(0, 4)
       
       setUpcomingRaces(next4Races)
-      
-      if (next4Races.length === 0) {
-        setError('No upcoming races available. All races have finished.')
-      } else {
-        setError(null)
-      }
+      setError(null)
       
     } catch (err: any) {
       // Don't set error if the fetch was aborted (component unmounting)
@@ -255,16 +250,39 @@ export default function UpcomingRaces() {
     )
   }
 
-  // Error or empty state
-  if (error || upcomingRaces.length === 0) {
+  // Error state
+  if (error) {
     return (
       <div className="upcoming-races-container">
         <h2 className="upcoming-races-title">Upcoming Races</h2>
         <div className="upcoming-races-empty">
-          <p>{error || 'No upcoming races available'}</p>
+          <p>{error}</p>
           <button onClick={() => fetchUpcomingRaces()} className="retry-button">
             Refresh
           </button>
+        </div>
+      </div>
+    )
+  }
+
+  // All races complete state
+  if (upcomingRaces.length === 0) {
+    return (
+      <div className="upcoming-races-container" aria-live="polite">
+        <h2 className="upcoming-races-title">Upcoming Races</h2>
+        <div className="upcoming-races-complete-container">
+          <div className="upcoming-races-complete-card">
+            <div className="upcoming-races-complete-icon" role="img" aria-label="Moon icon">🌙</div>
+            <h3 className="upcoming-races-complete-heading">
+              All Races Complete
+            </h3>
+            <p className="upcoming-races-complete-text">
+              No more races today
+            </p>
+            <p className="upcoming-races-complete-subtext">
+              Check back tomorrow!
+            </p>
+          </div>
         </div>
       </div>
     )
