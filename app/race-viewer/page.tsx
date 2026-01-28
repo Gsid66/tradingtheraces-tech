@@ -1,9 +1,10 @@
 import React from 'react';
-import { FilterParams, ApiResponse } from './types';
+import { FilterParams, ApiResponse, RaceCardData } from './types';
 import StatisticsCards from './StatisticsCards';
 import FilterPanel from './FilterPanel';
 import RaceDataTable from './RaceDataTable';
 import Pagination from './Pagination';
+import { getPostgresAPIClient, TabRace, TabRunner } from '@/lib/integrations/postgres-api';
 
 export const dynamic = 'force-dynamic';
 
@@ -97,6 +98,105 @@ async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
   }
 }
 
+async function mergeTABOdds(raceCards: RaceCardData[]): Promise<RaceCardData[]> {
+  // If no race cards, return empty array
+  if (!raceCards || raceCards.length === 0) {
+    return raceCards;
+  }
+
+  const pgClient = getPostgresAPIClient();
+  
+  // If postgres API client is not available, return race cards without TAB odds
+  if (!pgClient) {
+    console.warn('⚠️ PostgreSQL API client not available - TAB odds will not be fetched');
+    return raceCards;
+  }
+
+  try {
+    // Extract unique dates from race cards
+    const uniqueDates = [...new Set(raceCards.map(card => {
+      const date = new Date(card.race_date);
+      return date.toISOString().split('T')[0];
+    }))];
+
+    console.log('🔍 Fetching TAB odds for dates:', uniqueDates);
+
+    // Fetch TAB data for all unique dates
+    const tabDataPromises = uniqueDates.map(date => 
+      pgClient.getRacesByDate(date).catch(err => {
+        console.error(`Error fetching TAB data for ${date}:`, err);
+        return { success: false, data: [] };
+      })
+    );
+
+    const tabResponses = await Promise.all(tabDataPromises);
+
+    // Flatten all TAB races into a single array
+    const allTabRaces = tabResponses
+      .filter(response => response.success && Array.isArray(response.data))
+      .flatMap(response => response.data);
+
+    console.log(`📊 Fetched ${allTabRaces.length} TAB races`);
+
+    // Merge TAB odds into race cards
+    const mergedRaceCards = raceCards.map(card => {
+      // Normalize race_date to YYYY-MM-DD for comparison
+      const cardDate = new Date(card.race_date).toISOString().split('T')[0];
+      
+      // Find matching TAB race
+      const matchingTabRace = allTabRaces.find((tabRace: TabRace) => {
+        const tabDate = new Date(tabRace.meeting_date).toISOString().split('T')[0];
+        const dateMatch = tabDate === cardDate;
+        
+        // Match on meeting name with more precise logic
+        // Examples: "Flemington" matches "Flemington", "Randwick" matches "Randwick"
+        // Use length threshold to avoid false positives like "Park" matching multiple venues
+        const cardTrackLower = card.track.toLowerCase().trim();
+        const tabTrackLower = (tabRace.meeting_name ?? '').toLowerCase().trim();
+        
+        // Check for exact match or if one track name contains the full other name (min 5 chars to reduce false positives)
+        const trackMatch = cardTrackLower === tabTrackLower ||
+                          (cardTrackLower.length >= 5 && tabTrackLower.includes(cardTrackLower)) ||
+                          (tabTrackLower.length >= 5 && cardTrackLower.includes(tabTrackLower));
+        
+        const raceMatch = tabRace.race_number === card.race_number;
+        
+        return dateMatch && trackMatch && raceMatch;
+      });
+
+      if (matchingTabRace && matchingTabRace.runners) {
+        // Find matching runner in the TAB race
+        const matchingRunner = matchingTabRace.runners.find((runner: TabRunner) => {
+          // Skip runners without horse names
+          if (!runner.horse_name) return false;
+          return runner.horse_name.toLowerCase().trim() === card.horse_name.toLowerCase().trim();
+        });
+
+        if (matchingRunner) {
+          return {
+            ...card,
+            tab_fixed_win: matchingRunner.tab_fixed_win_price,
+            tab_fixed_place: matchingRunner.tab_fixed_place_price
+          };
+        }
+      }
+
+      // Return card without TAB odds if no match found
+      return card;
+    });
+
+    // Log merge statistics
+    const cardsWithTabWin = mergedRaceCards.filter(c => c.tab_fixed_win != null).length;
+    const cardsWithTabPlace = mergedRaceCards.filter(c => c.tab_fixed_place != null).length;
+    console.log(`✅ Merged TAB odds: ${cardsWithTabWin} with Win odds, ${cardsWithTabPlace} with Place odds out of ${raceCards.length} total cards`);
+
+    return mergedRaceCards;
+  } catch (error) {
+    console.error('Error merging TAB odds:', error);
+    return raceCards; // Return original race cards on error
+  }
+}
+
 export default async function RaceViewerPage({ searchParams }: PageProps) {
   const params = await searchParams;
   
@@ -121,6 +221,15 @@ export default async function RaceViewerPage({ searchParams }: PageProps) {
 
   const result = await fetchRaceCards(filters);
 
+  // Merge TAB odds into race cards
+  const raceCardsWithTABOdds = await mergeTABOdds(result.data);
+  
+  // Update result with merged data
+  const finalResult = {
+    ...result,
+    data: raceCardsWithTABOdds
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white">
       {/* Header */}
@@ -137,23 +246,23 @@ export default async function RaceViewerPage({ searchParams }: PageProps) {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Statistics Cards */}
         <StatisticsCards
-          totalRecords={result.total}
-          currentPage={result.page}
-          totalPages={result.totalPages}
-          recordsPerPage={result.perPage}
+          totalRecords={finalResult.total}
+          currentPage={finalResult.page}
+          totalPages={finalResult.totalPages}
+          recordsPerPage={finalResult.perPage}
         />
 
         {/* Filter Panel */}
         <FilterPanel />
 
         {/* Data Table */}
-        <RaceDataTable data={result.data} />
+        <RaceDataTable data={finalResult.data} />
 
         {/* Pagination */}
-        {result.totalPages > 1 && (
+        {finalResult.totalPages > 1 && (
           <Pagination 
-            currentPage={result.page} 
-            totalPages={result.totalPages} 
+            currentPage={finalResult.page} 
+            totalPages={finalResult.totalPages} 
           />
         )}
       </div>
