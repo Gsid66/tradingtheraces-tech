@@ -15,7 +15,6 @@ export default function Navigation() {
     { href: '/form-guide', label: 'Form Guide' },
     { href: '/race-viewer', label: 'Ratings' },
     { href: '/ratings-odds-comparison', label: 'Ratings vs Odds' },
-    { href: '/race-fields', label: 'Race Fields' },
     { href: '/calculator', label: 'Calculator' },
   ];
 
