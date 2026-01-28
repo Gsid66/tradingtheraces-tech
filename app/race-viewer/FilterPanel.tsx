@@ -46,7 +46,7 @@ export default function FilterPanel() {
     params.set('perPage', perPage);
     params.set('page', '1'); // Reset to page 1 when filters change
 
-    router.push(`?${params.toString()}`);
+    router.push(`/race-viewer?${params.toString()}`);
   };
 
   const clearFilters = () => {
