@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function FilterPanel() {
@@ -26,6 +26,25 @@ export default function FilterPanel() {
   const [minRating, setMinRating] = useState(searchParams.get('minRating') || '');
   const [maxRating, setMaxRating] = useState(searchParams.get('maxRating') || '');
   const [perPage, setPerPage] = useState(searchParams.get('perPage') || '50');
+
+  // Sync state with URL searchParams when they change
+  useEffect(() => {
+    const currentToday = new Date();
+    const currentOneYearAgo = new Date(currentToday);
+    currentOneYearAgo.setFullYear(currentToday.getFullYear() - 1);
+
+    setDateFrom(searchParams.get('dateFrom') || formatDate(currentOneYearAgo));
+    setDateTo(searchParams.get('dateTo') || formatDate(currentToday));
+    setTrack(searchParams.get('meeting_name') || '');
+    setState(searchParams.get('state') || '');
+    setRaceNumber(searchParams.get('race_number') || '');
+    setHorseName(searchParams.get('horse_name') || '');
+    setJockey(searchParams.get('jockey') || '');
+    setTrainer(searchParams.get('trainer') || '');
+    setMinRating(searchParams.get('minRating') || '');
+    setMaxRating(searchParams.get('maxRating') || '');
+    setPerPage(searchParams.get('perPage') || '50');
+  }, [searchParams]);
 
   const states = ['All States', 'NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'];
   const perPageOptions = ['25', '50', '100', '200'];
