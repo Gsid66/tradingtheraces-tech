@@ -108,7 +108,7 @@ function normalizeTrackName(trackName: string): string {
   const suffixes = ['racecourse', 'gardens', 'hillside', 'park', 'racing'];
   for (const suffix of suffixes) {
     // Remove suffix with optional space before it
-    normalized = normalized.replace(new RegExp(`\\s*${suffix}\\s*$`, 'i'), '');
+    normalized = normalized.replace(new RegExp(`\\s*${suffix}\\s*$`), '');
   }
   
   // Remove special characters and extra spaces
@@ -128,9 +128,10 @@ function tracksMatch(track1: string, track2: string): boolean {
   if (!normalized1 || !normalized2) return false;
   
   // Check if tracks are equal or one contains the other
+  // Use minimum length threshold to avoid false positives like "vale" matching "waverley"
   return normalized1 === normalized2 || 
-         normalized1.includes(normalized2) || 
-         normalized2.includes(normalized1);
+         (normalized1.length >= 5 && normalized2.includes(normalized1)) ||
+         (normalized2.length >= 5 && normalized1.includes(normalized2));
 }
 
 async function mergeTABOdds(raceCards: RaceCardData[]): Promise<RaceCardData[]> {
@@ -198,16 +199,16 @@ async function mergeTABOdds(raceCards: RaceCardData[]): Promise<RaceCardData[]> 
         // Match on meeting name with intelligent track name matching
         // Handles variations like "sandown" vs "sandown hillside", "rosehill" vs "rosehill gardens"
         // Support both 'track' and 'meeting_name' fields with null checks
-        const cardTrackLower = (card.track || card.meeting_name || '').toLowerCase().trim();
-        const tabTrackLower = (tabRace.meeting_name ?? '').toLowerCase().trim();
+        const cardTrack = card.track || card.meeting_name || '';
+        const tabTrack = tabRace.meeting_name ?? '';
         
         // Skip matching if card has no track information
-        if (!cardTrackLower || !tabTrackLower) {
+        if (!cardTrack || !tabTrack) {
           return false;
         }
         
         // Use intelligent track matching that normalizes and handles suffixes
-        const trackMatch = tracksMatch(cardTrackLower, tabTrackLower);
+        const trackMatch = tracksMatch(cardTrack, tabTrack);
         
         const raceMatch = tabRace.race_number === card.race_number;
         
@@ -215,8 +216,8 @@ async function mergeTABOdds(raceCards: RaceCardData[]): Promise<RaceCardData[]> 
         if (!dateMatch || !trackMatch || !raceMatch) {
           if (Math.random() < 0.01) {
             console.log('❌ Match failed:', {
-              cardTrack: cardTrackLower,
-              tabTrack: tabTrackLower,
+              cardTrack: cardTrack,
+              tabTrack: tabTrack,
               cardDate,
               tabDate,
               cardRace: card.race_number,
