@@ -36,19 +36,19 @@ export default function Home() {
       <div className="coming-soon-grid">
         <div className="coming-soon-card">
           <h4>Coming Soon</h4>
-          <p>More features</p>
+          <p>AU Data Base</p>
         </div>
         <div className="coming-soon-card">
           <h4>Coming Soon</h4>
-          <p>More features</p>
+          <p>UK Data Base</p>
         </div>
         <div className="coming-soon-card">
           <h4>Coming Soon</h4>
-          <p>More features</p>
+          <p>Trading Desk</p>
         </div>
         <div className="coming-soon-card">
           <h4>Coming Soon</h4>
-          <p>More features</p>
+          <p>Sherlock-Hooves AI Agent</p>
         </div>
       </div>
 
@@ -67,7 +67,7 @@ export default function Home() {
         <div className="info-banner-content">
           <h3>Want More Premium Content?</h3>
           <p>
-            Join our Members Portal for exclusive race reports, advanced tools, and comprehensive lessons
+            Join our Members Chat for exclusive race reports, advanced tools, and comprehensive lessons
           </p>
         </div>
       </div>
