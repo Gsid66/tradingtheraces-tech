@@ -272,7 +272,7 @@ export default function UpcomingRaces() {
         <h2 className="upcoming-races-title">Upcoming Races</h2>
         <div className="upcoming-races-complete-container">
           <div className="upcoming-races-complete-card">
-            <div className="upcoming-races-complete-icon">🌙</div>
+            <div className="upcoming-races-complete-icon" role="img" aria-label="Moon icon">🌙</div>
             <h3 className="upcoming-races-complete-heading">
               All Races Complete
             </h3>

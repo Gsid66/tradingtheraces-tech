@@ -890,22 +890,3 @@ footer p {
   color: rgba(139, 92, 246, 0.4);
   font-style: italic;
 }
-
-/* Retry Button */
-.retry-button {
-  background: linear-gradient(135deg, var(--purple-deep), var(--purple-main));
-  border: 2px solid var(--purple-main);
-  color: white;
-  padding: 0.8rem 1.5rem;
-  border-radius: 8px;
-  font-size:   1rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 1rem;
-  transition: all 0.3s ease;
-}
-
-.retry-button:hover {
-  background: linear-gradient(135deg, var(--purple-main), var(--purple-light));
-  transform: translateY(-2px);
-}
