@@ -29,12 +29,9 @@ export default function FilterPanel() {
 
   // Sync state with URL searchParams when they change
   useEffect(() => {
-    const currentToday = new Date();
-    const currentOneYearAgo = new Date(currentToday);
-    currentOneYearAgo.setFullYear(currentToday.getFullYear() - 1);
-
-    setDateFrom(searchParams.get('dateFrom') || formatDate(currentOneYearAgo));
-    setDateTo(searchParams.get('dateTo') || formatDate(currentToday));
+    // Use the same default dates as defined at component level
+    setDateFrom(searchParams.get('dateFrom') || formatDate(oneYearAgo));
+    setDateTo(searchParams.get('dateTo') || formatDate(today));
     setTrack(searchParams.get('meeting_name') || '');
     setState(searchParams.get('state') || '');
     setRaceNumber(searchParams.get('race_number') || '');
@@ -44,7 +41,7 @@ export default function FilterPanel() {
     setMinRating(searchParams.get('minRating') || '');
     setMaxRating(searchParams.get('maxRating') || '');
     setPerPage(searchParams.get('perPage') || '50');
-  }, [searchParams]);
+  }, [searchParams, today, oneYearAgo]);
 
   const states = ['All States', 'NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'];
   const perPageOptions = ['25', '50', '100', '200'];

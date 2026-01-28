@@ -4,7 +4,7 @@ import StatisticsCards from './StatisticsCards';
 import FilterPanel from './FilterPanel';
 import RaceDataTable from './RaceDataTable';
 import Pagination from './Pagination';
-import { getPostgresAPIClient } from '@/lib/integrations/postgres-api';
+import { getPostgresAPIClient, TabRace, TabRunner } from '@/lib/integrations/postgres-api';
 
 export const dynamic = 'force-dynamic';
 
@@ -144,22 +144,27 @@ async function mergeTABOdds(raceCards: RaceCardData[]): Promise<RaceCardData[]> 
       const cardDate = new Date(card.race_date).toISOString().split('T')[0];
       
       // Find matching TAB race
-      const matchingTabRace = allTabRaces.find((tabRace: any) => {
+      const matchingTabRace = allTabRaces.find((tabRace: TabRace) => {
         const tabDate = new Date(tabRace.meeting_date).toISOString().split('T')[0];
         const dateMatch = tabDate === cardDate;
         
-        // Match on meeting name (case insensitive, allow partial matches)
-        const trackMatch = tabRace.meeting_name?.toLowerCase().includes(card.track.toLowerCase()) || 
-                          card.track.toLowerCase().includes(tabRace.meeting_name?.toLowerCase());
+        // Match on meeting name with more precise logic
+        const cardTrackLower = card.track.toLowerCase().trim();
+        const tabTrackLower = (tabRace.meeting_name || '').toLowerCase().trim();
+        
+        // Check for exact match or if one track name contains the full other name
+        const trackMatch = cardTrackLower === tabTrackLower ||
+                          (cardTrackLower.length > 3 && tabTrackLower.includes(cardTrackLower)) ||
+                          (tabTrackLower.length > 3 && cardTrackLower.includes(tabTrackLower));
         
         const raceMatch = tabRace.race_number === card.race_number;
         
         return dateMatch && trackMatch && raceMatch;
       });
 
-      if (matchingTabRace) {
+      if (matchingTabRace && matchingTabRace.runners) {
         // Find matching runner in the TAB race
-        const matchingRunner = matchingTabRace.runners?.find((runner: any) => 
+        const matchingRunner = matchingTabRace.runners.find((runner: TabRunner) => 
           runner.horse_name?.toLowerCase().trim() === card.horse_name.toLowerCase().trim()
         );
 
