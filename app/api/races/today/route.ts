@@ -13,7 +13,8 @@ export async function GET() {
       )
     }
     
-    // Get today's date in AEDT (Australia/Sydney timezone) using reliable method
+    // Get today's date in AEDT (Australia/Sydney timezone)
+    // Using 'en-CA' locale guarantees YYYY-MM-DD format consistently across all environments
     const formatter = new Intl.DateTimeFormat('en-CA', {
       timeZone: 'Australia/Sydney',
       year: 'numeric',
