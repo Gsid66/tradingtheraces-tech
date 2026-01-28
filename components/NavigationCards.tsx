@@ -4,7 +4,7 @@ import { FaDiscord } from 'react-icons/fa';  // ⬅️ ADD THIS
 export default function NavigationCards() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         {/* Live TTR Ratings Card - ACTIVE */}
         <Link href="/form-guide">
