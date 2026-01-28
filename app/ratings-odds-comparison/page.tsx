@@ -200,7 +200,7 @@ export default async function RatingsOddsComparisonPage() {
           <h3 className="font-semibold text-blue-900 mb-2">About This Page</h3>
           <p className="text-blue-800 text-sm">
             This page displays today's race cards with TTR ratings alongside TAB fixed odds. 
-            Compare our TTR ratings with current market prices to identify potential value opportunities.
+            Compare our TTR ratings with current market prices to identify potential value opportunities. For full instructions please view the video tutorial availble to all VIP Members on the Discord Chat platform.
           </p>
         </div>
 
