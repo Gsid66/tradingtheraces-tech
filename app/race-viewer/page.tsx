@@ -2,6 +2,7 @@ import React from 'react';
 import { FilterParams, ApiResponse } from './types';
 import StatisticsCards from './StatisticsCards';
 import FilterPanel from './FilterPanel';
+import DateRangeDisplay from './DateRangeDisplay';
 import RaceDataTable from './RaceDataTable';
 
 export const dynamic = 'force-dynamic';
@@ -105,6 +106,12 @@ export default async function RaceViewerPage({ searchParams }: PageProps) {
 
         {/* Filter Panel */}
         <FilterPanel />
+
+        {/* Date Range Display */}
+        <DateRangeDisplay 
+          dateFrom={filters.dateFrom || todayFormatted} 
+          dateTo={filters.dateTo || todayFormatted} 
+        />
 
         {/* Data Table */}
         <RaceDataTable data={result.data} />
