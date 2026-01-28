@@ -2,6 +2,7 @@ import React from 'react';
 import { RatingsOddsData } from './types';
 import RatingsOddsTable from './RatingsOddsTable';
 import { getPostgresAPIClient, TabRace, TabRunner } from '@/lib/integrations/postgres-api';
+import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 
 export const dynamic = 'force-dynamic';
 
@@ -142,8 +143,7 @@ async function mergeTABOdds(raceCards: RatingsOddsData[]): Promise<RatingsOddsDa
 
       if (matchingTabRace && matchingTabRace.runners) {
         const matchingRunner = matchingTabRace.runners.find((runner: TabRunner) => {
-          if (!runner.horse_name || !card.horse_name) return false;
-          return runner.horse_name.toLowerCase().trim() === card.horse_name.toLowerCase().trim();
+          return horseNamesMatch(runner.horse_name, card.horse_name);
         });
 
         if (matchingRunner) {

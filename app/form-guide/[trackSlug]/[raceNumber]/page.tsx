@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
 import { getPostgresAPIClient } from '@/lib/integrations/postgres-api';
 import { getRaceCardRatingsClient } from '@/lib/integrations/race-card-ratings';
+import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 import RaceTabs from './RaceTabs';
 import RaceDetails from './RaceDetails';
 import RunnerList from './RunnerList';
@@ -150,21 +151,11 @@ export default async function RacePage({ params }: Props) {
     });
     
     const tabRunner = tabData?.runners?.find(
-      (tr: any) => {
-        const match = tr.horse_name.toLowerCase() === runnerName;
-        console.log('  🔍 TAB Runner Match:', {
-          tabHorse: tr.horse_name.toLowerCase(),
-          puntingHorse: runnerName,
-          match,
-          tabWinPrice: tr.tab_fixed_win_price,
-          tabPlacePrice: tr.tab_fixed_place_price
-        });
-        return match;
-      }
+      (tr: any) => horseNamesMatch(tr.horse_name, runner.horseName || runner.name)
     );
     
     const ttrRunner = ttrData?.find(
-      (tr: any) => tr.horse_name.toLowerCase() === runnerName
+      (tr: any) => horseNamesMatch(tr.horse_name, runner.horseName || runner.name)
     );
 
     const enriched = {
