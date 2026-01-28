@@ -149,13 +149,15 @@ async function mergeTABOdds(raceCards: RaceCardData[]): Promise<RaceCardData[]> 
         const dateMatch = tabDate === cardDate;
         
         // Match on meeting name with more precise logic
+        // Examples: "Flemington" matches "Flemington", "Randwick" matches "Randwick"
+        // Use length threshold to avoid false positives like "Park" matching multiple venues
         const cardTrackLower = card.track.toLowerCase().trim();
-        const tabTrackLower = (tabRace.meeting_name || '').toLowerCase().trim();
+        const tabTrackLower = (tabRace.meeting_name ?? '').toLowerCase().trim();
         
-        // Check for exact match or if one track name contains the full other name
+        // Check for exact match or if one track name contains the full other name (min 5 chars to reduce false positives)
         const trackMatch = cardTrackLower === tabTrackLower ||
-                          (cardTrackLower.length > 3 && tabTrackLower.includes(cardTrackLower)) ||
-                          (tabTrackLower.length > 3 && cardTrackLower.includes(tabTrackLower));
+                          (cardTrackLower.length >= 5 && tabTrackLower.includes(cardTrackLower)) ||
+                          (tabTrackLower.length >= 5 && cardTrackLower.includes(tabTrackLower));
         
         const raceMatch = tabRace.race_number === card.race_number;
         
@@ -164,9 +166,11 @@ async function mergeTABOdds(raceCards: RaceCardData[]): Promise<RaceCardData[]> 
 
       if (matchingTabRace && matchingTabRace.runners) {
         // Find matching runner in the TAB race
-        const matchingRunner = matchingTabRace.runners.find((runner: TabRunner) => 
-          runner.horse_name?.toLowerCase().trim() === card.horse_name.toLowerCase().trim()
-        );
+        const matchingRunner = matchingTabRace.runners.find((runner: TabRunner) => {
+          // Skip runners without horse names
+          if (!runner.horse_name) return false;
+          return runner.horse_name.toLowerCase().trim() === card.horse_name.toLowerCase().trim();
+        });
 
         if (matchingRunner) {
           return {

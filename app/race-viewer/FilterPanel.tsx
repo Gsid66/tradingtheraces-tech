@@ -41,7 +41,8 @@ export default function FilterPanel() {
     setMinRating(searchParams.get('minRating') || '');
     setMaxRating(searchParams.get('maxRating') || '');
     setPerPage(searchParams.get('perPage') || '50');
-  }, [searchParams, today, oneYearAgo]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const states = ['All States', 'NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'];
   const perPageOptions = ['25', '50', '100', '200'];
