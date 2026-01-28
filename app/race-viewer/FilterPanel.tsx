@@ -18,13 +18,18 @@ export default function FilterPanel() {
 
   // Sync state with URL searchParams when they change
   useEffect(() => {
-    const currentToday = new Date();
-    setDateFrom(searchParams.get('dateFrom') || formatDate(currentToday));
-    setDateTo(searchParams.get('dateTo') || formatDate(currentToday));
+    setDateFrom(searchParams.get('dateFrom') || formatDate(today));
+    setDateTo(searchParams.get('dateTo') || formatDate(today));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const applyFilters = () => {
+    // Validate date range
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+      alert('Start date cannot be after end date. Please adjust your date range.');
+      return;
+    }
+    
     const params = new URLSearchParams();
     
     if (dateFrom) params.set('dateFrom', dateFrom);

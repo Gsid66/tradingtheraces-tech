@@ -33,7 +33,8 @@ async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
     params.append('end_date', filters.dateTo || todayFormatted);
 
     // No limit or offset - fetch ALL records
-    // The API will return all matching records
+    // Note: This fetches all matching records without pagination.
+    // For large datasets, consider the API's default limits or client-side virtualization.
 
     const url = `${raceCardsApiUrl}/api/races?${params.toString()}`;
     console.log('🔍 Fetching from race-cards-ratings API:', url);
