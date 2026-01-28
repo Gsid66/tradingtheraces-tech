@@ -98,6 +98,42 @@ async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
   }
 }
 
+// Normalize track name by removing common suffixes and special characters
+function normalizeTrackName(trackName: string): string {
+  if (!trackName) return '';
+  
+  let normalized = trackName.toLowerCase().trim();
+  
+  // Remove common suffixes
+  const suffixes = ['racecourse', 'gardens', 'hillside', 'park', 'racing'];
+  for (const suffix of suffixes) {
+    // Remove suffix with optional space before it
+    normalized = normalized.replace(new RegExp(`\\s*${suffix}\\s*$`), '');
+  }
+  
+  // Remove special characters and extra spaces
+  normalized = normalized.replace(/[^a-z0-9\s]/g, ' ');
+  normalized = normalized.replace(/\s+/g, ' ').trim();
+  
+  return normalized;
+}
+
+// Check if two track names match (handles variations like "sandown" vs "sandown hillside")
+function tracksMatch(track1: string, track2: string): boolean {
+  if (!track1 || !track2) return false;
+  
+  const normalized1 = normalizeTrackName(track1);
+  const normalized2 = normalizeTrackName(track2);
+  
+  if (!normalized1 || !normalized2) return false;
+  
+  // Check if tracks are equal or one contains the other
+  // Use minimum length threshold to avoid false positives like "vale" matching "waverley"
+  return normalized1 === normalized2 || 
+         (normalized1.length >= 5 && normalized2.includes(normalized1)) ||
+         (normalized2.length >= 5 && normalized1.includes(normalized2));
+}
+
 async function mergeTABOdds(raceCards: RaceCardData[]): Promise<RaceCardData[]> {
   // If no race cards, return empty array
   if (!raceCards || raceCards.length === 0) {
@@ -160,22 +196,19 @@ async function mergeTABOdds(raceCards: RaceCardData[]): Promise<RaceCardData[]> 
         const tabDate = new Date(tabRace.meeting_date).toISOString().split('T')[0];
         const dateMatch = tabDate === cardDate;
         
-        // Match on meeting name with more precise logic
-        // Examples: "Flemington" matches "Flemington", "Randwick" matches "Randwick"
-        // Use length threshold to avoid false positives like "Park" matching multiple venues
+        // Match on meeting name with intelligent track name matching
+        // Handles variations like "sandown" vs "sandown hillside", "rosehill" vs "rosehill gardens"
         // Support both 'track' and 'meeting_name' fields with null checks
-        const cardTrackLower = (card.track || card.meeting_name || '').toLowerCase().trim();
-        const tabTrackLower = (tabRace.meeting_name ?? '').toLowerCase().trim();
+        const cardTrack = card.track || card.meeting_name || '';
+        const tabTrack = tabRace.meeting_name ?? '';
         
         // Skip matching if card has no track information
-        if (!cardTrackLower || !tabTrackLower) {
+        if (!cardTrack || !tabTrack) {
           return false;
         }
         
-        // Check for exact match or if one track name contains the full other name (min 5 chars to reduce false positives)
-        const trackMatch = cardTrackLower === tabTrackLower ||
-                          (cardTrackLower.length >= 5 && tabTrackLower.includes(cardTrackLower)) ||
-                          (tabTrackLower.length >= 5 && cardTrackLower.includes(tabTrackLower));
+        // Use intelligent track matching that normalizes and handles suffixes
+        const trackMatch = tracksMatch(cardTrack, tabTrack);
         
         const raceMatch = tabRace.race_number === card.race_number;
         
@@ -183,8 +216,8 @@ async function mergeTABOdds(raceCards: RaceCardData[]): Promise<RaceCardData[]> 
         if (!dateMatch || !trackMatch || !raceMatch) {
           if (Math.random() < 0.01) {
             console.log('❌ Match failed:', {
-              cardTrack: cardTrackLower,
-              tabTrack: tabTrackLower,
+              cardTrack: cardTrack,
+              tabTrack: tabTrack,
               cardDate,
               tabDate,
               cardRace: card.race_number,
