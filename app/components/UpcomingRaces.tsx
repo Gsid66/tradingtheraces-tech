@@ -268,18 +268,18 @@ export default function UpcomingRaces() {
   // All races complete state
   if (upcomingRaces.length === 0) {
     return (
-      <div className="upcoming-races-container">
+      <div className="upcoming-races-container" aria-live="polite">
         <h2 className="upcoming-races-title">Upcoming Races</h2>
-        <div className="upcoming-races-grid" style={{ display: 'flex', justifyContent: 'center' }}>
-          <div className="upcoming-race-card" style={{ cursor: 'default', textAlign: 'center', maxWidth: '400px' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🌙</div>
-            <h3 style={{ color: 'var(--purple-lighter)', fontSize: '1.5rem', fontWeight: '700', margin: '0 0 0.5rem 0' }}>
+        <div className="upcoming-races-complete-container">
+          <div className="upcoming-races-complete-card">
+            <div className="upcoming-races-complete-icon">🌙</div>
+            <h3 className="upcoming-races-complete-heading">
               All Races Complete
             </h3>
-            <p style={{ color: 'var(--purple-light)', fontSize: '1.1rem', margin: '0.5rem 0' }}>
+            <p className="upcoming-races-complete-text">
               No more races today
             </p>
-            <p style={{ color: 'var(--purple-light)', fontSize: '0.95rem', opacity: '0.8', margin: '0.5rem 0 0 0' }}>
+            <p className="upcoming-races-complete-subtext">
               Check back tomorrow!
             </p>
           </div>
