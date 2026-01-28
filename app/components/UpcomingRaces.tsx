@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { FaClock, FaMapMarkerAlt, FaRoad } from 'react-icons/fa'
+import { convertToAEDT, convertTo24Hour, getStateFromTrackName } from '@/lib/utils/timezone-converter'
 
 interface Runner {
   tab_number: number
@@ -37,36 +38,6 @@ interface Track {
   track_name: string
   race_count: number
   runner_count: number
-}
-
-// Helper function to convert 12-hour time to 24-hour format
-const convertTo24Hour = (time12h: string): string => {
-  if (!time12h) return '00:00'
-  
-  // Remove spaces and convert to lowercase
-  const cleaned = time12h.trim().toLowerCase()
-  
-  // Check if already in 24-hour format (no am/pm)
-  if (!cleaned.includes('am') && !cleaned.includes('pm')) {
-    return cleaned
-  }
-  
-  // Extract time and period
-  const timeMatch = cleaned.match(/(\d{1,2}):(\d{2})\s*(am|pm)/)
-  if (!timeMatch) return cleaned
-  
-  let [_, hours, minutes, period] = timeMatch
-  let hour = parseInt(hours)
-  
-  // Convert to 24-hour
-  if (period === 'pm' && hour !== 12) {
-    hour += 12
-  } else if (period === 'am' && hour === 12) {
-    hour = 0
-  }
-  
-  // Return as HH:MM
-  return `${hour.toString().padStart(2, '0')}:${minutes}`
 }
 
 // Helper function to format time in AEDT (e.g., "2:15 PM")
@@ -143,9 +114,14 @@ export default function UpcomingRaces() {
           const data = await response.json()
           const races: Race[] = data.races || []
           
-          // Add track_name to each race
+          // Get track state from track name
+          const trackState = getStateFromTrackName(track.track_name)
+          
+          // Add track_name to each race and convert race times to AEDT
           return races.map(race => ({
             ...race,
+            race_time_local: race.race_time,
+            race_time: race.race_time ? convertToAEDT(race.race_time, trackState) : race.race_time,
             track_name: track.track_name
           }))
         } catch (err) {
