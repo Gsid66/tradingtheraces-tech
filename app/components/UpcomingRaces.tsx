@@ -90,28 +90,40 @@ export default function UpcomingRaces() {
   const [upcomingRaces, setUpcomingRaces] = useState<Race[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isFetching, setIsFetching] = useState(false)
 
   // Fetch all races and filter for upcoming
-  const fetchUpcomingRaces = async () => {
+  const fetchUpcomingRaces = async (abortSignal?: AbortSignal) => {
+    // Prevent concurrent fetches
+    if (isFetching) return
+    
+    setIsFetching(true)
     try {
       // Step 1: Get today's tracks
-      const tracksResponse = await fetch('/api/races/today')
+      const tracksResponse = await fetch('/api/races/today', {
+        signal: abortSignal
+      })
       
       if (!tracksResponse.ok) {
-        if (tracksResponse.status === 404 || tracksResponse.status === 500) {
-          setError('No races currently available')
-          setLoading(false)
-          return
+        if (tracksResponse.status === 404) {
+          setError('No races scheduled for today. Check back later!')
+        } else if (tracksResponse.status === 500) {
+          setError('Unable to load races. Please try again.')
+        } else {
+          setError('Failed to load race data')
         }
-        throw new Error('Failed to fetch tracks')
+        setLoading(false)
+        setIsFetching(false)
+        return
       }
       
       const tracksData = await tracksResponse.json()
       const tracks: Track[] = tracksData.tracks || []
       
       if (tracks.length === 0) {
-        setError('No races currently available')
+        setError('No races scheduled for today. Check back later!')
         setLoading(false)
+        setIsFetching(false)
         return
       }
       
@@ -121,7 +133,8 @@ export default function UpcomingRaces() {
       const allRacesPromises = tracks.map(async (track) => {
         try {
           const response = await fetch(
-            `/api/races/form-guide?date=${date}&track=${encodeURIComponent(track.track_name)}`
+            `/api/races/form-guide?date=${date}&track=${encodeURIComponent(track.track_name)}`,
+            { signal: abortSignal }
           )
           if (!response.ok) {
             return []
@@ -145,7 +158,7 @@ export default function UpcomingRaces() {
       const racesArrays = await Promise.all(allRacesPromises)
       const flattenedRaces = racesArrays.flat()
       
-      // Step 4: Get current time in AEDT (24-hour format HH:MM)
+      // Step 4: Get current time in AEDT (24-hour format HH:MM) AND current date
       const now = new Date()
       const currentTimeStr = now.toLocaleString('en-AU', {
         timeZone: 'Australia/Sydney',
@@ -154,11 +167,28 @@ export default function UpcomingRaces() {
         hour12: false
       })
       
+      const currentDate = now.toLocaleString('en-AU', {
+        timeZone: 'Australia/Sydney',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).split('/').reverse().join('-') // Convert to YYYY-MM-DD
+      
       // Step 5: Filter races that haven't started yet
+      // Note: This assumes all races are on the same date (today)
+      // For races past midnight, they would be on tomorrow's data
       const upcomingRacesFiltered = flattenedRaces.filter(race => {
         if (!race.race_time) return false
         const raceTime24 = convertTo24Hour(race.race_time)
-        return raceTime24 > currentTimeStr
+        
+        // Compare only if we're looking at today's races
+        // If the fetched date matches current date, filter by time
+        if (date === currentDate) {
+          return raceTime24 > currentTimeStr
+        }
+        
+        // If date is in the future, include all races
+        return date >= currentDate
       })
       
       // Step 6: Sort by race_time (chronological order)
@@ -174,34 +204,47 @@ export default function UpcomingRaces() {
       setUpcomingRaces(next4Races)
       
       if (next4Races.length === 0) {
-        setError('No upcoming races available')
+        setError('No upcoming races available. All races have finished.')
       } else {
         setError(null)
       }
       
-    } catch (err) {
-      console.error('Error fetching upcoming races:', err)
-      setError('Unable to load race data')
+    } catch (err: any) {
+      // Don't set error if the fetch was aborted (component unmounting)
+      if (err.name !== 'AbortError') {
+        console.error('Error fetching upcoming races:', err)
+        setError('Unable to load race data. Please try again.')
+      }
     } finally {
       setLoading(false)
+      setIsFetching(false)
     }
   }
 
   // Fetch on mount and set up auto-refresh every 30 seconds
   useEffect(() => {
-    fetchUpcomingRaces()
-    const interval = setInterval(fetchUpcomingRaces, 30000) // Refresh every 30 seconds
-    return () => clearInterval(interval)
-  }, [])
+    const abortController = new AbortController()
+    
+    fetchUpcomingRaces(abortController.signal)
+    const interval = setInterval(() => {
+      fetchUpcomingRaces(abortController.signal)
+    }, 30000) // Refresh every 30 seconds
+    
+    return () => {
+      clearInterval(interval)
+      abortController.abort() // Cancel pending requests on unmount
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Loading state with skeleton cards
   if (loading) {
     return (
-      <div className="upcoming-races-container">
+      <div className="upcoming-races-container" aria-busy="true" aria-live="polite">
         <h2 className="upcoming-races-title">Upcoming Races</h2>
+        <p className="sr-only">Loading upcoming races...</p>
         <div className="upcoming-races-grid">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="upcoming-race-card upcoming-race-card-skeleton">
+            <div key={i} className="upcoming-race-card upcoming-race-card-skeleton" aria-hidden="true">
               <div className="skeleton-line skeleton-line-short"></div>
               <div className="skeleton-line skeleton-line-medium"></div>
               <div className="skeleton-line skeleton-line-long"></div>
@@ -219,7 +262,7 @@ export default function UpcomingRaces() {
         <h2 className="upcoming-races-title">Upcoming Races</h2>
         <div className="upcoming-races-empty">
           <p>{error || 'No upcoming races available'}</p>
-          <button onClick={fetchUpcomingRaces} className="retry-button">
+          <button onClick={() => fetchUpcomingRaces()} className="retry-button">
             Refresh
           </button>
         </div>
@@ -231,17 +274,19 @@ export default function UpcomingRaces() {
     <div className="upcoming-races-container">
       <h2 className="upcoming-races-title">Upcoming Races</h2>
       <div className="upcoming-races-grid">
-        {upcomingRaces.map((race, index) => {
+        {upcomingRaces.map((race) => {
           const trackSlug = createTrackSlug(race.track_name)
           const formGuideUrl = `/form-guide/${trackSlug}/${race.race_number}`
           const raceTime24 = convertTo24Hour(race.race_time || '')
           const raceTimeFormatted = formatTimeAEDT(raceTime24)
+          const ariaLabel = `View Race ${race.race_number} at ${race.track_name} - ${raceTimeFormatted} AEDT`
           
           return (
             <Link 
-              key={`${race.track_name}-${race.race_number}-${index}`} 
+              key={`${race.track_name}-${race.race_number}`}
               href={formGuideUrl}
               className="upcoming-race-card"
+              aria-label={ariaLabel}
             >
               <div className="upcoming-race-card-header">
                 <div className="upcoming-race-track">
