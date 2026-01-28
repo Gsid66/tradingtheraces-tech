@@ -67,7 +67,7 @@ export default function Home() {
         <div className="info-banner-content">
           <h3>Want More Premium Content?</h3>
           <p>
-            Join our Members Chat for exclusive race reports, advanced tools, and comprehensive lessons
+            Join our Discord Members Chat for exclusive race reports, advanced tools, and comprehensive lessons. Coming soon! Run queries against our full historical database and access premium AI tools. 
           </p>
         </div>
       </div>
@@ -75,12 +75,12 @@ export default function Home() {
       {/* CTA Button */}
       <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
         <a 
-          href="/members" 
+          href="https://discord.gg/TawzRkQZgB" 
           className="gold-button"
           style={{
             display: 'inline-block',
-            background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
-            color: '#1a0033',
+            background: 'linear-gradient(135deg, #0a0803 0%, #0a0803 100%)',
+            color: '#eae4f0',
             padding: '1rem 2rem',
             borderRadius: '8px',
             textDecoration: 'none',
@@ -91,7 +91,7 @@ export default function Home() {
             border: '2px solid #fbbf24'
           }}
         >
-          Access Members Portal →
+          Access Discord Members Chat →
         </a>
       </div>
     </>
