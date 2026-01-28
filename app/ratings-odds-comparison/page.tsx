@@ -12,11 +12,10 @@ function formatDate(date: Date): string {
 
 // Get today's date
 // NEW (FIXED):
-function getTodayFormatted(): string {
-  // Get today's date in Australia/Sydney timezone
-  const now = new Date();
-  const aestDate = new Date(now.toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
-  return formatDate(aestDate);
+function getToday(): string {
+  return new Date().toLocaleDateString('en-CA', { 
+    timeZone: 'Australia/Sydney' 
+  }); // Returns YYYY-MM-DD directly
 }
 
 // Normalize track name by removing common suffixes and special characters
@@ -59,7 +58,7 @@ async function fetchTodayRaceCards(): Promise<RatingsOddsData[]> {
   const raceCardsApiUrl = process.env.RACE_CARD_RATINGS_API_URL || 'https://race-cards-ratings.onrender.com';
 
   try {
-    const today = getTodayFormatted();
+    const today = getToday();
 
     const params = new URLSearchParams();
     params.append('start_date', today);
@@ -103,7 +102,7 @@ async function mergeTABOdds(raceCards: RatingsOddsData[]): Promise<RatingsOddsDa
   }
 
   try {
-    const today = getTodayFormatted();
+    const today = getToday();
     console.log('🔍 Fetching TAB odds for today:', today);
 
     const tabResponse = await pgClient.getRacesByDate(today).catch(err => {

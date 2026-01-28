@@ -19,10 +19,9 @@ function formatDate(date: Date): string {
 // Utility function to get today's date
 // NEW (FIXED):
 function getToday(): string {
-  // Get today's date in Australia/Sydney timezone
-  const now = new Date();
-  const aestDate = new Date(now.toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
-  return formatDate(aestDate);
+  return new Date().toLocaleDateString('en-CA', { 
+    timeZone: 'Australia/Sydney' 
+  }); // Returns YYYY-MM-DD directly
 }
 
 async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
