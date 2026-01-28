@@ -15,7 +15,7 @@ export default function Pagination({ currentPage, totalPages }: PaginationProps)
   const goToPage = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', page.toString());
-    router.push(`?${params.toString()}`);
+    router.push(`/race-viewer?${params.toString()}`);
   };
 
   return (

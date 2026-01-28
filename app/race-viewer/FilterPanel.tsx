@@ -9,13 +9,13 @@ export default function FilterPanel() {
 
   // Calculate default dates
   const today = new Date();
-  const threeDaysAgo = new Date(today);
-  threeDaysAgo.setDate(today.getDate() - 3);
+  const oneYearAgo = new Date(today);
+  oneYearAgo.setFullYear(today.getFullYear() - 1);
 
   const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
   // State for all filters
-  const [dateFrom, setDateFrom] = useState(searchParams.get('dateFrom') || formatDate(threeDaysAgo));
+  const [dateFrom, setDateFrom] = useState(searchParams.get('dateFrom') || formatDate(oneYearAgo));
   const [dateTo, setDateTo] = useState(searchParams.get('dateTo') || formatDate(today));
   const [track, setTrack] = useState(searchParams.get('meeting_name') || '');
   const [state, setState] = useState(searchParams.get('state') || '');
@@ -46,12 +46,17 @@ export default function FilterPanel() {
     params.set('perPage', perPage);
     params.set('page', '1'); // Reset to page 1 when filters change
 
-    router.push(`?${params.toString()}`);
+    router.push(`/race-viewer?${params.toString()}`);
   };
 
   const clearFilters = () => {
-    setDateFrom(formatDate(threeDaysAgo));
-    setDateTo(formatDate(today));
+    // Recalculate dates to ensure fresh values
+    const currentToday = new Date();
+    const currentOneYearAgo = new Date(currentToday);
+    currentOneYearAgo.setFullYear(currentToday.getFullYear() - 1);
+    
+    setDateFrom(formatDate(currentOneYearAgo));
+    setDateTo(formatDate(currentToday));
     setTrack('');
     setState('');
     setRaceNumber('');
