@@ -96,7 +96,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
   const prepareExportData = () => {
     const headers = [
       'Date', 'Track', 'Race', 'Saddle', 'Horse', 'Jockey', 'Trainer', 
-      'Rating', 'Price', 'TAB Win', 'TAB Place'
+      'Rating', 'Price'
     ];
     
     const rows = sortedData.map(row => [
@@ -108,9 +108,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
       row.jockey,
       row.trainer,
       formatRating(row.rating),
-      formatPrice(row.price).replace('$', ''),
-      row.tab_fixed_win ? formatPrice(row.tab_fixed_win).replace('$', '') : '-',
-      row.tab_fixed_place ? formatPrice(row.tab_fixed_place).replace('$', '') : '-'
+      formatPrice(row.price).replace('$', '')
     ]);
 
     return { headers, rows };
@@ -256,24 +254,6 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                   Price <SortIcon field="price" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
-              <th 
-                className="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-purple-700"
-                onClick={() => handleSort('tab_fixed_win')}
-                aria-sort={sortField === 'tab_fixed_win' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-              >
-                <div className="flex items-center gap-2">
-                  TAB Win <SortIcon field="tab_fixed_win" sortField={sortField} sortDirection={sortDirection} />
-                </div>
-              </th>
-              <th 
-                className="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-purple-700"
-                onClick={() => handleSort('tab_fixed_place')}
-                aria-sort={sortField === 'tab_fixed_place' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-              >
-                <div className="flex items-center gap-2">
-                  TAB Place <SortIcon field="tab_fixed_place" sortField={sortField} sortDirection={sortDirection} />
-                </div>
-              </th>
             </tr>
           </thead>
           <tbody>
@@ -319,24 +299,6 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                   <span className="inline-block bg-green-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
                     {formatPrice(row.price)}
                   </span>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  {row.tab_fixed_win ? (
-                    <span className="inline-block bg-green-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                      {formatPrice(row.tab_fixed_win)}
-                    </span>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-center">
-                  {row.tab_fixed_place ? (
-                    <span className="inline-block bg-green-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                      {formatPrice(row.tab_fixed_place)}
-                    </span>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
                 </td>
               </tr>
             );
