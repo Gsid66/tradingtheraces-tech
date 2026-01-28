@@ -2,7 +2,8 @@
 
 export interface RaceCardData {
   race_date: string; // "2026-01-28T00:00:00.000Z"
-  track: string; // Changed from meeting_name
+  track?: string; // Changed from meeting_name
+  meeting_name?: string; // Alternative field name from API
   race_number: number;
   race_name: string;
   saddle_cloth: number;

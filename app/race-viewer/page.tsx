@@ -138,6 +138,18 @@ async function mergeTABOdds(raceCards: RaceCardData[]): Promise<RaceCardData[]> 
 
     console.log(`📊 Fetched ${allTabRaces.length} TAB races`);
 
+    // Debug: Log first race card structure to understand field names
+    if (raceCards.length > 0) {
+      const sampleCard = raceCards[0];
+      console.log('🔍 Sample race card fields:', {
+        track: sampleCard.track,
+        meeting_name: sampleCard.meeting_name,
+        race_date: sampleCard.race_date,
+        race_number: sampleCard.race_number,
+        horse_name: sampleCard.horse_name
+      });
+    }
+
     // Merge TAB odds into race cards
     const mergedRaceCards = raceCards.map(card => {
       // Normalize race_date to YYYY-MM-DD for comparison
@@ -151,7 +163,8 @@ async function mergeTABOdds(raceCards: RaceCardData[]): Promise<RaceCardData[]> 
         // Match on meeting name with more precise logic
         // Examples: "Flemington" matches "Flemington", "Randwick" matches "Randwick"
         // Use length threshold to avoid false positives like "Park" matching multiple venues
-        const cardTrackLower = card.track.toLowerCase().trim();
+        // Support both 'track' and 'meeting_name' fields with null checks
+        const cardTrackLower = (card.track || card.meeting_name || '').toLowerCase().trim();
         const tabTrackLower = (tabRace.meeting_name ?? '').toLowerCase().trim();
         
         // Check for exact match or if one track name contains the full other name (min 5 chars to reduce false positives)
@@ -161,6 +174,24 @@ async function mergeTABOdds(raceCards: RaceCardData[]): Promise<RaceCardData[]> 
         
         const raceMatch = tabRace.race_number === card.race_number;
         
+        // Debug log for first few matching attempts
+        if (!dateMatch || !trackMatch || !raceMatch) {
+          // Only log first 3 failed matches to avoid spam
+          if (Math.random() < 0.01) { // 1% sample rate for failed matches
+            console.log('❌ Match failed:', {
+              cardTrack: cardTrackLower,
+              tabTrack: tabTrackLower,
+              cardDate,
+              tabDate,
+              cardRace: card.race_number,
+              tabRace: tabRace.race_number,
+              dateMatch,
+              trackMatch,
+              raceMatch
+            });
+          }
+        }
+        
         return dateMatch && trackMatch && raceMatch;
       });
 
@@ -168,7 +199,7 @@ async function mergeTABOdds(raceCards: RaceCardData[]): Promise<RaceCardData[]> 
         // Find matching runner in the TAB race
         const matchingRunner = matchingTabRace.runners.find((runner: TabRunner) => {
           // Skip runners without horse names
-          if (!runner.horse_name) return false;
+          if (!runner.horse_name || !card.horse_name) return false;
           return runner.horse_name.toLowerCase().trim() === card.horse_name.toLowerCase().trim();
         });
 
