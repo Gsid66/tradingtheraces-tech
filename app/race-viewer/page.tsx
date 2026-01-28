@@ -1,5 +1,5 @@
 import React from 'react';
-import { FilterParams, ApiResponse, RaceCardData } from './types';
+import { FilterParams, ApiResponse } from './types';
 import StatisticsCards from './StatisticsCards';
 import FilterPanel from './FilterPanel';
 import RaceDataTable from './RaceDataTable';
