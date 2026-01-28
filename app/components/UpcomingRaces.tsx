@@ -202,12 +202,7 @@ export default function UpcomingRaces() {
       const next4Races = sortedRaces.slice(0, 4)
       
       setUpcomingRaces(next4Races)
-      
-      if (next4Races.length === 0) {
-        setError('No upcoming races available. All races have finished.')
-      } else {
-        setError(null)
-      }
+      setError(null)
       
     } catch (err: any) {
       // Don't set error if the fetch was aborted (component unmounting)
@@ -255,16 +250,39 @@ export default function UpcomingRaces() {
     )
   }
 
-  // Error or empty state
-  if (error || upcomingRaces.length === 0) {
+  // Error state
+  if (error) {
     return (
       <div className="upcoming-races-container">
         <h2 className="upcoming-races-title">Upcoming Races</h2>
         <div className="upcoming-races-empty">
-          <p>{error || 'No upcoming races available'}</p>
+          <p>{error}</p>
           <button onClick={() => fetchUpcomingRaces()} className="retry-button">
             Refresh
           </button>
+        </div>
+      </div>
+    )
+  }
+
+  // All races complete state
+  if (upcomingRaces.length === 0) {
+    return (
+      <div className="upcoming-races-container">
+        <h2 className="upcoming-races-title">Upcoming Races</h2>
+        <div className="upcoming-races-grid" style={{ display: 'flex', justifyContent: 'center' }}>
+          <div className="upcoming-race-card" style={{ cursor: 'default', textAlign: 'center', maxWidth: '400px' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🌙</div>
+            <h3 style={{ color: 'var(--purple-lighter)', fontSize: '1.5rem', fontWeight: '700', margin: '0 0 0.5rem 0' }}>
+              All Races Complete
+            </h3>
+            <p style={{ color: 'var(--purple-light)', fontSize: '1.1rem', margin: '0.5rem 0' }}>
+              No more races today
+            </p>
+            <p style={{ color: 'var(--purple-light)', fontSize: '0.95rem', opacity: '0.8', margin: '0.5rem 0 0 0' }}>
+              Check back tomorrow!
+            </p>
+          </div>
         </div>
       </div>
     )
