@@ -117,14 +117,19 @@ export default function UpcomingRaces() {
           
           // Get track state from track name
           const trackState = getStateFromTrackName(track.track_name)
+          console.log(`🏇 Processing ${track.track_name} in ${trackState}`)
           
           // Add track_name to each race and convert race times to AEDT
-          return races.map(race => ({
-            ...race,
-            race_time_local: race.race_time,
-            race_time: race.race_time ? convertToAEDT(race.race_time, trackState) : race.race_time,
-            track_name: track.track_name
-          }))
+          return races.map(race => {
+            const convertedTime = race.race_time ? convertToAEDT(race.race_time, trackState) : race.race_time
+            console.log(`  R${race.race_number}: "${race.race_time}" → "${convertedTime}" AEDT`)
+            return {
+              ...race,
+              race_time_local: race.race_time,
+              race_time: convertedTime,
+              track_name: track.track_name
+            }
+          })
         } catch (err) {
           console.error(`Error fetching ${track.track_name}:`, err)
           return []
@@ -154,9 +159,13 @@ export default function UpcomingRaces() {
       // Step 5: Filter races that haven't started yet
       // Note: This assumes all races are on the same date (today)
       // For races past midnight, they would be on tomorrow's data
+      console.log(`⏰ Current AEDT time: ${currentTimeStr}`)
+      console.log(`📅 Checking ${flattenedRaces.length} total races`)
       const upcomingRacesFiltered = flattenedRaces.filter(race => {
         if (!race.race_time) return false
         const raceTime24 = convertTo24Hour(race.race_time)
+        const isUpcoming = raceTime24 > currentTimeStr
+        console.log(`${isUpcoming ? '✅' : '❌'} ${race.track_name} R${race.race_number}: ${race.race_time} (${raceTime24}) ${isUpcoming ? '>' : '≤'} ${currentTimeStr}`)
         
         // Compare only if we're looking at today's races
         // If the fetched date matches current date, filter by time
@@ -167,6 +176,8 @@ export default function UpcomingRaces() {
         // If date is in the future, include all races
         return date >= currentDate
       })
+      
+      console.log(`📊 Result: ${upcomingRacesFiltered.length} upcoming races`)
       
       // Step 6: Sort by race_time (chronological order)
       const sortedRaces = upcomingRacesFiltered.sort((a, b) => {
