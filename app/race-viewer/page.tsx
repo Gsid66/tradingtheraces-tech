@@ -20,14 +20,14 @@ function formatDate(date: Date): string {
 // Utility function to get default date range
 function getDefaultDateRange() {
   const today = new Date();
-  const oneYearAgo = new Date(today);
-  oneYearAgo.setFullYear(today.getFullYear() - 1);
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
   
   return {
     today,
     todayFormatted: formatDate(today),
-    oneYearAgo,
-    oneYearAgoFormatted: formatDate(oneYearAgo),
+    yesterday,
+    yesterdayFormatted: formatDate(yesterday),
   };
 }
 
@@ -35,12 +35,12 @@ async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
   const raceCardsApiUrl = process.env.RACE_CARD_RATINGS_API_URL || 'https://race-cards-ratings.onrender.com';
 
   try {
-    const { todayFormatted, oneYearAgoFormatted } = getDefaultDateRange();
+    const { todayFormatted } = getDefaultDateRange();
 
     const params = new URLSearchParams();
     
     // Required date range
-    params.append('start_date', filters.dateFrom || oneYearAgoFormatted);
+    params.append('start_date', filters.dateFrom || todayFormatted);
     params.append('end_date', filters.dateTo || todayFormatted);
 
     // Optional filters
@@ -269,11 +269,11 @@ export default async function RaceViewerPage({ searchParams }: PageProps) {
   const params = await searchParams;
   
   // Get default dates using utility function
-  const { todayFormatted, oneYearAgoFormatted } = getDefaultDateRange();
+  const { todayFormatted } = getDefaultDateRange();
 
   // Extract filter params from URL
   const filters: FilterParams = {
-    dateFrom: typeof params.dateFrom === 'string' ? params.dateFrom : oneYearAgoFormatted,
+    dateFrom: typeof params.dateFrom === 'string' ? params.dateFrom : todayFormatted,
     dateTo: typeof params.dateTo === 'string' ? params.dateTo : todayFormatted,
     meeting_name: typeof params.meeting_name === 'string' ? params.meeting_name : undefined,
     state: typeof params.state === 'string' ? params.state : undefined,
