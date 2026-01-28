@@ -11,8 +11,12 @@ function formatDate(date: Date): string {
 }
 
 // Get today's date
+// NEW (FIXED):
 function getTodayFormatted(): string {
-  return formatDate(new Date());
+  // Get today's date in Australia/Sydney timezone
+  const now = new Date();
+  const aestDate = new Date(now.toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
+  return formatDate(aestDate);
 }
 
 // Normalize track name by removing common suffixes and special characters
