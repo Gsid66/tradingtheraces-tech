@@ -12,8 +12,6 @@ export interface RaceCardData {
   trainer: string;
   rating: number | null;
   price: string | number | null;
-  tab_fixed_win?: number | null;
-  tab_fixed_place?: number | null;
 }
 
 export interface FilterParams {
