@@ -1,4 +1,5 @@
-import Link from 'next/link'
+import Link from 'next/link';
+import { FaDiscord } from 'react-icons/fa';  // ⬅️ ADD THIS
 
 export default function NavigationCards() {
   return (
@@ -14,13 +15,18 @@ export default function NavigationCards() {
           </div>
         </Link>
 
-        {/* Race Fields Hub Card - Coming Soon */}
-        <div className="bg-black/40 rounded-lg p-8 text-center opacity-60 cursor-not-allowed border-2 border-transparent" role="button" aria-disabled="true">
-          <div className="text-white text-5xl mb-4" role="img" aria-label="Clipboard icon">📋</div>
-          <h2 className="text-white text-xl font-semibold mb-2">Race Fields Hub</h2>
-          <p className="text-gray-300 text-sm">Official fields &amp; guides</p>
-          <p className="text-purple-300 text-xs mt-2 font-semibold">Coming Soon</p>
-        </div>
+        {/* Discord Card - ACTIVE */}
+        <a 
+          href="https://discord.gg/TawzRkQZgB" 
+          target="_blank" 
+          rel="noopener noreferrer"
+        >
+          <div className="bg-black/60 rounded-lg p-8 text-center hover:bg-black/80 hover:border-2 hover:border-purple-400 hover:shadow-lg hover:shadow-purple-500/50 transition-all cursor-pointer border-2 border-purple-500 shadow-lg shadow-purple-500/30">
+            <FaDiscord className="text-white text-5xl mb-4 mx-auto" />
+            <h2 className="text-white text-xl font-semibold mb-2">Join Our Discord</h2>
+            <p className="text-gray-300 text-sm">Community chat & support</p>
+          </div>
+        </a>
 
         {/* Betting Calculator Card - Coming Soon */}
         <div className="bg-black/40 rounded-lg p-8 text-center opacity-60 cursor-not-allowed border-2 border-transparent" role="button" aria-disabled="true">
@@ -29,8 +35,7 @@ export default function NavigationCards() {
           <p className="text-gray-300 text-sm">Calculate returns</p>
           <p className="text-purple-300 text-xs mt-2 font-semibold">Coming Soon</p>
         </div>
-
       </div>
     </div>
-  )
+  );
 }
