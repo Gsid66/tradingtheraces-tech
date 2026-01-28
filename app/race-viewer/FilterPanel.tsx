@@ -50,8 +50,13 @@ export default function FilterPanel() {
   };
 
   const clearFilters = () => {
-    setDateFrom(formatDate(oneYearAgo));
-    setDateTo(formatDate(today));
+    // Recalculate dates to ensure fresh values
+    const currentToday = new Date();
+    const currentOneYearAgo = new Date(currentToday);
+    currentOneYearAgo.setFullYear(currentToday.getFullYear() - 1);
+    
+    setDateFrom(formatDate(currentOneYearAgo));
+    setDateTo(formatDate(currentToday));
     setTrack('');
     setState('');
     setRaceNumber('');
