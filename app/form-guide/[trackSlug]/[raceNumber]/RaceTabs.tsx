@@ -3,10 +3,10 @@
 import { useState } from 'react';
 
 const tabs = [
-  { id:  'form', label: 'Form', available: true },
-  { id:  'ratings-odds', label: 'Ratings/Odds', available: false },
+  { id: 'form', label: 'Form', available: true },
+  { id: 'ratings-odds', label: 'Ratings/Odds', available: true, href: '/ratings-odds-comparison' }, // ⬅️ CHANGE THIS
   { id: 'analysis', label: 'Analysis', available: false },
-  { id: 'trading-desk', label: 'Trading Desk', available:  false },
+  { id: 'trading-desk', label: 'Trading Desk', available: false },
   { id: 'sherlock-hooves', label: 'Sherlock Hooves AI', available: false },
 ];
 
@@ -15,14 +15,17 @@ export default function RaceTabs() {
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [comingSoonTab, setComingSoonTab] = useState('');
 
-  const handleTabClick = (tabId: string, available: boolean) => {
-    if (! available) {
-      setComingSoonTab(tabId);
-      setShowComingSoon(true);
-    } else {
-      setActiveTab(tabId);
-    }
-  };
+  const handleTabClick = (tabId: string, available: boolean, href?: string) => {
+  if (href) {
+    // Navigate to external page
+    window.location.href = href;
+  } else if (!available) {
+    setComingSoonTab(tabId);
+    setShowComingSoon(true);
+  } else {
+    setActiveTab(tabId);
+  }
+};
 
   return (
     <>
@@ -31,7 +34,7 @@ export default function RaceTabs() {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => handleTabClick(tab.id, tab.available)}
+              onClick={() => handleTabClick(tab.id, tab.available, tab.href)}
               className={`relative px-4 py-4 text-sm font-medium transition-colors whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'border-b-2 border-green-600 text-gray-900'
