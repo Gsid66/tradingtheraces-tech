@@ -167,6 +167,11 @@ async function mergeTABOdds(raceCards: RaceCardData[]): Promise<RaceCardData[]> 
         const cardTrackLower = (card.track || card.meeting_name || '').toLowerCase().trim();
         const tabTrackLower = (tabRace.meeting_name ?? '').toLowerCase().trim();
         
+        // Skip matching if card has no track information
+        if (!cardTrackLower || !tabTrackLower) {
+          return false;
+        }
+        
         // Check for exact match or if one track name contains the full other name (min 5 chars to reduce false positives)
         const trackMatch = cardTrackLower === tabTrackLower ||
                           (cardTrackLower.length >= 5 && tabTrackLower.includes(cardTrackLower)) ||
@@ -174,10 +179,9 @@ async function mergeTABOdds(raceCards: RaceCardData[]): Promise<RaceCardData[]> 
         
         const raceMatch = tabRace.race_number === card.race_number;
         
-        // Debug log for first few matching attempts
+        // Debug log for failed matches (1% sample rate to avoid spam)
         if (!dateMatch || !trackMatch || !raceMatch) {
-          // Only log first 3 failed matches to avoid spam
-          if (Math.random() < 0.01) { // 1% sample rate for failed matches
+          if (Math.random() < 0.01) {
             console.log('❌ Match failed:', {
               cardTrack: cardTrackLower,
               tabTrack: tabTrackLower,
