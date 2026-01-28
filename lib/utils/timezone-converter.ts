@@ -108,93 +108,77 @@ export function convertToAEDT(timeStr: string, state: string): string {
     let [_, hours, minutes, period] = timeMatch;
     let hour = parseInt(hours);
     
+    // Convert to 24-hour format
     if (period) {
       if (period === 'pm' && hour !== 12) hour += 12;
       if (period === 'am' && hour === 12) hour = 0;
     }
     
-    // Get today's date in the venue's timezone
-    const venueDate = new Date().toLocaleString('en-US', { 
-      timeZone: venueTimezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-    const [month, day, year] = venueDate.split(',')[0].split('/');
+    // Get today's date
+    const today = new Date();
     
-    // Create a date string in the venue's timezone
-    const dateStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour.toString().padStart(2, '0')}:${minutes}:00`;
+    // Create a date/time string that represents the time in the venue's timezone
+    // We'll use toLocaleString to parse it correctly
+    const dateStr = today.toLocaleDateString('en-CA'); // YYYY-MM-DD format
+    const timeStr24 = `${hour.toString().padStart(2, '0')}:${minutes}:00`;
     
-    // Parse the date as if it's in the venue timezone by using toLocaleString
-    // We create a formatter that will interpret the time in the venue timezone
-    const venueDateObj = new Date(dateStr + 'Z'); // Treat as UTC first
+    // Create ISO string (this is in local browser timezone, but we'll adjust)
+    const isoStr = `${dateStr}T${timeStr24}`;
     
-    // Get the offset difference between venue timezone and UTC
-    const venueOffsetStr = venueDateObj.toLocaleString('en-US', {
-      timeZone: venueTimezone,
-      timeZoneName: 'short'
-    });
+    // The key insight: we need to treat the input time as if it's in the venue timezone
+    // and convert it to AEDT. We do this by:
+    // 1. Creating a reference date
+    // 2. Formatting it in both timezones
+    // 3. Calculating the offset
+    // 4. Applying that offset to our time
     
-    // Now create the actual time in the venue timezone
-    // by using a more reliable method: create ISO string and parse in venue timezone
-    const testDate = new Date();
-    testDate.setHours(hour, parseInt(minutes), 0, 0);
+    const refDate = today;
     
-    // Format the time in AEDT
-    const aedtTime = testDate.toLocaleTimeString('en-AU', {
-      timeZone: 'Australia/Sydney',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-      timeZoneName: undefined
-    });
-    
-    // Get UTC offsets to calculate the time difference
+    // Format reference in venue timezone to get its representation
     const venueFormatter = new Intl.DateTimeFormat('en-US', {
       timeZone: venueTimezone,
       hour: '2-digit',
       minute: '2-digit',
       hour12: false
     });
+    
+    // Format reference in AEDT to get its representation
     const aedtFormatter = new Intl.DateTimeFormat('en-US', {
       timeZone: 'Australia/Sydney',
       hour: '2-digit',
-      minute: '2-digit', 
+      minute: '2-digit',
       hour12: false
     });
     
-    // Create a reference date to calculate offset
-    const refDate = new Date('2024-01-15T12:00:00Z'); // Mid-summer date when DST is active
-    const venueTime24 = venueFormatter.format(refDate);
-    const aedtTime24 = aedtFormatter.format(refDate);
+    // Get the same moment in time in both timezones
+    const venueTimeStr = venueFormatter.format(refDate);
+    const aedtTimeStr = aedtFormatter.format(refDate);
     
-    // Calculate hour offset
-    const [venueHour, venueMin] = venueTime24.split(':').map(Number);
-    const [aedtHour, aedtMin] = aedtTime24.split(':').map(Number);
-    const offsetHours = aedtHour - venueHour;
-    const offsetMins = aedtMin - venueMin;
+    // Parse the times to get hours and minutes
+    const [venueHour, venueMin] = venueTimeStr.split(':').map(Number);
+    const [aedtHour, aedtMin] = aedtTimeStr.split(':').map(Number);
     
-    // Apply offset to the race time
-    let resultHour = hour + offsetHours;
-    let resultMin = parseInt(minutes) + offsetMins;
+    // Calculate the total offset in minutes
+    const venueTotalMins = venueHour * 60 + venueMin;
+    const aedtTotalMins = aedtHour * 60 + aedtMin;
+    const offsetMins = aedtTotalMins - venueTotalMins;
     
-    // Handle minute overflow
-    if (resultMin >= 60) {
-      resultHour += 1;
-      resultMin -= 60;
-    } else if (resultMin < 0) {
-      resultHour -= 1;
-      resultMin += 60;
+    // Apply offset to our race time
+    const raceTotalMins = hour * 60 + parseInt(minutes);
+    let resultTotalMins = raceTotalMins + offsetMins;
+    
+    // Handle day overflow/underflow
+    if (resultTotalMins >= 24 * 60) {
+      resultTotalMins -= 24 * 60;
+    } else if (resultTotalMins < 0) {
+      resultTotalMins += 24 * 60;
     }
     
-    // Handle hour overflow
-    if (resultHour >= 24) {
-      resultHour -= 24;
-    } else if (resultHour < 0) {
-      resultHour += 24;
-    }
+    // Convert back to hours and minutes
+    const resultHour = Math.floor(resultTotalMins / 60);
+    const resultMin = resultTotalMins % 60;
     
-    // Format back to 12-hour time
+    // Format as 12-hour time
     const ampm = resultHour >= 12 ? 'pm' : 'am';
     const display12Hour = resultHour % 12 || 12;
     
