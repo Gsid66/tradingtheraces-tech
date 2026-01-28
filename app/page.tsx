@@ -12,19 +12,6 @@ export default function Home() {
         </p>
       </div>
 
-      {/* Info Banner */}
-      <div className="info-banner">
-        <div className="info-banner-icon">
-          <FaGift />
-        </div>
-        <div className="info-banner-content">
-          <h3>Real-Time Racing Data Platform</h3>
-          <p>
-            Access live race ratings, comprehensive analysis, and professional betting tools
-          </p>
-        </div>
-      </div>
-
       {/* RACE CAROUSEL - THE MAIN FEATURE */}
       <RaceCarousel />
 
