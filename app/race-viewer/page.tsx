@@ -3,7 +3,6 @@ import { FilterParams, ApiResponse } from './types';
 import StatisticsCards from './StatisticsCards';
 import FilterPanel from './FilterPanel';
 import RaceDataTable from './RaceDataTable';
-import Pagination from './Pagination';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,47 +15,26 @@ function formatDate(date: Date): string {
   return date.toISOString().split('T')[0];
 }
 
-// Utility function to get default date range (1 year)
-function getDefaultDateRange() {
-  const today = new Date();
-  const oneYearAgo = new Date(today);
-  oneYearAgo.setFullYear(today.getFullYear() - 1);
-  
-  return {
-    today,
-    oneYearAgo,
-    todayFormatted: formatDate(today),
-    oneYearAgoFormatted: formatDate(oneYearAgo),
-  };
+// Utility function to get today's date
+function getToday(): string {
+  return formatDate(new Date());
 }
 
 async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
   const raceCardsApiUrl = process.env.RACE_CARD_RATINGS_API_URL || 'https://race-cards-ratings.onrender.com';
 
   try {
-    const { todayFormatted, oneYearAgoFormatted } = getDefaultDateRange();
+    const todayFormatted = getToday();
 
     const params = new URLSearchParams();
     
-    // Required date range - default to 1 year
-    params.append('start_date', filters.dateFrom || oneYearAgoFormatted);
+    // Required date range - default to today
+    params.append('start_date', filters.dateFrom || todayFormatted);
     params.append('end_date', filters.dateTo || todayFormatted);
 
-    // Optional filters
-    if (filters.meeting_name) params.append('track', filters.meeting_name);
-    if (filters.state) params.append('state', filters.state);
-    if (filters.race_number) params.append('race_number', filters.race_number.toString());
-    if (filters.horse_name) params.append('horse_name', filters.horse_name);
-    if (filters.jockey) params.append('jockey', filters.jockey);
-    if (filters.trainer) params.append('trainer', filters.trainer);
-    if (filters.minRating) params.append('min_rating', filters.minRating.toString());
-    if (filters.maxRating) params.append('max_rating', filters.maxRating.toString());
-
-    // Pagination
-    const limit = filters.perPage || 50;
-    const offset = ((filters.page || 1) - 1) * limit;
-    params.append('limit', limit.toString());
-    params.append('offset', offset.toString());
+    // No limit or offset - fetch ALL records
+    // Note: This fetches all matching records without pagination.
+    // For large datasets, consider the API's default limits or client-side virtualization.
 
     const url = `${raceCardsApiUrl}/api/races?${params.toString()}`;
     console.log('🔍 Fetching from race-cards-ratings API:', url);
@@ -75,24 +53,19 @@ async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
 
     const responseData = await response.json();
 
-    // Extract total from pagination object if available, otherwise use data.total
-    const total = responseData.pagination?.total || responseData.total || 0;
+    // Extract data and total count
+    const data = responseData.data || [];
+    const total = responseData.pagination?.total || responseData.total || data.length;
 
     return {
-      data: responseData.data || [],
-      total: total,
-      page: filters.page || 1,
-      perPage: filters.perPage || 50,
-      totalPages: Math.ceil(total / (filters.perPage || 50))
+      data: data,
+      total: total
     };
   } catch (error) {
     console.error('Error fetching race cards:', error);
     return {
       data: [],
-      total: 0,
-      page: 1,
-      perPage: 50,
-      totalPages: 0
+      total: 0
     };
   }
 }
@@ -100,23 +73,13 @@ async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
 export default async function RaceViewerPage({ searchParams }: PageProps) {
   const params = await searchParams;
   
-  // Get default dates using utility function (1 year range)
-  const { todayFormatted, oneYearAgoFormatted } = getDefaultDateRange();
+  // Get default date (today)
+  const todayFormatted = getToday();
 
-  // Extract filter params from URL
+  // Extract filter params from URL (only dates)
   const filters: FilterParams = {
-    dateFrom: typeof params.dateFrom === 'string' ? params.dateFrom : oneYearAgoFormatted,
+    dateFrom: typeof params.dateFrom === 'string' ? params.dateFrom : todayFormatted,
     dateTo: typeof params.dateTo === 'string' ? params.dateTo : todayFormatted,
-    meeting_name: typeof params.meeting_name === 'string' ? params.meeting_name : undefined,
-    state: typeof params.state === 'string' ? params.state : undefined,
-    race_number: typeof params.race_number === 'string' ? parseInt(params.race_number) : undefined,
-    horse_name: typeof params.horse_name === 'string' ? params.horse_name : undefined,
-    jockey: typeof params.jockey === 'string' ? params.jockey : undefined,
-    trainer: typeof params.trainer === 'string' ? params.trainer : undefined,
-    minRating: typeof params.minRating === 'string' ? parseInt(params.minRating) : undefined,
-    maxRating: typeof params.maxRating === 'string' ? parseInt(params.maxRating) : undefined,
-    page: typeof params.page === 'string' ? parseInt(params.page) : 1,
-    perPage: typeof params.perPage === 'string' ? parseInt(params.perPage) : 50,
   };
 
   const result = await fetchRaceCards(filters);
@@ -138,9 +101,6 @@ export default async function RaceViewerPage({ searchParams }: PageProps) {
         {/* Statistics Cards */}
         <StatisticsCards
           totalRecords={result.total}
-          currentPage={result.page}
-          totalPages={result.totalPages}
-          recordsPerPage={result.perPage}
         />
 
         {/* Filter Panel */}
@@ -148,14 +108,6 @@ export default async function RaceViewerPage({ searchParams }: PageProps) {
 
         {/* Data Table */}
         <RaceDataTable data={result.data} />
-
-        {/* Pagination */}
-        {result.totalPages > 1 && (
-          <Pagination 
-            currentPage={result.page} 
-            totalPages={result.totalPages} 
-          />
-        )}
       </div>
     </div>
   );

@@ -17,32 +17,11 @@ export interface RaceCardData {
 export interface FilterParams {
   dateFrom?: string;
   dateTo?: string;
-  meeting_name?: string;
-  state?: string;
-  race_number?: number;
-  horse_name?: string;
-  jockey?: string;
-  trainer?: string;
-  minRating?: number;
-  maxRating?: number;
-  page?: number;
-  perPage?: number;
 }
 
 export interface ApiResponse {
   data: RaceCardData[];
-  pagination?: {
-    // API response structure
-    total: number;
-    page: number;
-    limit: number;
-    pages: number;
-  };
-  // Normalized pagination fields used by the app
   total: number;
-  page: number;
-  perPage: number;
-  totalPages: number;
 }
 
 export type SortField = keyof RaceCardData;
