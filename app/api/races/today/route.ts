@@ -14,12 +14,14 @@ export async function GET() {
     }
     
     // Get today's date in AEDT (Australia/Sydney timezone)
-    const today = new Date().toLocaleString('en-AU', {
+    // Using 'en-CA' locale guarantees YYYY-MM-DD format consistently across all environments
+    const formatter = new Intl.DateTimeFormat('en-CA', {
       timeZone: 'Australia/Sydney',
-      year:  'numeric',
-      month:  '2-digit',
+      year: 'numeric',
+      month: '2-digit',
       day: '2-digit'
-    }).split('/').reverse().join('-') // Convert DD/MM/YYYY to YYYY-MM-DD
+    });
+    const today = formatter.format(new Date()); // Returns YYYY-MM-DD directly
     
     console.log('📅 Fetching races for date (AEDT):', today)
     
