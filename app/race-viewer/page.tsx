@@ -44,10 +44,13 @@ async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
 
     // Optional filters
     if (filters.meeting_name) params.append('track', filters.meeting_name);
+    if (filters.state) params.append('state', filters.state);
     if (filters.race_number) params.append('race_number', filters.race_number.toString());
-    if (filters.horse_name) params.append('horse', filters.horse_name);
+    if (filters.horse_name) params.append('horse_name', filters.horse_name);
     if (filters.jockey) params.append('jockey', filters.jockey);
     if (filters.trainer) params.append('trainer', filters.trainer);
+    if (filters.minRating) params.append('min_rating', filters.minRating.toString());
+    if (filters.maxRating) params.append('max_rating', filters.maxRating.toString());
 
     // Pagination
     const limit = filters.perPage || 50;

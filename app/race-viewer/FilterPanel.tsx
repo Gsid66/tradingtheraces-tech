@@ -9,13 +9,13 @@ export default function FilterPanel() {
 
   // Calculate default dates
   const today = new Date();
-  const thirtyDaysAgo = new Date(today);
-  thirtyDaysAgo.setDate(today.getDate() - 30);
+  const threeDaysAgo = new Date(today);
+  threeDaysAgo.setDate(today.getDate() - 3);
 
   const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
   // State for all filters
-  const [dateFrom, setDateFrom] = useState(searchParams.get('dateFrom') || formatDate(thirtyDaysAgo));
+  const [dateFrom, setDateFrom] = useState(searchParams.get('dateFrom') || formatDate(threeDaysAgo));
   const [dateTo, setDateTo] = useState(searchParams.get('dateTo') || formatDate(today));
   const [track, setTrack] = useState(searchParams.get('meeting_name') || '');
   const [state, setState] = useState(searchParams.get('state') || '');
@@ -50,7 +50,7 @@ export default function FilterPanel() {
   };
 
   const clearFilters = () => {
-    setDateFrom(formatDate(thirtyDaysAgo));
+    setDateFrom(formatDate(threeDaysAgo));
     setDateTo(formatDate(today));
     setTrack('');
     setState('');
