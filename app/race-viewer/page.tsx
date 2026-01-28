@@ -20,14 +20,10 @@ function formatDate(date: Date): string {
 // Utility function to get default date range
 function getDefaultDateRange() {
   const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
   
   return {
     today,
     todayFormatted: formatDate(today),
-    yesterday,
-    yesterdayFormatted: formatDate(yesterday),
   };
 }
 
