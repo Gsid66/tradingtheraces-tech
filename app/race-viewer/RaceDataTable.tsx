@@ -101,7 +101,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
     
     const rows = sortedData.map(row => [
       formatDate(row.race_date),
-      row.track,
+      row.track || row.meeting_name || '-',
       `Race ${row.race_number}`,
       row.saddle_cloth,
       row.horse_name,
@@ -279,7 +279,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
           <tbody>
             {sortedData.map((row, index) => {
               // Create a unique composite key
-              const rowKey = `${row.race_date}-${row.track}-${row.race_number}-${row.saddle_cloth}`;
+              const rowKey = `${row.race_date}-${row.track || row.meeting_name}-${row.race_number}-${row.saddle_cloth}`;
               return (
                 <tr 
                   key={rowKey}
@@ -291,7 +291,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                 </td>
                 <td className="px-4 py-3">
                   <span className="inline-block bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                    {row.track}
+                    {row.track || row.meeting_name || '-'}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700">
