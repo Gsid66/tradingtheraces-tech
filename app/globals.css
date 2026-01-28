@@ -66,6 +66,23 @@ body {
   background: linear-gradient(135deg, rgba(26, 0, 51, 0.95), rgba(107, 33, 168, 0.8));
 }
 
+.quick-link-card-active {
+  border-color: var(--purple-light);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.7);
+  background: linear-gradient(135deg, rgba(26, 0, 51, 0.95), rgba(107, 33, 168, 0.9));
+}
+
+.quick-link-card-coming-soon {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.quick-link-card-coming-soon:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
 .quick-link-icon {
   font-size: 2. 8rem;
   margin-bottom:   1rem;
