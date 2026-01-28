@@ -19,14 +19,14 @@ function formatDate(date: Date): string {
 // Utility function to get default date range
 function getDefaultDateRange() {
   const today = new Date();
-  const threeDaysAgo = new Date(today);
-  threeDaysAgo.setDate(today.getDate() - 3);
+  const oneYearAgo = new Date(today);
+  oneYearAgo.setFullYear(today.getFullYear() - 1);
   
   return {
     today,
     todayFormatted: formatDate(today),
-    threeDaysAgo,
-    threeDaysAgoFormatted: formatDate(threeDaysAgo),
+    oneYearAgo,
+    oneYearAgoFormatted: formatDate(oneYearAgo),
   };
 }
 
@@ -34,12 +34,12 @@ async function fetchRaceCards(filters: FilterParams): Promise<ApiResponse> {
   const raceCardsApiUrl = process.env.RACE_CARD_RATINGS_API_URL || 'https://race-cards-ratings.onrender.com';
 
   try {
-    const { todayFormatted, threeDaysAgoFormatted } = getDefaultDateRange();
+    const { todayFormatted, oneYearAgoFormatted } = getDefaultDateRange();
 
     const params = new URLSearchParams();
     
     // Required date range
-    params.append('start_date', filters.dateFrom || threeDaysAgoFormatted);
+    params.append('start_date', filters.dateFrom || oneYearAgoFormatted);
     params.append('end_date', filters.dateTo || todayFormatted);
 
     // Optional filters
@@ -101,11 +101,11 @@ export default async function RaceViewerPage({ searchParams }: PageProps) {
   const params = await searchParams;
   
   // Get default dates using utility function
-  const { todayFormatted, threeDaysAgoFormatted } = getDefaultDateRange();
+  const { todayFormatted, oneYearAgoFormatted } = getDefaultDateRange();
 
   // Extract filter params from URL
   const filters: FilterParams = {
-    dateFrom: typeof params.dateFrom === 'string' ? params.dateFrom : threeDaysAgoFormatted,
+    dateFrom: typeof params.dateFrom === 'string' ? params.dateFrom : oneYearAgoFormatted,
     dateTo: typeof params.dateTo === 'string' ? params.dateTo : todayFormatted,
     meeting_name: typeof params.meeting_name === 'string' ? params.meeting_name : undefined,
     state: typeof params.state === 'string' ? params.state : undefined,
