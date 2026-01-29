@@ -72,6 +72,97 @@ const STATE_TIMEZONES: Record<string, string> = {
   'NZ': 'Pacific/Auckland',
 };
 
+// Helper function to convert a datetime string in track local time to a Date object in AEDT
+function parseTrackTimeToAEDT(startTime: string, trackTimezone: string): Date | null {
+  try {
+    // Parse the datetime string: "1/29/2026 1:40:00 PM"
+    const match = startTime.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})\s+(AM|PM)/i);
+    if (!match) return null;
+    
+    const [, month, day, year, hours, minutes, seconds, period] = match;
+    let hour = parseInt(hours);
+    
+    // Convert to 24-hour format
+    if (period.toUpperCase() === 'PM' && hour !== 12) hour += 12;
+    if (period.toUpperCase() === 'AM' && hour === 12) hour = 0;
+    
+    // Create an ISO-like string for the track local time
+    const paddedMonth = month.padStart(2, '0');
+    const paddedDay = day.padStart(2, '0');
+    
+    // Now we need to interpret the parsed time as if it's in the track's timezone
+    // and get the equivalent UTC timestamp
+    
+    // Strategy: Create two dates at the same moment in time
+    // 1. A reference date to understand the offset
+    // 2. Calculate how to adjust our parsed date
+    
+    // Use a known reference point - use the parsed date components
+    const referenceDate = new Date(`${year}-${paddedMonth}-${paddedDay}T12:00:00Z`);
+    
+    // Format this reference in both timezones to get the offset
+    const trackFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: trackTimezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    
+    const utcFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'UTC',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    
+    const trackParts = trackFormatter.formatToParts(referenceDate);
+    const utcParts = utcFormatter.formatToParts(referenceDate);
+    
+    const parseTimeFromParts = (parts: Intl.DateTimeFormatPart[]) => {
+      const year = parseInt(parts.find(p => p.type === 'year')?.value || '0');
+      const month = parseInt(parts.find(p => p.type === 'month')?.value || '0');
+      const day = parseInt(parts.find(p => p.type === 'day')?.value || '0');
+      const hour = parseInt(parts.find(p => p.type === 'hour')?.value || '0');
+      const minute = parseInt(parts.find(p => p.type === 'minute')?.value || '0');
+      const second = parseInt(parts.find(p => p.type === 'second')?.value || '0');
+      return Date.UTC(year, month - 1, day, hour, minute, second);
+    };
+    
+    const trackMs = parseTimeFromParts(trackParts);
+    const utcMs = parseTimeFromParts(utcParts);
+    
+    // The offset is the difference between UTC and track time
+    const offsetMs = utcMs - trackMs;
+    
+    // Now create the race time by treating our parsed components as track local time
+    const raceLocalMs = Date.UTC(
+      parseInt(year),
+      parseInt(month) - 1,
+      parseInt(day),
+      hour,
+      parseInt(minutes),
+      parseInt(seconds)
+    );
+    
+    // Adjust by the offset to get the actual UTC time
+    const raceUtcMs = raceLocalMs + offsetMs;
+    
+    // Create the Date object (which will be in UTC internally)
+    return new Date(raceUtcMs);
+  } catch (error) {
+    console.error('Error parsing race time:', error);
+    return null;
+  }
+}
+
 function NextToJumpButton({ meetings, currentTime }: { meetings: MeetingWithRaces[]; currentTime: Date }) {
   // Calculate next race and countdown
   const { countdown, nextRace } = useMemo(() => {
@@ -84,87 +175,16 @@ function NextToJumpButton({ meetings, currentTime }: { meetings: MeetingWithRace
       
       meeting.raceDetails?.forEach(race => {
         if (race.startTime) {
-          try {
-            // Parse the datetime string from Punting Form API
-            // Format: "1/29/2026 1:40:00 PM" (in track's local timezone)
-            const dateTimeMatch = race.startTime.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})\s+(AM|PM)/i);
-            if (!dateTimeMatch) return;
-            
-            const [, month, day, year, hours, minutes, seconds, period] = dateTimeMatch;
-            let hour = parseInt(hours);
-            
-            // Convert to 24-hour format
-            if (period.toUpperCase() === 'PM' && hour !== 12) hour += 12;
-            if (period.toUpperCase() === 'AM' && hour === 12) hour = 0;
-            
-            // Create a Date object in the track's local timezone
-            // We need to create a date that represents the track local time, then get the equivalent AEDT time
-            
-            // First, create a Date with the time components (this will be in the user's browser timezone)
-            const localDate = new Date(
-              parseInt(year),
-              parseInt(month) - 1,
-              parseInt(day),
-              hour,
-              parseInt(minutes),
-              parseInt(seconds)
-            );
-            
-            // Get what this time would be in the track's timezone
-            // We use Intl.DateTimeFormat to understand the offset between timezones
-            const trackFormatter = new Intl.DateTimeFormat('en-US', {
-              timeZone: trackTimezone,
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-              hour12: false
-            });
-            
-            const aedtFormatter = new Intl.DateTimeFormat('en-US', {
-              timeZone: 'Australia/Sydney',
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-              hour12: false
-            });
-            
-            // Get the offset between track timezone and AEDT at this point in time
-            // by formatting a reference date in both timezones
-            const refDate = new Date();
-            const trackParts = trackFormatter.formatToParts(refDate);
-            const aedtParts = aedtFormatter.formatToParts(refDate);
-            
-            const getTimeValue = (parts: Intl.DateTimeFormatPart[]) => {
-              const hour = parts.find(p => p.type === 'hour')?.value || '0';
-              const minute = parts.find(p => p.type === 'minute')?.value || '0';
-              return parseInt(hour) * 60 + parseInt(minute);
-            };
-            
-            const trackMinutes = getTimeValue(trackParts);
-            const aedtMinutes = getTimeValue(aedtParts);
-            const offsetMinutes = aedtMinutes - trackMinutes;
-            
-            // Apply the offset to convert track local time to AEDT
-            const raceTimeAEDT = new Date(localDate.getTime() + offsetMinutes * 60 * 1000);
-            
-            // Now compare in AEDT
-            if (raceTimeAEDT > currentTime) {
-              if (!closestRace || raceTimeAEDT < closestRace.time) {
-                closestRace = {
-                  time: raceTimeAEDT,
-                  track: meeting.track.name,
-                  raceNumber: race.number
-                };
-              }
+          const raceTimeUTC = parseTrackTimeToAEDT(race.startTime, trackTimezone);
+          
+          if (raceTimeUTC && raceTimeUTC > currentTime) {
+            if (!closestRace || raceTimeUTC < closestRace.time) {
+              closestRace = {
+                time: raceTimeUTC,
+                track: meeting.track.name,
+                raceNumber: race.number
+              };
             }
-          } catch (error) {
-            console.error('Error parsing race time:', error);
           }
         }
       });
