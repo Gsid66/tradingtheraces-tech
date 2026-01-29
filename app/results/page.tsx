@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FiArrowLeft } from 'react-icons/fi';
+import { Client } from 'pg';
 import ResultsContent from './ResultsContent';
 
 export const dynamic = 'force-dynamic';
@@ -40,32 +41,67 @@ export default async function ResultsPage({
   }
   
   try {
-    // Fetch results from our database API
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const apiUrl = `${baseUrl}/api/results?date=${targetDateStr}`;
-    
-    console.log(`Fetching results from: ${apiUrl}`);
-    
-    const response = await fetch(apiUrl, {
-      cache: 'no-store',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    // Query database directly
+    const dbClient = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.NODE_ENV === 'production' 
+        ? { rejectUnauthorized: false } 
+        : false
     });
     
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.statusText}`);
+    await dbClient.connect();
+    
+    let ausNzMeetings: any[] = [];
+    
+    try {
+      const query = `
+        SELECT 
+          m.meeting_id, m.track_name, m.state, m.country, m.rail_position,
+          ra.race_id, ra.race_number, ra.race_name, ra.distance, ra.start_time,
+          r.horse_name, r.finishing_position, r.tab_number, r.jockey_name,
+          r.trainer_name, r.starting_price, r.margin_to_winner
+        FROM pf_results r
+        JOIN pf_races ra ON r.race_id = ra.race_id
+        JOIN pf_meetings m ON ra.meeting_id = m.meeting_id
+        WHERE m.meeting_date = $1 AND (m.country = 'AUS' OR m.country = 'NZ')
+        ORDER BY m.track_name, ra.race_number, r.finishing_position
+      `;
+      
+      const result = await dbClient.query(query, [targetDateStr]);
+      
+      // Group results by meeting
+      const meetingsMap = new Map();
+      result.rows.forEach((row) => {
+        if (!meetingsMap.has(row.meeting_id)) {
+          meetingsMap.set(row.meeting_id, {
+            meetingId: row.meeting_id,
+            track: { name: row.track_name, state: row.state, country: row.country },
+            railPosition: row.rail_position,
+            races: []
+          });
+        }
+        const meeting = meetingsMap.get(row.meeting_id);
+        let race = meeting.races.find((r: any) => r.raceId === row.race_id);
+        if (!race) {
+          race = {
+            raceId: row.race_id, number: row.race_number,
+            name: row.race_name, distance: row.distance,
+            startTime: row.start_time, results: []
+          };
+          meeting.races.push(race);
+        }
+        race.results.push({
+          horseName: row.horse_name, finishingPosition: row.finishing_position,
+          tabNumber: row.tab_number, jockeyName: row.jockey_name,
+          trainerName: row.trainer_name, startingPrice: row.starting_price,
+          marginToWinner: row.margin_to_winner
+        });
+      });
+      
+      ausNzMeetings = Array.from(meetingsMap.values());
+    } finally {
+      await dbClient.end();
     }
-    
-    const data = await response.json();
-    const meetingsWithResults = data.meetings || [];
-    
-    // Filter to AUS/NZ only
-    const ausNzMeetings = Array.isArray(meetingsWithResults) 
-      ? meetingsWithResults.filter((m: { track?: { country?: string } }) => 
-          m.track?.country === 'AUS' || m.track?.country === 'NZ'
-        )
-      : [];
 
     return (
       <div className="min-h-screen bg-gray-50">
