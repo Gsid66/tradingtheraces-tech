@@ -59,6 +59,19 @@ export default function FormGuideContent({ meetings }: Props) {
   );
 }
 
+// Timezone mappings for Australian states (using IANA timezone identifiers)
+const STATE_TIMEZONES: Record<string, string> = {
+  'NSW': 'Australia/Sydney',
+  'VIC': 'Australia/Melbourne',
+  'ACT': 'Australia/Sydney',
+  'TAS': 'Australia/Hobart',
+  'QLD': 'Australia/Brisbane',
+  'SA': 'Australia/Adelaide',
+  'NT': 'Australia/Darwin',
+  'WA': 'Australia/Perth',
+  'NZ': 'Pacific/Auckland',
+};
+
 function NextToJumpButton({ meetings, currentTime }: { meetings: MeetingWithRaces[]; currentTime: Date }) {
   // Calculate next race and countdown
   const { countdown, nextRace } = useMemo(() => {
@@ -67,64 +80,78 @@ function NextToJumpButton({ meetings, currentTime }: { meetings: MeetingWithRace
     
     meetings.forEach(meeting => {
       const trackState = meeting.track.state;
+      const trackTimezone = STATE_TIMEZONES[trackState] || 'Australia/Sydney';
       
       meeting.raceDetails?.forEach(race => {
         if (race.startTime) {
           try {
-            // Parse the datetime from Punting Form API
-            const raceDate = new Date(race.startTime);
+            // Parse the datetime string from Punting Form API
+            // Format: "1/29/2026 1:40:00 PM" (in track's local timezone)
+            const dateTimeMatch = race.startTime.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})\s+(AM|PM)/i);
+            if (!dateTimeMatch) return;
             
-            // Extract time components from the parsed date
-            // Note: This is in the track's LOCAL timezone as returned by the API
-            const localTimeStr = raceDate.toLocaleTimeString('en-US', {
-              hour: 'numeric',
-              minute: '2-digit',
-              hour12: true
-            });
-            
-            // Get date components
-            const dateStr = raceDate.toLocaleDateString('en-CA'); // YYYY-MM-DD
-            
-            // Convert track local time to AEDT using timezone offsets
-            // During DST (summer): AEDT is UTC+11
-            // QLD (AEST) is UTC+10, so it's 1 hour behind AEDT
-            // WA (AWST) is UTC+8, so it's 3 hours behind AEDT
-            // SA (ACDT) is UTC+10:30, so it's 0.5 hours behind AEDT
-            // NT (ACST) is UTC+9:30, so it's 1.5 hours behind AEDT
-            const STATE_TIMEZONE_OFFSETS: Record<string, number> = {
-              'NSW': 0,    // AEDT = AEDT
-              'VIC': 0,    // AEDT = AEDT
-              'ACT': 0,    // AEDT = AEDT
-              'TAS': 0,    // AEDT = AEDT
-              'QLD': -1,   // AEST is 1 hour behind AEDT
-              'SA': -0.5,  // ACDT is 30 mins behind AEDT
-              'NT': -1.5,  // ACST is 1.5 hours behind AEDT
-              'WA': -3,    // AWST is 3 hours behind AEDT
-            };
-            
-            const offset = STATE_TIMEZONE_OFFSETS[trackState] || 0;
-            
-            // Parse time (handle 12-hour format)
-            const timeMatch = localTimeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-            if (!timeMatch) return;
-            
-            const [, hours, minutes, period] = timeMatch;
+            const [, month, day, year, hours, minutes, seconds, period] = dateTimeMatch;
             let hour = parseInt(hours);
             
-            // Convert to 24-hour
+            // Convert to 24-hour format
             if (period.toUpperCase() === 'PM' && hour !== 12) hour += 12;
             if (period.toUpperCase() === 'AM' && hour === 12) hour = 0;
             
-            // Apply timezone offset (convert track local time to AEDT)
-            hour = hour - offset;
+            // Create a Date object in the track's local timezone
+            // We need to create a date that represents the track local time, then get the equivalent AEDT time
             
-            // Handle day overflow
-            if (hour >= 24) hour -= 24;
-            if (hour < 0) hour += 24;
+            // First, create a Date with the time components (this will be in the user's browser timezone)
+            const localDate = new Date(
+              parseInt(year),
+              parseInt(month) - 1,
+              parseInt(day),
+              hour,
+              parseInt(minutes),
+              parseInt(seconds)
+            );
             
-            // Create datetime in AEDT
-            const [year, month, day] = dateStr.split('-').map(Number);
-            const raceTimeAEDT = new Date(year, month - 1, day, hour, parseInt(minutes), 0);
+            // Get what this time would be in the track's timezone
+            // We use Intl.DateTimeFormat to understand the offset between timezones
+            const trackFormatter = new Intl.DateTimeFormat('en-US', {
+              timeZone: trackTimezone,
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: false
+            });
+            
+            const aedtFormatter = new Intl.DateTimeFormat('en-US', {
+              timeZone: 'Australia/Sydney',
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: false
+            });
+            
+            // Get the offset between track timezone and AEDT at this point in time
+            // by formatting a reference date in both timezones
+            const refDate = new Date();
+            const trackParts = trackFormatter.formatToParts(refDate);
+            const aedtParts = aedtFormatter.formatToParts(refDate);
+            
+            const getTimeValue = (parts: Intl.DateTimeFormatPart[]) => {
+              const hour = parts.find(p => p.type === 'hour')?.value || '0';
+              const minute = parts.find(p => p.type === 'minute')?.value || '0';
+              return parseInt(hour) * 60 + parseInt(minute);
+            };
+            
+            const trackMinutes = getTimeValue(trackParts);
+            const aedtMinutes = getTimeValue(aedtParts);
+            const offsetMinutes = aedtMinutes - trackMinutes;
+            
+            // Apply the offset to convert track local time to AEDT
+            const raceTimeAEDT = new Date(localDate.getTime() + offsetMinutes * 60 * 1000);
             
             // Now compare in AEDT
             if (raceTimeAEDT > currentTime) {
