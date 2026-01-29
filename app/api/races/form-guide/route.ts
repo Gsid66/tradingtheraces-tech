@@ -1,51 +1,126 @@
 import { NextResponse } from 'next/server'
+import { getPuntingFormClient } from '@/lib/integrations/punting-form/client'
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const date = searchParams.get('date')
-    const track = searchParams. get('track')
+    const dateParam = searchParams.get('date') // YYYY-MM-DD format
+    const trackName = searchParams.get('track')
     
-    if (!date || !track) {
+    if (!dateParam || !trackName) {
       return NextResponse.json(
         { error: 'Date and track parameters required' },
         { status: 400 }
       )
     }
     
-    const apiUrl = process.env.RACING_DATA_API_URL
+    console.log(`🏇 Fetching form guide: ${trackName} on ${dateParam}`)
     
-    if (!apiUrl) {
+    // Validate date format (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/
+    if (!dateRegex.test(dateParam)) {
       return NextResponse.json(
-        { error: 'RACING_DATA_API_URL not configured' },
-        { status: 500 }
+        { error: 'Invalid date format. Expected YYYY-MM-DD' },
+        { status: 400 }
       )
     }
     
-    console.log(`🏇 Fetching form guide:  ${track} on ${date}`)
+    const pfClient = getPuntingFormClient()
     
-    const response = await fetch(
-      `${apiUrl}/api/form-guide?date=${date}&track=${encodeURIComponent(track)}`,
-      { cache: 'no-store' }
+    // Convert YYYY-MM-DD to Date object
+    const [year, month, day] = dateParam.split('-').map(Number)
+    const raceDate = new Date(year, month - 1, day)
+    
+    // Validate the date is valid
+    if (isNaN(raceDate.getTime())) {
+      return NextResponse.json(
+        { error: 'Invalid date value' },
+        { status: 400 }
+      )
+    }
+    
+    // Get meetings for the date
+    const meetingsResponse = await pfClient.getMeetingsByDate(raceDate)
+    
+    if (!meetingsResponse.payLoad || meetingsResponse.payLoad.length === 0) {
+      console.log(`⚠️ No meetings found for ${dateParam}`)
+      return NextResponse.json(
+        { error: 'No meetings found for this date', races: [] },
+        { status: 404 }
+      )
+    }
+    
+    // Find the matching track (case-insensitive comparison with normalized whitespace)
+    const normalizeTrackName = (name: string) => 
+      name.toLowerCase().replace(/\s+/g, ' ').trim()
+    
+    const meeting = meetingsResponse.payLoad.find(
+      (m) => m.track?.name && normalizeTrackName(m.track.name) === normalizeTrackName(trackName)
     )
     
-    if (!response.ok) {
-      console.error('❌ Failed to fetch form guide.  Status:', response.status)
+    if (!meeting) {
+      console.log(`⚠️ Track "${trackName}" not found in meetings`)
       return NextResponse.json(
-        { error: 'Failed to fetch form guide', status: response.status },
+        { error: 'Track not found', races: [] },
+        { status: 404 }
+      )
+    }
+    
+    console.log(`✅ Found meeting: ${meeting.track.name} (ID: ${meeting.meetingId})`)
+    
+    // Get full race details for this meeting
+    const raceDetailsResponse = await pfClient.getAllRacesForMeeting(meeting.meetingId)
+    
+    if (!raceDetailsResponse.payLoad) {
+      console.log(`⚠️ No race details found for meeting ${meeting.meetingId}`)
+      return NextResponse.json(
+        { error: 'No race details found', races: [] },
+        { status: 404 }
+      )
+    }
+    
+    const raceFields = raceDetailsResponse.payLoad
+    
+    // Validate response structure
+    if (!raceFields.track?.name || !Array.isArray(raceFields.races)) {
+      console.log(`⚠️ Invalid race details structure for meeting ${meeting.meetingId}`)
+      return NextResponse.json(
+        { error: 'Invalid race details structure', races: [] },
         { status: 500 }
       )
     }
     
-    const data = await response.json()
-    console.log('✅ Form guide data received')
+    // Transform to match expected format
+    const races = raceFields.races.map((race) => ({
+      race_number: race.number,
+      race_name: race.name || '',
+      race_time: race.startTime || '',
+      distance: race.distance,
+      runner_count: race.runners?.length || 0,
+      runners: race.runners?.map((runner) => ({
+        tab_number: runner.tabNumber,
+        horse_name: runner.name || runner.horseName || 'Unknown',
+        barrier: runner.barrierNumber,
+        jockey_name: runner.jockey?.fullName,
+        trainer_name: runner.trainer?.fullName,
+        weight: runner.weight,
+        form: runner.lastFiveStarts,
+        tab_fixed_win: runner.fixedOdds
+      })) || []
+    }))
     
-    return NextResponse.json(data)
+    console.log(`✅ Returning ${races.length} races for ${trackName}`)
     
-  } catch (error:  any) {
+    return NextResponse.json({
+      success: true,
+      track: raceFields.track.name,
+      races: races
+    })
+    
+  } catch (error: any) {
     console.error('💥 Error in /api/races/form-guide:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch form guide', message:  error.message },
+      { error: 'Failed to fetch form guide', message: error.message },
       { status: 500 }
     )
   }
