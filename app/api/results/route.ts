@@ -1,6 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Client } from 'pg';
 
+// Type definitions
+interface RunnerResult {
+  resultId: number;
+  horseName: string;
+  finishingPosition: number;
+  position: number;
+  tabNumber: number;
+  barrierNumber: number;
+  finishingTime: number | null;
+  marginToWinner: number | null;
+  margin: number | null;
+  marginToNext: number | null;
+  jockeyName: string;
+  jockey: string;
+  trainerName: string;
+  trainer: string;
+  startingPrice: number | null;
+  price: number | null;
+  prizeMoneyWon: number | null;
+  prizeMoney: number | null;
+}
+
+interface RaceResult {
+  raceId: string;
+  number: number;
+  name: string;
+  raceClass: string | null;
+  distance: number;
+  startTime: Date;
+  runners: RunnerResult[];
+}
+
+interface MeetingResult {
+  meetingId: string;
+  track: {
+    name: string;
+    state: string;
+  };
+  railPosition: string | null;
+  expectedCondition: string | null;
+  raceResults: RaceResult[];
+}
+
 // Helper to format date to YYYY-MM-DD
 function formatDate(date: Date): string {
   const year = date.getFullYear();
@@ -97,7 +140,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Group results by meeting and race
-    const meetingsMap = new Map();
+    const meetingsMap = new Map<string, MeetingResult>();
 
     for (const row of result.rows) {
       const meetingId = row.meeting_id;
@@ -115,10 +158,10 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      const meeting = meetingsMap.get(meetingId);
+      const meeting = meetingsMap.get(meetingId)!;
       
       // Find or create race in this meeting
-      let race = meeting.raceResults.find((r: any) => r.raceId === row.race_id);
+      let race = meeting.raceResults.find((r: RaceResult) => r.raceId === row.race_id);
       if (!race) {
         race = {
           raceId: row.race_id,
@@ -165,13 +208,14 @@ export async function GET(request: NextRequest) {
       meetings: meetings
     });
 
-  } catch (error: any) {
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('💥 Error fetching results from database:', error);
     return NextResponse.json(
       { 
         success: false, 
         error: 'Database error', 
-        message: error.message 
+        message: errorMessage 
       },
       { status: 500 }
     );
