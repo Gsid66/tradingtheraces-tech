@@ -66,17 +66,78 @@ function NextToJumpButton({ meetings, currentTime }: { meetings: MeetingWithRace
     let closestRace: ClosestRace | null = null;
     
     meetings.forEach(meeting => {
+      const trackState = meeting.track.state;
+      
       meeting.raceDetails?.forEach(race => {
         if (race.startTime) {
-          const raceTime = new Date(race.startTime);
-          if (raceTime > currentTime) {
-            if (!closestRace || raceTime < closestRace.time) {
-              closestRace = {
-                time: raceTime,
-                track: meeting.track.name,
-                raceNumber: race.number
-              };
+          try {
+            // Parse the datetime from Punting Form API
+            const raceDate = new Date(race.startTime);
+            
+            // Extract time components from the parsed date
+            // Note: This is in the track's LOCAL timezone as returned by the API
+            const localTimeStr = raceDate.toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true
+            });
+            
+            // Get date components
+            const dateStr = raceDate.toLocaleDateString('en-CA'); // YYYY-MM-DD
+            
+            // Convert track local time to AEDT using timezone offsets
+            // During DST (summer): AEDT is UTC+11
+            // QLD (AEST) is UTC+10, so it's 1 hour behind AEDT
+            // WA (AWST) is UTC+8, so it's 3 hours behind AEDT
+            // SA (ACDT) is UTC+10:30, so it's 0.5 hours behind AEDT
+            // NT (ACST) is UTC+9:30, so it's 1.5 hours behind AEDT
+            const STATE_TIMEZONE_OFFSETS: Record<string, number> = {
+              'NSW': 0,    // AEDT = AEDT
+              'VIC': 0,    // AEDT = AEDT
+              'ACT': 0,    // AEDT = AEDT
+              'TAS': 0,    // AEDT = AEDT
+              'QLD': -1,   // AEST is 1 hour behind AEDT
+              'SA': -0.5,  // ACDT is 30 mins behind AEDT
+              'NT': -1.5,  // ACST is 1.5 hours behind AEDT
+              'WA': -3,    // AWST is 3 hours behind AEDT
+            };
+            
+            const offset = STATE_TIMEZONE_OFFSETS[trackState] || 0;
+            
+            // Parse time (handle 12-hour format)
+            const timeMatch = localTimeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!timeMatch) return;
+            
+            const [, hours, minutes, period] = timeMatch;
+            let hour = parseInt(hours);
+            
+            // Convert to 24-hour
+            if (period.toUpperCase() === 'PM' && hour !== 12) hour += 12;
+            if (period.toUpperCase() === 'AM' && hour === 12) hour = 0;
+            
+            // Apply timezone offset (convert track local time to AEDT)
+            hour = hour - offset;
+            
+            // Handle day overflow
+            if (hour >= 24) hour -= 24;
+            if (hour < 0) hour += 24;
+            
+            // Create datetime in AEDT
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const raceTimeAEDT = new Date(year, month - 1, day, hour, parseInt(minutes), 0);
+            
+            // Now compare in AEDT
+            if (raceTimeAEDT > currentTime) {
+              if (!closestRace || raceTimeAEDT < closestRace.time) {
+                closestRace = {
+                  time: raceTimeAEDT,
+                  track: meeting.track.name,
+                  raceNumber: race.number
+                };
+              }
             }
+          } catch (error) {
+            console.error('Error parsing race time:', error);
           }
         }
       });
