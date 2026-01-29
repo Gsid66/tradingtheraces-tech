@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import type { PFMeeting, PFRace } from '@/lib/integrations/punting-form/client';
+import { convertToAEDT } from '@/lib/utils/timezone-converter';
 
 interface MeetingWithRaces extends PFMeeting {
   raceDetails?: PFRace[];
@@ -131,16 +132,22 @@ function NextToJumpButton({ meetings, currentTime }: { meetings: MeetingWithRace
   );
 }
 
-// Helper function to format race time in AEDT
-function formatRaceTime(startTime: string) {
+// Helper function to format race time and convert to AEDT
+function formatRaceTime(startTime: string, state: string) {
   try {
     const date = new Date(startTime);
-    return date.toLocaleTimeString('en-AU', {
+    
+    // Extract time in 12-hour format (this is in the track's local timezone)
+    const localTimeStr = date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
-      hour12: true,
-      timeZone: 'Australia/Sydney'
+      hour12: true
     });
+    
+    // Convert to AEDT
+    const aedtTime = convertToAEDT(localTimeStr, state);
+    
+    return `${aedtTime} AEDT`;
   } catch {
     return '--:--';
   }
@@ -195,7 +202,7 @@ function MeetingCard({ meeting }: { meeting: MeetingWithRaces }) {
                     Race {race.number}
                   </div>
                   <div className="text-sm text-gray-600">
-                    {race.startTime ? formatRaceTime(race.startTime) : '--:--'}
+                    {race.startTime ? formatRaceTime(race.startTime, meeting.track.state) : '--:--'}
                   </div>
                 </div>
               </Link>
