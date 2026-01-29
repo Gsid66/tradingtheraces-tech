@@ -16,11 +16,28 @@ export async function GET(request: Request) {
     
     console.log(`🏇 Fetching form guide: ${trackName} on ${dateParam}`)
     
+    // Validate date format (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/
+    if (!dateRegex.test(dateParam)) {
+      return NextResponse.json(
+        { error: 'Invalid date format. Expected YYYY-MM-DD' },
+        { status: 400 }
+      )
+    }
+    
     const pfClient = getPuntingFormClient()
     
     // Convert YYYY-MM-DD to Date object
     const [year, month, day] = dateParam.split('-').map(Number)
     const raceDate = new Date(year, month - 1, day)
+    
+    // Validate the date is valid
+    if (isNaN(raceDate.getTime())) {
+      return NextResponse.json(
+        { error: 'Invalid date value' },
+        { status: 400 }
+      )
+    }
     
     // Get meetings for the date
     const meetingsResponse = await pfClient.getMeetingsByDate(raceDate)
@@ -33,9 +50,12 @@ export async function GET(request: Request) {
       )
     }
     
-    // Find the matching track (case-insensitive comparison)
+    // Find the matching track (case-insensitive comparison with normalized whitespace)
+    const normalizeTrackName = (name: string) => 
+      name.toLowerCase().replace(/\s+/g, ' ').trim()
+    
     const meeting = meetingsResponse.payLoad.find(
-      (m) => m.track.name.toLowerCase() === trackName.toLowerCase()
+      (m) => m.track?.name && normalizeTrackName(m.track.name) === normalizeTrackName(trackName)
     )
     
     if (!meeting) {
@@ -61,6 +81,15 @@ export async function GET(request: Request) {
     
     const raceFields = raceDetailsResponse.payLoad
     
+    // Validate response structure
+    if (!raceFields.track?.name || !Array.isArray(raceFields.races)) {
+      console.log(`⚠️ Invalid race details structure for meeting ${meeting.meetingId}`)
+      return NextResponse.json(
+        { error: 'Invalid race details structure', races: [] },
+        { status: 500 }
+      )
+    }
+    
     // Transform to match expected format
     const races = raceFields.races.map((race) => ({
       race_number: race.number,
@@ -70,7 +99,7 @@ export async function GET(request: Request) {
       runner_count: race.runners?.length || 0,
       runners: race.runners?.map((runner) => ({
         tab_number: runner.tabNumber,
-        horse_name: runner.name || runner.horseName,
+        horse_name: runner.name || runner.horseName || 'Unknown',
         barrier: runner.barrierNumber,
         jockey_name: runner.jockey?.fullName,
         trainer_name: runner.trainer?.fullName,
