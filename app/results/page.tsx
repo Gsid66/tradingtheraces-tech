@@ -7,16 +7,29 @@ import ResultsContent from './ResultsContent';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ResultsPage() {
+export default async function ResultsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const pfClient = getPuntingFormClient();
   
-  // Get yesterday's date (AEDT)
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
+  // Await searchParams
+  const params = await searchParams;
+  const dateParam = params.date as string | undefined;
+  
+  // Get yesterday's date (AEDT) or use the provided date
+  let targetDate: Date;
+  if (dateParam) {
+    targetDate = new Date(dateParam);
+  } else {
+    targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() - 1);
+  }
   
   try {
     // Fetch results
-    const resultsResponse = await pfClient.getResultsByDate(yesterday);
+    const resultsResponse = await pfClient.getResultsByDate(targetDate);
     const meetingsWithResults = resultsResponse.payLoad || [];
     
     // Filter to AUS/NZ only
@@ -62,7 +75,7 @@ export default async function ResultsPage() {
             </div>
           </div>
         }>
-          <ResultsContent meetings={ausNzMeetings} selectedDate={yesterday} />
+          <ResultsContent meetings={ausNzMeetings} selectedDate={targetDate} />
         </Suspense>
       </div>
     );

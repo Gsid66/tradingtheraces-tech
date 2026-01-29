@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import RaceResultCard from './RaceResultCard';
 
 interface Props {
@@ -10,9 +11,10 @@ export default function ResultsMeetingCard({ meeting }: Props) {
   const track = meeting.track || {};
   const raceResults = meeting.raceResults || [];
   
-  // Sort races by race number
-  const sortedRaces = [...raceResults].sort((a, b) => 
-    (a.number || 0) - (b.number || 0)
+  // Sort races by race number - memoized
+  const sortedRaces = useMemo(() => 
+    [...raceResults].sort((a, b) => (a.number || 0) - (b.number || 0)),
+    [raceResults]
   );
 
   return (

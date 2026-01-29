@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import RunnerResultRow from './RunnerResultRow';
 
 interface Props {
@@ -13,13 +13,18 @@ export default function RaceResultCard({ race, trackState }: Props) {
   
   const runners = race.runners || [];
   
-  // Sort runners by finishing position
-  const sortedRunners = [...runners]
-    .filter((r: any) => (r.position || r.finishingPosition) > 0)
-    .sort((a, b) => (a.position || a.finishingPosition) - (b.position || b.finishingPosition));
-  
-  const topThree = sortedRunners.slice(0, 3);
-  const remainingRunners = sortedRunners.slice(3);
+  // Sort runners by finishing position - memoized
+  const { sortedRunners, topThree, remainingRunners } = useMemo(() => {
+    const sorted = [...runners]
+      .filter((r: any) => (r.position || r.finishingPosition) > 0)
+      .sort((a, b) => (a.position || a.finishingPosition) - (b.position || b.finishingPosition));
+    
+    return {
+      sortedRunners: sorted,
+      topThree: sorted.slice(0, 3),
+      remainingRunners: sorted.slice(3)
+    };
+  }, [runners]);
 
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -42,13 +47,16 @@ export default function RaceResultCard({ race, trackState }: Props) {
       <div className="p-4 space-y-2">
         {topThree.length > 0 ? (
           <>
-            {topThree.map((runner: any, index: number) => (
-              <RunnerResultRow 
-                key={runner.formId || index} 
-                runner={runner} 
-                position={index + 1}
-              />
-            ))}
+            {topThree.map((runner: any) => {
+              const position = runner.position || runner.finishingPosition || 0;
+              return (
+                <RunnerResultRow 
+                  key={runner.formId || runner.runnerId} 
+                  runner={runner} 
+                  position={position}
+                />
+              );
+            })}
           </>
         ) : (
           <div className="text-center py-4 text-gray-500">
@@ -71,13 +79,16 @@ export default function RaceResultCard({ race, trackState }: Props) {
         {/* Remaining Runners */}
         {showAllRunners && remainingRunners.length > 0 && (
           <div className="mt-2 space-y-2 pt-2 border-t border-gray-200">
-            {remainingRunners.map((runner: any, index: number) => (
-              <RunnerResultRow 
-                key={runner.formId || index} 
-                runner={runner} 
-                position={index + 4}
-              />
-            ))}
+            {remainingRunners.map((runner: any) => {
+              const position = runner.position || runner.finishingPosition || 0;
+              return (
+                <RunnerResultRow 
+                  key={runner.formId || runner.runnerId} 
+                  runner={runner} 
+                  position={position}
+                />
+              );
+            })}
           </div>
         )}
       </div>

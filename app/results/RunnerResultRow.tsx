@@ -73,7 +73,8 @@ export default function RunnerResultRow({ runner, position }: Props) {
   const trainerName = runner.trainer || runner.trainerName || 'Unknown Trainer';
   const margin = formatMargin(runner.margin || runner.marginToWinner || 0);
   const startingPrice = formatPrice(runner.price || runner.startingPrice || runner.priceSP || 0);
-  const prizeMoney = formatPrizeMoney(runner.prizeMoneyWon || runner.prizeMoney || 0);
+  const prizeMoneyValue = runner.prizeMoneyWon || runner.prizeMoney || 0;
+  const prizeMoney = formatPrizeMoney(prizeMoneyValue);
 
   return (
     <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
@@ -102,7 +103,7 @@ export default function RunnerResultRow({ runner, position }: Props) {
             <div className="text-gray-600">
               <span className="font-medium">SP:</span> {startingPrice}
             </div>
-            {runner.prizeMoneyWon > 0 && (
+            {prizeMoneyValue > 0 && (
               <div className="text-green-600 font-medium">
                 {prizeMoney}
               </div>

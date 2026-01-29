@@ -8,12 +8,19 @@ interface Props {
   selectedDate: Date;
 }
 
-export default function ResultsContent({ meetings, selectedDate: initialDate }: Props) {
-  const [selectedDateOffset, setSelectedDateOffset] = useState(1); // 1 = yesterday
+export default function ResultsContent({ meetings, selectedDate }: Props) {
+  // Calculate offset from selectedDate
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const selected = new Date(selectedDate);
+  selected.setHours(0, 0, 0, 0);
+  const initialOffset = Math.round((today.getTime() - selected.getTime()) / (1000 * 60 * 60 * 24));
+  
+  const [selectedDateOffset, setSelectedDateOffset] = useState(initialOffset || 1);
 
   // Calculate the actual date based on offset
-  const selectedDate = new Date();
-  selectedDate.setDate(selectedDate.getDate() - selectedDateOffset);
+  const displayDate = new Date();
+  displayDate.setDate(displayDate.getDate() - selectedDateOffset);
 
   // Format date for display
   const formatDate = (date: Date) => {
@@ -39,10 +46,12 @@ export default function ResultsContent({ meetings, selectedDate: initialDate }: 
       {/* Date Selector */}
       <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
         <div className="text-lg font-semibold text-gray-700">
-          {formatDate(selectedDate)}
+          {formatDate(displayDate)}
         </div>
         <div className="flex gap-2">
+          <label htmlFor="date-selector" className="sr-only">Select date</label>
           <select
+            id="date-selector"
             value={selectedDateOffset}
             onChange={(e) => handleDateChange(Number(e.target.value))}
             className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 font-medium hover:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
