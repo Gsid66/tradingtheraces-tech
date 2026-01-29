@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Client } from 'pg';
+import { query } from '@/lib/database/client';
 
 // Type definitions
 interface RunnerResult {
@@ -38,18 +38,23 @@ interface MeetingResult {
   track: {
     name: string;
     state: string;
+    country: string;
   };
   railPosition: string | null;
   expectedCondition: string | null;
   raceResults: RaceResult[];
 }
 
-// Helper to format date to YYYY-MM-DD
+// Helper to format date to YYYY-MM-DD in AEDT timezone
 function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  // Use Australia/Sydney timezone to get correct date
+  const aedtDate = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Australia/Sydney',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(date);
+  return aedtDate;
 }
 
 // Validate date format YYYY-MM-DD
@@ -65,7 +70,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const dateParam = searchParams.get('date');
   
-  // Determine target date (default to yesterday)
+  // Determine target date (default to yesterday in AEDT)
   let targetDate: string;
   if (dateParam) {
     if (!isValidDate(dateParam)) {
@@ -76,26 +81,23 @@ export async function GET(request: NextRequest) {
     }
     targetDate = dateParam;
   } else {
+    // Get yesterday's date in AEDT timezone
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     targetDate = formatDate(yesterday);
   }
 
-  const dbClient = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-  });
-
   try {
-    await dbClient.connect();
     console.log(`📅 Fetching results for ${targetDate} from database`);
 
     // Query to get results with meeting and race details
-    const query = `
+    // Filter for AUS/NZ countries only
+    const queryText = `
       SELECT 
         m.meeting_id,
         m.track_name,
         m.state,
+        m.country,
         m.meeting_date,
         m.rail_position,
         m.expected_condition,
@@ -121,12 +123,13 @@ export async function GET(request: NextRequest) {
       JOIN pf_races r ON res.race_id = r.race_id
       JOIN pf_meetings m ON r.meeting_id = m.meeting_id
       WHERE m.meeting_date = $1
+        AND m.country IN ('AUS', 'NZ')
         AND res.finishing_position > 0
         AND res.finishing_position <= 3
       ORDER BY m.track_name, r.race_number, res.finishing_position
     `;
 
-    const result = await dbClient.query(query, [targetDate]);
+    const result = await query(queryText, [targetDate]);
 
     if (result.rows.length === 0) {
       return NextResponse.json(
@@ -151,6 +154,7 @@ export async function GET(request: NextRequest) {
           track: {
             name: row.track_name,
             state: row.state,
+            country: row.country,
           },
           railPosition: row.rail_position,
           expectedCondition: row.expected_condition,
@@ -209,17 +213,13 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('💥 Error fetching results from database:', error);
     return NextResponse.json(
       { 
         success: false, 
-        error: 'Database error', 
-        message: errorMessage 
+        error: 'Database error'
       },
       { status: 500 }
     );
-  } finally {
-    await dbClient.end();
   }
 }

@@ -6,12 +6,16 @@ import ResultsContent from './ResultsContent';
 
 export const dynamic = 'force-dynamic';
 
-// Helper to format date to YYYY-MM-DD
+// Helper to format date to YYYY-MM-DD in AEDT timezone
 function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  // Use Australia/Sydney timezone to get correct date
+  const aedtDate = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Australia/Sydney',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(date);
+  return aedtDate;
 }
 
 export default async function ResultsPage({
@@ -23,7 +27,7 @@ export default async function ResultsPage({
   const params = await searchParams;
   const dateParam = params.date as string | undefined;
   
-  // Get yesterday's date or use the provided date
+  // Get yesterday's date in AEDT or use the provided date
   let targetDate: Date;
   let targetDateStr: string;
   if (dateParam) {
@@ -56,9 +60,11 @@ export default async function ResultsPage({
     const data = await response.json();
     const meetingsWithResults = data.meetings || [];
     
-    // Filter to AUS/NZ only (already filtered by database query, but keeping for safety)
+    // Filter to AUS/NZ only
     const ausNzMeetings = Array.isArray(meetingsWithResults) 
-      ? meetingsWithResults
+      ? meetingsWithResults.filter((m: { track?: { country?: string } }) => 
+          m.track?.country === 'AUS' || m.track?.country === 'NZ'
+        )
       : [];
 
     return (
