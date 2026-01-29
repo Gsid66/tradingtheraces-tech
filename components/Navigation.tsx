@@ -13,6 +13,7 @@ export default function Navigation() {
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/form-guide', label: 'Form Guide' },
+    { href: '/results', label: 'Results' },
     { href: '/race-viewer', label: 'Ratings' },
     { href: '/ratings-odds-comparison', label: 'Ratings vs Odds' },
     { href: '/calculator', label: 'Calculator' },
