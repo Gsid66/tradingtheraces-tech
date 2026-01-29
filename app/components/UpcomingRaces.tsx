@@ -101,44 +101,51 @@ export default function UpcomingRaces() {
       
       const date = tracksData.date
       
-      // Step 2: Fetch form guide for each track
-      const allRacesPromises = tracks.map(async (track) => {
+      // Step 2: Fetch form guide for each track SEQUENTIALLY with delays to avoid rate limiting
+      const allRaces: Race[] = []
+
+      for (let i = 0; i < tracks.length; i++) {
+        const track = tracks[i]
+        
         try {
+          // Add 300ms delay between requests (except for first one)
+          if (i > 0) {
+            await new Promise(resolve => setTimeout(resolve, 300))
+          }
+          
+          console.log(`🏇 Fetching ${track.track_name} (${i + 1}/${tracks.length})`)
+          
           const response = await fetch(
             `/api/races/form-guide?date=${date}&track=${encodeURIComponent(track.track_name)}`,
             { signal: abortSignal }
           )
+          
           if (!response.ok) {
-            return []
+            console.warn(`⚠️ Failed to fetch ${track.track_name}: ${response.status}`)
+            continue
           }
           
           const data = await response.json()
           const races: Race[] = data.races || []
           
-          // Get track state from track name
           const trackState = getStateFromTrackName(track.track_name)
-          console.log(`🏇 Processing ${track.track_name} in ${trackState}`)
           
-          // Add track_name to each race and convert race times to AEDT
-          return races.map(race => {
-            const convertedTime = race.race_time ? convertToAEDT(race.race_time, trackState) : race.race_time
-            console.log(`  R${race.race_number}: "${race.race_time}" → "${convertedTime}" AEDT`)
-            return {
-              ...race,
-              race_time_local: race.race_time,
-              race_time: convertedTime,
-              track_name: track.track_name
-            }
-          })
+          const racesWithTrack = races.map(race => ({
+            ...race,
+            race_time_local: race.race_time,
+            race_time: race.race_time ? convertToAEDT(race.race_time, trackState) : race.race_time,
+            track_name: track.track_name
+          }))
+          
+          allRaces.push(...racesWithTrack)
+          
         } catch (err) {
-          console.error(`Error fetching ${track.track_name}:`, err)
-          return []
+          console.error(`❌ Error fetching ${track.track_name}:`, err)
         }
-      })
-      
-      // Step 3: Wait for all requests to complete
-      const racesArrays = await Promise.all(allRacesPromises)
-      const flattenedRaces = racesArrays.flat()
+      }
+
+      // Step 3: Continue with filtering
+      const flattenedRaces = allRaces
       
       // Step 4: Get current time in AEDT (24-hour format HH:MM) AND current date
       const now = new Date()
