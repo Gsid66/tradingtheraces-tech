@@ -58,6 +58,9 @@ const createTrackSlug = (trackName: string): string => {
   return trackName.toLowerCase().replace(/\s+/g, '-')
 }
 
+// Delay between API requests to avoid rate limiting (in milliseconds)
+const RATE_LIMIT_DELAY_MS = 300
+
 export default function UpcomingRaces() {
   const [upcomingRaces, setUpcomingRaces] = useState<Race[]>([])
   const [loading, setLoading] = useState(true)
@@ -108,9 +111,9 @@ export default function UpcomingRaces() {
         const track = tracks[i]
         
         try {
-          // Add 300ms delay between requests (except for first one)
+          // Add delay between requests (except for first one) to avoid rate limiting
           if (i > 0) {
-            await new Promise(resolve => setTimeout(resolve, 300))
+            await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY_MS))
           }
           
           console.log(`🏇 Fetching ${track.track_name} (${i + 1}/${tracks.length})`)
@@ -144,7 +147,7 @@ export default function UpcomingRaces() {
         }
       }
 
-      // Step 3: Continue with filtering
+      // Step 3: Process fetched races
       const flattenedRaces = allRaces
       
       // Step 4: Get current time in AEDT (24-hour format HH:MM) AND current date
