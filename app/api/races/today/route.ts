@@ -1,68 +1,50 @@
 import { NextResponse } from 'next/server'
+import { getPuntingFormClient } from '@/lib/integrations/punting-form/client'
 
 export async function GET() {
   try {
-    const apiUrl = process.env.RACING_DATA_API_URL
+    console.log('📅 Fetching today\'s meetings from Punting Form API')
     
-    console.log('🔍 Racing API URL:', apiUrl)
+    const pfClient = getPuntingFormClient()
+    const meetingsResponse = await pfClient.getTodaysMeetings()
     
-    if (!apiUrl) {
+    if (!meetingsResponse.payLoad || meetingsResponse.payLoad.length === 0) {
       return NextResponse.json(
-        { error: 'RACING_DATA_API_URL not configured in . env.local' },
-        { status:  500 }
+        { error: 'No races available today' },
+        { status: 404 }
       )
     }
     
-    // Get today's date in AEDT (Australia/Sydney timezone)
-    // Using 'en-CA' locale guarantees YYYY-MM-DD format consistently across all environments
-    const formatter = new Intl.DateTimeFormat('en-CA', {
+    const meetings = meetingsResponse.payLoad
+    
+    // Format meetings into track list
+    const tracks = meetings.map(meeting => ({
+      track_name: meeting.track.name,
+      track_state: meeting.track.state,
+      race_count: meeting.races || 0,
+      runner_count: 0, // Not available in meetings list endpoint
+      meeting_id: meeting.meetingId
+    }))
+    
+    // Get today's date in AEDT using reliable formatting
+    const today = new Intl.DateTimeFormat('en-CA', {
       timeZone: 'Australia/Sydney',
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
-    });
-    const today = formatter.format(new Date()); // Returns YYYY-MM-DD directly
+    }).format(new Date())
     
-    console.log('📅 Fetching races for date (AEDT):', today)
+    console.log(`✅ Found ${tracks.length} tracks for ${today}`)
     
-    // Fetch available dates from the API
-    const datesResponse = await fetch(`${apiUrl}/api/dates`, {
-      cache: 'no-store' // Always get fresh data
-    })
-    
-    if (!datesResponse.ok) {
-      console.error('❌ Failed to fetch dates.  Status:', datesResponse.status)
-      return NextResponse.json(
-        { error: 'Failed to fetch from racing API', status: datesResponse.status },
-        { status: 500 }
-      )
-    }
-    
-    const dates = await datesResponse.json()
-    console.log('✅ Received dates:', JSON.stringify(dates, null, 2))
-    
-    // Find today's date in the response
-    const todayData = dates.find((d: any) => d.date === today) || dates[0]
-    
-    if (!todayData) {
-      return NextResponse.json({ 
-        error: 'No races available',
-        date: today,
-        availableDates: dates. map((d: any) => d.date)
-      }, { status: 404 })
-    }
-    
-    console.log('🏇 Returning today\'s races:', todayData)
-    
-    return NextResponse. json({
+    return NextResponse.json({
       success: true,
-      date: todayData. date,
-      track_count:  todayData.track_count,
-      tracks: todayData. tracks
+      date: today,
+      track_count: tracks.length,
+      tracks: tracks
     })
     
-  } catch (error:  any) {
-    console.error('💥 Error in /api/races/today:', error)
+  } catch (error: any) {
+    console.error('💥 Error fetching today\'s meetings:', error)
     return NextResponse.json(
       { error: 'Failed to fetch races', message: error.message },
       { status: 500 }
