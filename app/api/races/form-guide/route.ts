@@ -1,6 +1,25 @@
 import { NextResponse } from 'next/server'
 import { getPuntingFormClient } from '@/lib/integrations/punting-form/client'
 
+// Helper function to extract time from datetime string
+function extractTimeOnly(datetime: string): string {
+  try {
+    // Parse "1/29/2026 1:15:00 PM" and format as "1:15 PM"
+    const date = new Date(datetime)
+    
+    // Format in AEDT timezone
+    return date.toLocaleString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Australia/Sydney'
+    })
+  } catch {
+    // If parsing fails, return original string
+    return datetime
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -94,7 +113,7 @@ export async function GET(request: Request) {
     const races = raceFields.races.map((race) => ({
       race_number: race.number,
       race_name: race.name || '',
-      race_time: race.startTime || '',
+      race_time: race.startTime ? extractTimeOnly(race.startTime) : '',
       distance: race.distance,
       runner_count: race.runners?.length || 0,
       runners: race.runners?.map((runner) => ({
