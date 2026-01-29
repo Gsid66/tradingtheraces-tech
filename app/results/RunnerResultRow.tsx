@@ -68,11 +68,11 @@ function getPositionEmoji(position: number): string {
 }
 
 export default function RunnerResultRow({ runner, position }: Props) {
-  const horseName = runner.horseName || runner.name || 'Unknown Horse';
-  const jockeyName = runner.jockeyName || runner.jockey?.fullName || 'Unknown Jockey';
-  const trainerName = runner.trainerName || runner.trainer?.fullName || 'Unknown Trainer';
+  const horseName = runner.runner || runner.horseName || runner.name || 'Unknown Horse';
+  const jockeyName = runner.jockey || runner.jockeyName || 'Unknown Jockey';
+  const trainerName = runner.trainer || runner.trainerName || 'Unknown Trainer';
   const margin = formatMargin(runner.margin || runner.marginToWinner || 0);
-  const startingPrice = formatPrice(runner.startingPrice || runner.priceSP || 0);
+  const startingPrice = formatPrice(runner.price || runner.startingPrice || runner.priceSP || 0);
   const prizeMoney = formatPrizeMoney(runner.prizeMoneyWon || runner.prizeMoney || 0);
 
   return (

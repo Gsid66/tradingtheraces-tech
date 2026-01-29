@@ -15,8 +15,8 @@ export default function RaceResultCard({ race, trackState }: Props) {
   
   // Sort runners by finishing position
   const sortedRunners = [...runners]
-    .filter((r: any) => r.finishingPosition > 0)
-    .sort((a, b) => a.finishingPosition - b.finishingPosition);
+    .filter((r: any) => (r.position || r.finishingPosition) > 0)
+    .sort((a, b) => (a.position || a.finishingPosition) - (b.position || b.finishingPosition));
   
   const topThree = sortedRunners.slice(0, 3);
   const remainingRunners = sortedRunners.slice(3);

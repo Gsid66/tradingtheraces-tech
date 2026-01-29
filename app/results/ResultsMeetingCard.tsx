@@ -21,10 +21,10 @@ export default function ResultsMeetingCard({ meeting }: Props) {
       <div className="p-4 md:p-6 bg-gradient-to-r from-purple-600 to-purple-700 text-white">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="flex-1">
-            <h2 className="text-xl md:text-2xl font-bold text-purple-600 mb-2">
+            <h2 className="text-xl md:text-2xl font-bold mb-2">
               {track.name || 'Unknown Track'} ({sortedRaces.length} {sortedRaces.length === 1 ? 'race' : 'races'})
             </h2>
-            <div className="flex flex-wrap gap-3 text-sm text-white">
+            <div className="flex flex-wrap gap-3 text-sm">
               <span className="flex items-center gap-1">
                 <span className="font-semibold">{track.state || 'N/A'}</span>
               </span>
