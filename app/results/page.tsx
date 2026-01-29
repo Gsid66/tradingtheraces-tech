@@ -2,41 +2,63 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FiArrowLeft } from 'react-icons/fi';
-import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
 import ResultsContent from './ResultsContent';
 
 export const dynamic = 'force-dynamic';
+
+// Helper to format date to YYYY-MM-DD
+function formatDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 export default async function ResultsPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const pfClient = getPuntingFormClient();
-  
   // Await searchParams
   const params = await searchParams;
   const dateParam = params.date as string | undefined;
   
-  // Get yesterday's date (AEDT) or use the provided date
+  // Get yesterday's date or use the provided date
   let targetDate: Date;
+  let targetDateStr: string;
   if (dateParam) {
     targetDate = new Date(dateParam);
+    targetDateStr = dateParam;
   } else {
     targetDate = new Date();
     targetDate.setDate(targetDate.getDate() - 1);
+    targetDateStr = formatDate(targetDate);
   }
   
   try {
-    // Fetch results
-    const resultsResponse = await pfClient.getResultsByDate(targetDate);
-    const meetingsWithResults = resultsResponse.payLoad || [];
+    // Fetch results from our database API
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const apiUrl = `${baseUrl}/api/results?date=${targetDateStr}`;
     
-    // Filter to AUS/NZ only
+    console.log(`Fetching results from: ${apiUrl}`);
+    
+    const response = await fetch(apiUrl, {
+      cache: 'no-store',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    const meetingsWithResults = data.meetings || [];
+    
+    // Filter to AUS/NZ only (already filtered by database query, but keeping for safety)
     const ausNzMeetings = Array.isArray(meetingsWithResults) 
-      ? meetingsWithResults.filter((m: any) => 
-          m.track?.country === 'AUS' || m.track?.country === 'NZ'
-        )
+      ? meetingsWithResults
       : [];
 
     return (
