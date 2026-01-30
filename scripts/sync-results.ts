@@ -57,8 +57,49 @@ async function syncResults(daysAgo: number = 1) {
         totalRaces += races.length;
         let meetingResultCount = 0;
 
+        // Insert meeting first (required for foreign key)
+        await dbClient.query(`
+          INSERT INTO pf_meetings (
+            meeting_id, track_name, track_id, state, country, 
+            meeting_date, rail_position, stage
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          ON CONFLICT (meeting_id) DO UPDATE SET
+            rail_position = EXCLUDED.rail_position,
+            updated_at = NOW()
+        `, [
+          meeting.meetingId,
+          meeting.track.name,
+          meeting.track.trackId || null,
+          meeting.track.state,
+          meeting.track.country,
+          targetDate.toISOString().split('T')[0], // YYYY-MM-DD format
+          meetingData.railPosition || null,
+          meeting.stage || 'RESULTS'
+        ]);
+
         for (const race of races) {
           const runners = race. runners || [];
+
+          // Insert race (required for foreign key)
+          await dbClient.query(`
+            INSERT INTO pf_races (
+              race_id, meeting_id, race_number, race_name, distance, 
+              start_time, result_status, winning_time
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            ON CONFLICT (race_id) DO UPDATE SET
+              result_status = EXCLUDED.result_status,
+              winning_time = EXCLUDED.winning_time,
+              updated_at = NOW()
+          `, [
+            race.raceId,
+            meeting.meetingId,
+            race.number,
+            race.name || `Race ${race.number}`,
+            race.distance,
+            race.jumpTime || null,
+            'FINAL',
+            race.officialRaceTimeString
+          ]);
 
           for (const runner of runners) {
             try {
