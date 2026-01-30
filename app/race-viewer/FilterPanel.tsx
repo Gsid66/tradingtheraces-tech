@@ -73,6 +73,19 @@ export default function FilterPanel() {
 
   const removeFilter = (filterName: string) => {
     const params = new URLSearchParams(searchParams.toString());
+    
+    // Handle date range reset
+    if (filterName === 'dateRange') {
+      const currentToday = new Date();
+      const todayStr = formatDate(currentToday);
+      setDateFrom(todayStr);
+      setDateTo(todayStr);
+      params.set('dateFrom', todayStr);
+      params.set('dateTo', todayStr);
+      router.push(`/race-viewer?${params.toString()}`);
+      return;
+    }
+    
     params.delete(filterName);
     
     // Update state
@@ -100,14 +113,15 @@ export default function FilterPanel() {
     router.push(`/race-viewer?${params.toString()}`);
   };
 
-  // Get active filters (excluding dates)
-  const activeFilters = [];
-  if (horseName) activeFilters.push({ name: 'horseName', label: 'Horse', value: horseName });
-  if (jockeyName) activeFilters.push({ name: 'jockeyName', label: 'Jockey', value: jockeyName });
-  if (trainerName) activeFilters.push({ name: 'trainerName', label: 'Trainer', value: trainerName });
-  if (trackName) activeFilters.push({ name: 'trackName', label: 'Track', value: trackName });
-  if (state) activeFilters.push({ name: 'state', label: 'State', value: state });
-  if (position) activeFilters.push({ name: 'position', label: 'Position', value: getPositionLabel(position) });
+  function formatDateDisplay(dateStr: string): string {
+    const date = new Date(dateStr + 'T00:00:00');
+    return date.toLocaleDateString('en-AU', { 
+      weekday: 'short',
+      day: 'numeric', 
+      month: 'short', 
+      year: 'numeric' 
+    });
+  }
 
   function getPositionLabel(pos: string): string {
     const positions: { [key: string]: string } = {
@@ -125,6 +139,27 @@ export default function FilterPanel() {
     return positions[pos] || pos;
   }
 
+  // Get active filters (INCLUDING dates)
+  const activeFilters = [];
+
+  // Add date range - ALWAYS show it
+  const dateLabel = dateFrom === dateTo 
+    ? formatDateDisplay(dateFrom)
+    : `${formatDateDisplay(dateFrom)} → ${formatDateDisplay(dateTo)}`;
+  activeFilters.push({ 
+    name: 'dateRange', 
+    label: '📅 Date', 
+    value: dateLabel,
+    isDates: true 
+  });
+
+  if (horseName) activeFilters.push({ name: 'horseName', label: 'Horse', value: horseName, isDates: false });
+  if (jockeyName) activeFilters.push({ name: 'jockeyName', label: 'Jockey', value: jockeyName, isDates: false });
+  if (trainerName) activeFilters.push({ name: 'trainerName', label: 'Trainer', value: trainerName, isDates: false });
+  if (trackName) activeFilters.push({ name: 'trackName', label: 'Track', value: trackName, isDates: false });
+  if (state) activeFilters.push({ name: 'state', label: 'State', value: state, isDates: false });
+  if (position) activeFilters.push({ name: 'position', label: 'Position', value: getPositionLabel(position), isDates: false });
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 mb-6 border-2 border-purple-100">
       <h2 className="text-2xl font-bold text-purple-900 mb-4">🔍 Search Race Results</h2>
@@ -133,37 +168,51 @@ export default function FilterPanel() {
       {activeFilters.length > 0 && (
         <div className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-semibold text-purple-900">Active Filters:</h3>
-            <button
-              onClick={() => {
-                setHorseName('');
-                setJockeyName('');
-                setTrainerName('');
-                setTrackName('');
-                setState('');
-                setPosition('');
-                const params = new URLSearchParams();
-                params.set('dateFrom', dateFrom);
-                params.set('dateTo', dateTo);
-                router.push(`/race-viewer?${params.toString()}`);
-              }}
-              className="text-xs text-purple-600 hover:text-purple-800 font-medium"
-            >
-              Clear All Filters
-            </button>
+            <h3 className="text-sm font-semibold text-purple-900">Active Search:</h3>
+            {activeFilters.length > 1 && (
+              <button
+                onClick={() => {
+                  setHorseName('');
+                  setJockeyName('');
+                  setTrainerName('');
+                  setTrackName('');
+                  setState('');
+                  setPosition('');
+                  const params = new URLSearchParams();
+                  params.set('dateFrom', dateFrom);
+                  params.set('dateTo', dateTo);
+                  router.push(`/race-viewer?${params.toString()}`);
+                }}
+                className="text-xs text-purple-600 hover:text-purple-800 font-medium"
+              >
+                Clear Search Filters
+              </button>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             {activeFilters.map((filter) => (
               <div
                 key={filter.name}
-                className="inline-flex items-center gap-2 bg-white border-2 border-purple-300 rounded-full px-3 py-1.5 text-sm"
+                className={`inline-flex items-center gap-2 ${
+                  filter.isDates 
+                    ? 'bg-blue-50 border-2 border-blue-400' 
+                    : 'bg-white border-2 border-purple-300'
+                } rounded-full px-3 py-1.5 text-sm`}
               >
-                <span className="font-semibold text-purple-700">{filter.label}:</span>
+                <span className={`font-semibold ${
+                  filter.isDates ? 'text-blue-700' : 'text-purple-700'
+                }`}>
+                  {filter.label}:
+                </span>
                 <span className="text-gray-700">{filter.value}</span>
                 <button
                   onClick={() => removeFilter(filter.name)}
-                  className="ml-1 text-purple-600 hover:text-purple-800 hover:bg-purple-100 rounded-full p-0.5"
-                  title={`Remove ${filter.label} filter`}
+                  className={`ml-1 ${
+                    filter.isDates 
+                      ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-100' 
+                      : 'text-purple-600 hover:text-purple-800 hover:bg-purple-100'
+                  } rounded-full p-0.5`}
+                  title={filter.isDates ? 'Reset to today' : `Remove ${filter.label} filter`}
                 >
                   <FiX size={14} />
                 </button>
