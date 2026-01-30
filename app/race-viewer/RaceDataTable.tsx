@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { RaceResultData, SortField, SortDirection } from './types';
+import { CombinedRaceData, SortField, SortDirection } from './types';
 import { FiArrowUp, FiArrowDown, FiDownload } from 'react-icons/fi';
 
 interface RaceDataTableProps {
-  data: RaceResultData[];
+  data: CombinedRaceData[];
 }
 
 // Sort icon component
@@ -15,7 +15,9 @@ function SortIcon({ field, sortField, sortDirection }: { field: SortField; sortF
 }
 
 // Position badge component
-function PositionBadge({ position }: { position: number }) {
+function PositionBadge({ position }: { position?: number }) {
+  if (!position) return <span className="text-gray-400 text-sm">-</span>;
+
   const getPositionStyle = () => {
     switch (position) {
       case 1:
@@ -68,8 +70,8 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
       if (aVal === null || aVal === undefined) return 1;
       if (bVal === null || bVal === undefined) return -1;
 
-      // Special handling for price and margin fields
-      if (sortField === 'starting_price' || sortField === 'margin_to_winner') {
+      // Special handling for numeric fields
+      if (sortField === 'price' || sortField === 'starting_price' || sortField === 'margin_to_winner' || sortField === 'rating') {
         const aNum = typeof aVal === 'string' ? parseFloat(aVal) : aVal;
         const bNum = typeof bVal === 'string' ? parseFloat(bVal) : bVal;
         
@@ -104,13 +106,19 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
   };
 
   const formatPrice = (value: any): string => {
+    if (!value) return '-';
     if (typeof value === 'string') {
       const parsed = parseFloat(value);
       if (isNaN(parsed)) return '-';
       return `$${parsed.toFixed(2)}`;
     }
-    if (value == null || typeof value !== 'number' || isNaN(value)) return '-';
+    if (typeof value !== 'number' || isNaN(value)) return '-';
     return `$${value.toFixed(2)}`;
+  };
+
+  const formatRating = (value: any): string => {
+    if (value == null || typeof value !== 'number' || isNaN(value)) return '-';
+    return value.toString();
   };
 
   const formatMargin = (value: any): string => {
@@ -131,24 +139,27 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
 
   const prepareExportData = () => {
     const headers = [
-      'Date', 'Track', 'State', 'Race No', 'Race Name', 'Distance', 
-      'Position', 'Tab No', 'Horse', 'Jockey', 'Trainer', 'SP', 'Margin'
+      'Date', 'Track', 'State', 'Race No', 'Race Name', 'Saddle', 
+      'Horse', 'Jockey', 'Trainer', 'Rating', 'Price', 
+      'Result', 'SP', 'Margin', 'Tab No'
     ];
     
     const rows = sortedData.map(row => [
-      formatDate(row.meeting_date),
+      formatDate(row.race_date),
       row.track_name,
-      row.state,
+      row.state || '-',
       row.race_number,
       row.race_name,
-      `${row.distance}m`,
-      row.finishing_position,
-      row.tab_number,
+      row.saddle_cloth,
       row.horse_name,
       row.jockey_name,
       row.trainer_name,
+      formatRating(row.rating),
+      formatPrice(row.price).replace('$', ''),
+      row.finishing_position || '-',
       formatPrice(row.starting_price).replace('$', ''),
-      formatMargin(row.margin_to_winner)
+      formatMargin(row.margin_to_winner),
+      row.tab_number || '-'
     ]);
 
     return { headers, rows };
@@ -165,7 +176,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ttr-results-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `ttr-race-data-${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -183,7 +194,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ttr-results-${new Date().toISOString().split('T')[0]}.xlsx`;
+    a.download = `ttr-race-data-${new Date().toISOString().split('T')[0]}.xlsx`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -203,9 +214,14 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-purple-100">
       {/* Export Buttons */}
-      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center flex-wrap gap-4">
         <div className="text-sm text-gray-600">
-          Showing <span className="font-bold text-purple-600">{sortedData.length}</span> results
+          Showing <span className="font-bold text-purple-600">{sortedData.length}</span> records
+          {sortedData.filter(r => r.finishing_position).length > 0 && (
+            <span className="ml-2">
+              • <span className="font-bold text-green-600">{sortedData.filter(r => r.finishing_position).length}</span> with results
+            </span>
+          )}
         </div>
         <div className="flex gap-3">
           <button
@@ -232,10 +248,10 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
             <tr>
               <th 
                 className="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-purple-700"
-                onClick={() => handleSort('meeting_date')}
+                onClick={() => handleSort('race_date')}
               >
                 <div className="flex items-center gap-2">
-                  Date <SortIcon field="meeting_date" sortField={sortField} sortDirection={sortDirection} />
+                  Date <SortIcon field="race_date" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
               <th 
@@ -258,10 +274,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                 </div>
               </th>
               <th className="px-4 py-3 text-center text-sm font-semibold">
-                Pos
-              </th>
-              <th className="px-4 py-3 text-center text-sm font-semibold">
-                Tab
+                Saddle
               </th>
               <th className="px-4 py-3 text-left text-sm font-semibold">
                 Horse
@@ -274,9 +287,33 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
               </th>
               <th 
                 className="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-purple-700"
+                onClick={() => handleSort('rating')}
+              >
+                <div className="flex items-center gap-2 justify-center">
+                  Rating <SortIcon field="rating" sortField={sortField} sortDirection={sortDirection} />
+                </div>
+              </th>
+              <th 
+                className="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-purple-700"
+                onClick={() => handleSort('price')}
+              >
+                <div className="flex items-center gap-2 justify-center">
+                  Price <SortIcon field="price" sortField={sortField} sortDirection={sortDirection} />
+                </div>
+              </th>
+              <th 
+                className="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-purple-700"
+                onClick={() => handleSort('finishing_position')}
+              >
+                <div className="flex items-center gap-2 justify-center">
+                  Result <SortIcon field="finishing_position" sortField={sortField} sortDirection={sortDirection} />
+                </div>
+              </th>
+              <th 
+                className="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-purple-700"
                 onClick={() => handleSort('starting_price')}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 justify-center">
                   SP <SortIcon field="starting_price" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
@@ -287,15 +324,17 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
           </thead>
           <tbody>
             {sortedData.map((row, index) => {
-              const rowKey = `${row.race_id}-${row.horse_name}-${index}`;
+              const rowKey = `${row.id}-${index}`;
+              const hasResult = row.finishing_position !== null && row.finishing_position !== undefined;
+              
               return (
                 <tr 
                   key={rowKey}
-                  className="border-b border-gray-200 hover:bg-purple-50 transition-colors"
-                  style={{ backgroundColor: index % 2 === 0 ? 'white' : '#fafafa' }}
+                  className={`border-b border-gray-200 hover:bg-purple-50 transition-colors ${hasResult ? 'bg-green-50' : ''}`}
+                  style={{ backgroundColor: hasResult ? '#f0fdf4' : (index % 2 === 0 ? 'white' : '#fafafa') }}
                 >
                   <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-                    {formatDate(row.meeting_date)}
+                    {formatDate(row.race_date)}
                   </td>
                   <td className="px-4 py-3">
                     <span className="inline-block bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
@@ -303,17 +342,14 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center text-sm font-medium text-gray-700">
-                    {row.state}
+                    {row.state || '-'}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-700">
                     <div className="font-medium">R{row.race_number}</div>
-                    <div className="text-xs text-gray-500">{row.distance}m</div>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <PositionBadge position={row.finishing_position} />
+                    <div className="text-xs text-gray-500 truncate max-w-[120px]">{row.race_name}</div>
                   </td>
                   <td className="px-4 py-3 text-center text-sm font-semibold text-gray-800">
-                    {row.tab_number}
+                    {row.saddle_cloth}
                   </td>
                   <td className="px-4 py-3 text-sm font-bold text-gray-900">
                     {row.horse_name}
@@ -325,9 +361,26 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                     {row.trainer_name}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <span className="inline-block bg-green-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                      {formatPrice(row.starting_price)}
+                    <span className="inline-block bg-cyan-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                      {formatRating(row.rating)}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span className="inline-block bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                      {formatPrice(row.price)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <PositionBadge position={row.finishing_position} />
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {row.starting_price ? (
+                      <span className="inline-block bg-green-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                        {formatPrice(row.starting_price)}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 text-sm">-</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-center text-sm text-gray-700">
                     {formatMargin(row.margin_to_winner)}
