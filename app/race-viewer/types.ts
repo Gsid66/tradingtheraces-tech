@@ -1,28 +1,41 @@
 // TypeScript interfaces for Race Viewer
 
-export interface RaceCardData {
-  race_date: string; // "2026-01-28T00:00:00.000Z"
-  track?: string; // Track/meeting name (primary field)
-  meeting_name?: string; // Alternative field name from API
+export interface RaceResultData {
+  result_id: number;
+  meeting_date: string;
+  track_name: string;
+  state: string;
+  country: string;
   race_number: number;
   race_name: string;
-  saddle_cloth: number;
+  distance: number;
+  start_time: string;
   horse_name: string;
-  jockey: string;
-  trainer: string;
-  rating: number | null;
-  price: string | number | null;
+  finishing_position: number;
+  tab_number: number;
+  jockey_name: string;
+  trainer_name: string;
+  starting_price: string | number;
+  margin_to_winner: string | number;
 }
 
 export interface FilterParams {
   dateFrom?: string;
   dateTo?: string;
+  horseName?: string;
+  jockeyName?: string;
+  trainerName?: string;
+  trackName?: string;
+  state?: string;
+  position?: string;
+  limit?: number;
+  offset?: number;
 }
 
 export interface ApiResponse {
-  data: RaceCardData[];
+  data: RaceResultData[];
   total: number;
 }
 
-export type SortField = keyof RaceCardData;
+export type SortField = keyof RaceResultData;
 export type SortDirection = 'asc' | 'desc';

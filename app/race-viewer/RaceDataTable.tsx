@@ -1,17 +1,48 @@
 'use client';
 
 import React, { useState } from 'react';
-import { RaceCardData, SortField, SortDirection } from './types';
+import { RaceResultData, SortField, SortDirection } from './types';
 import { FiArrowUp, FiArrowDown, FiDownload } from 'react-icons/fi';
 
 interface RaceDataTableProps {
-  data: RaceCardData[];
+  data: RaceResultData[];
 }
 
 // Sort icon component
 function SortIcon({ field, sortField, sortDirection }: { field: SortField; sortField: SortField | null; sortDirection: SortDirection }) {
   if (sortField !== field) return null;
   return sortDirection === 'asc' ? <FiArrowUp /> : <FiArrowDown />;
+}
+
+// Position badge component
+function PositionBadge({ position }: { position: number }) {
+  const getPositionStyle = () => {
+    switch (position) {
+      case 1:
+        return 'bg-yellow-400 text-yellow-900 border-2 border-yellow-600';
+      case 2:
+        return 'bg-gray-300 text-gray-900 border-2 border-gray-500';
+      case 3:
+        return 'bg-orange-400 text-orange-900 border-2 border-orange-600';
+      default:
+        return 'bg-gray-100 text-gray-700 border-2 border-gray-300';
+    }
+  };
+
+  const getEmoji = () => {
+    switch (position) {
+      case 1: return '🥇';
+      case 2: return '🥈';
+      case 3: return '🥉';
+      default: return '';
+    }
+  };
+
+  return (
+    <span className={`inline-flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold ${getPositionStyle()}`}>
+      {position <= 3 ? getEmoji() : position}
+    </span>
+  );
 }
 
 export default function RaceDataTable({ data }: RaceDataTableProps) {
@@ -37,8 +68,8 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
       if (aVal === null || aVal === undefined) return 1;
       if (bVal === null || bVal === undefined) return -1;
 
-      // Special handling for price field which can be string or number
-      if (sortField === 'price') {
+      // Special handling for price and margin fields
+      if (sortField === 'starting_price' || sortField === 'margin_to_winner') {
         const aNum = typeof aVal === 'string' ? parseFloat(aVal) : aVal;
         const bNum = typeof bVal === 'string' ? parseFloat(bVal) : bVal;
         
@@ -64,7 +95,8 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
+    return date.toLocaleDateString('en-AU', { 
+      weekday: 'short',
       month: 'short', 
       day: 'numeric', 
       year: 'numeric' 
@@ -72,43 +104,51 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
   };
 
   const formatPrice = (value: any): string => {
-    // Handle string price values by parsing to number
     if (typeof value === 'string') {
       const parsed = parseFloat(value);
-      if (isNaN(parsed)) {
-        return '-';
-      }
+      if (isNaN(parsed)) return '-';
       return `$${parsed.toFixed(2)}`;
     }
-    if (value == null || typeof value !== 'number' || isNaN(value)) {
-      return '-';
-    }
+    if (value == null || typeof value !== 'number' || isNaN(value)) return '-';
     return `$${value.toFixed(2)}`;
   };
 
-  const formatRating = (value: any): string => {
-    if (value == null || typeof value !== 'number' || isNaN(value)) {
-      return '-';
+  const formatMargin = (value: any): string => {
+    if (!value) return '-';
+    const str = String(value).toUpperCase();
+    
+    if (['NECK', 'HEAD', 'NOSE', 'SHORT HEAD', 'LONG HEAD', 'SHORT NECK'].includes(str)) {
+      return str;
     }
-    return value.toString();
+    
+    const num = parseFloat(String(value));
+    if (!isNaN(num)) {
+      return `${num.toFixed(2)}L`;
+    }
+    
+    return str;
   };
 
   const prepareExportData = () => {
     const headers = [
-      'Date', 'Track', 'Race', 'Saddle', 'Horse', 'Jockey', 'Trainer', 
-      'Rating', 'Price'
+      'Date', 'Track', 'State', 'Race No', 'Race Name', 'Distance', 
+      'Position', 'Tab No', 'Horse', 'Jockey', 'Trainer', 'SP', 'Margin'
     ];
     
     const rows = sortedData.map(row => [
-      formatDate(row.race_date),
-      row.track || row.meeting_name || '-',
-      `Race ${row.race_number}`,
-      row.saddle_cloth,
+      formatDate(row.meeting_date),
+      row.track_name,
+      row.state,
+      row.race_number,
+      row.race_name,
+      `${row.distance}m`,
+      row.finishing_position,
+      row.tab_number,
       row.horse_name,
-      row.jockey,
-      row.trainer,
-      formatRating(row.rating),
-      formatPrice(row.price).replace('$', '')
+      row.jockey_name,
+      row.trainer_name,
+      formatPrice(row.starting_price).replace('$', ''),
+      formatMargin(row.margin_to_winner)
     ]);
 
     return { headers, rows };
@@ -125,7 +165,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ttr-race-data-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `ttr-results-${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -135,8 +175,6 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
   const exportToExcel = () => {
     const { headers, rows } = prepareExportData();
 
-    // Note: This creates a CSV file with Excel-compatible format
-    // For true Excel files, consider using a library like 'xlsx' or 'exceljs'
     const csv = [headers, ...rows]
       .map(row => row.map(cell => `"${cell}"`).join(','))
       .join('\n');
@@ -145,7 +183,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ttr-race-data-${new Date().toISOString().split('T')[0]}.xlsx`;
+    a.download = `ttr-results-${new Date().toISOString().split('T')[0]}.xlsx`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -155,7 +193,9 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
   if (data.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-lg p-12 text-center border-2 border-purple-100">
-        <p className="text-gray-500 text-lg">No data found. Try adjusting your filters.</p>
+        <div className="text-6xl mb-4">🔍</div>
+        <p className="text-gray-500 text-lg font-medium">No results found</p>
+        <p className="text-gray-400 text-sm mt-2">Try adjusting your search filters</p>
       </div>
     );
   }
@@ -163,21 +203,26 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-purple-100">
       {/* Export Buttons */}
-      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex gap-3">
-        <button
-          onClick={exportToCSV}
-          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"
-        >
-          <FiDownload />
-          Export CSV
-        </button>
-        <button
-          onClick={exportToExcel}
-          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"
-        >
-          <FiDownload />
-          Export Excel
-        </button>
+      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+        <div className="text-sm text-gray-600">
+          Showing <span className="font-bold text-purple-600">{sortedData.length}</span> results
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={exportToCSV}
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-md hover:shadow-lg"
+          >
+            <FiDownload />
+            Export CSV
+          </button>
+          <button
+            onClick={exportToExcel}
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-md hover:shadow-lg"
+          >
+            <FiDownload />
+            Export Excel
+          </button>
+        </div>
       </div>
 
       {/* Table */}
@@ -187,121 +232,108 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
             <tr>
               <th 
                 className="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-purple-700"
-                onClick={() => handleSort('race_date')}
-                aria-sort={sortField === 'race_date' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                onClick={() => handleSort('meeting_date')}
               >
                 <div className="flex items-center gap-2">
-                  Date <SortIcon field="race_date" sortField={sortField} sortDirection={sortDirection} />
+                  Date <SortIcon field="meeting_date" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
               <th 
                 className="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-purple-700"
-                onClick={() => handleSort('track')}
-                aria-sort={sortField === 'track' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                onClick={() => handleSort('track_name')}
               >
                 <div className="flex items-center gap-2">
-                  Track <SortIcon field="track" sortField={sortField} sortDirection={sortDirection} />
+                  Track <SortIcon field="track_name" sortField={sortField} sortDirection={sortDirection} />
                 </div>
+              </th>
+              <th className="px-4 py-3 text-center text-sm font-semibold">
+                State
               </th>
               <th 
                 className="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-purple-700"
                 onClick={() => handleSort('race_number')}
-                aria-sort={sortField === 'race_number' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
               >
                 <div className="flex items-center gap-2">
                   Race <SortIcon field="race_number" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
               <th className="px-4 py-3 text-center text-sm font-semibold">
-                Saddle
+                Pos
+              </th>
+              <th className="px-4 py-3 text-center text-sm font-semibold">
+                Tab
               </th>
               <th className="px-4 py-3 text-left text-sm font-semibold">
                 Horse
               </th>
-              <th 
-                className="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-purple-700"
-                onClick={() => handleSort('jockey')}
-                aria-sort={sortField === 'jockey' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-              >
-                <div className="flex items-center gap-2">
-                  Jockey <SortIcon field="jockey" sortField={sortField} sortDirection={sortDirection} />
-                </div>
+              <th className="px-4 py-3 text-left text-sm font-semibold">
+                Jockey
               </th>
-              <th 
-                className="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-purple-700"
-                onClick={() => handleSort('trainer')}
-                aria-sort={sortField === 'trainer' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-              >
-                <div className="flex items-center gap-2">
-                  Trainer <SortIcon field="trainer" sortField={sortField} sortDirection={sortDirection} />
-                </div>
+              <th className="px-4 py-3 text-left text-sm font-semibold">
+                Trainer
               </th>
               <th 
                 className="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-purple-700"
-                onClick={() => handleSort('rating')}
-                aria-sort={sortField === 'rating' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                onClick={() => handleSort('starting_price')}
               >
                 <div className="flex items-center gap-2">
-                  Rating <SortIcon field="rating" sortField={sortField} sortDirection={sortDirection} />
+                  SP <SortIcon field="starting_price" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
-              <th 
-                className="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-purple-700"
-                onClick={() => handleSort('price')}
-                aria-sort={sortField === 'price' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-              >
-                <div className="flex items-center gap-2">
-                  Price <SortIcon field="price" sortField={sortField} sortDirection={sortDirection} />
-                </div>
+              <th className="px-4 py-3 text-center text-sm font-semibold">
+                Margin
               </th>
             </tr>
           </thead>
           <tbody>
             {sortedData.map((row, index) => {
-              // Create a unique composite key
-              const rowKey = `${row.race_date}-${row.track || row.meeting_name}-${row.race_number}-${row.saddle_cloth}`;
+              const rowKey = `${row.result_id}-${index}`;
               return (
                 <tr 
                   key={rowKey}
                   className="border-b border-gray-200 hover:bg-purple-50 transition-colors"
                   style={{ backgroundColor: index % 2 === 0 ? 'white' : '#fafafa' }}
                 >
-                <td className="px-4 py-3 text-sm text-gray-700">
-                  {formatDate(row.race_date)}
-                </td>
-                <td className="px-4 py-3">
-                  <span className="inline-block bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                    {row.track || row.meeting_name || '-'}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
-                  <div className="font-medium">Race {row.race_number}</div>
-                  <div className="text-xs text-gray-500">{row.race_name}</div>
-                </td>
-                <td className="px-4 py-3 text-center text-sm font-semibold text-gray-800">
-                  {row.saddle_cloth}
-                </td>
-                <td className="px-4 py-3 text-sm font-bold text-gray-900">
-                  {row.horse_name}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
-                  {row.jockey}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
-                  {row.trainer}
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <span className="inline-block bg-cyan-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                    {formatRating(row.rating)}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <span className="inline-block bg-green-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                    {formatPrice(row.price)}
-                  </span>
-                </td>
-              </tr>
-            );
+                  <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                    {formatDate(row.meeting_date)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="inline-block bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                      {row.track_name}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm font-medium text-gray-700">
+                    {row.state}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    <div className="font-medium">R{row.race_number}</div>
+                    <div className="text-xs text-gray-500">{row.distance}m</div>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <PositionBadge position={row.finishing_position} />
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm font-semibold text-gray-800">
+                    {row.tab_number}
+                  </td>
+                  <td className="px-4 py-3 text-sm font-bold text-gray-900">
+                    {row.horse_name}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {row.jockey_name}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {row.trainer_name}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span className="inline-block bg-green-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                      {formatPrice(row.starting_price)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm text-gray-700">
+                    {formatMargin(row.margin_to_winner)}
+                  </td>
+                </tr>
+              );
             })}
           </tbody>
         </table>
