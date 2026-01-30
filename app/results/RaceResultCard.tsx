@@ -11,7 +11,7 @@ interface Props {
 export default function RaceResultCard({ race, trackState }: Props) {
   const [showAllRunners, setShowAllRunners] = useState(false);
   
-  const runners = race.runners || [];
+  const runners = race.results || [];
   
   // Sort runners by finishing position - memoized
   const { sortedRunners, topThree, remainingRunners } = useMemo(() => {
