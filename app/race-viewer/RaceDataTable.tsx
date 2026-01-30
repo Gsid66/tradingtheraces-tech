@@ -240,10 +240,10 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
           </button>
         </div>
       </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
+{/* Table */}
+<div className="overflow-x-auto max-w-full">
+  <table className="w-full min-w-[1400px]">
+    
           <thead className="bg-purple-600 text-white sticky top-0">
             <tr>
               <th 
