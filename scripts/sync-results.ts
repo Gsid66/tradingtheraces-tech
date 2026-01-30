@@ -80,6 +80,17 @@ async function syncResults(daysAgo: number = 1) {
         for (const race of races) {
           const runners = race. runners || [];
 
+          // Convert winning time string to seconds for numeric field
+          let winningTimeSeconds = null;
+          if (race.officialRaceTimeString) {
+            const timeParts = race.officialRaceTimeString.split(':');
+            if (timeParts.length === 2) {
+              const minutes = parseInt(timeParts[0]);
+              const seconds = parseFloat(timeParts[1]);
+              winningTimeSeconds = (minutes * 60) + seconds;
+            }
+          }
+
           // Insert race (required for foreign key)
           await dbClient.query(`
             INSERT INTO pf_races (
@@ -98,7 +109,7 @@ async function syncResults(daysAgo: number = 1) {
             race.distance,
             race.jumpTime || null,
             'FINAL',
-            race.officialRaceTimeString
+            winningTimeSeconds
           ]);
 
           for (const runner of runners) {
