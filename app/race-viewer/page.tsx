@@ -96,30 +96,30 @@ async function searchRaceResults(filters: FilterParams): Promise<ApiResponse> {
     const offset = filters.offset || 0;
 
     const dataQuery = `
-      SELECT 
-        r.result_id,
-        m.meeting_date,
-        m.track_name,
-        m.state,
-        m.country,
-        ra.race_number,
-        ra.race_name,
-        ra.distance,
-        ra.start_time,
-        r.horse_name,
-        r.finishing_position,
-        r.tab_number,
-        r.jockey_name,
-        r.trainer_name,
-        r.starting_price,
-        r.margin_to_winner
-      FROM pf_results r
-      JOIN pf_races ra ON r.race_id = ra.race_id
-      JOIN pf_meetings m ON ra.meeting_id = m.meeting_id
-      ${whereClause}
-      ORDER BY m.meeting_date DESC, m.track_name, ra.race_number, r.finishing_position
-      LIMIT $${paramCount} OFFSET $${paramCount + 1}
-    `;
+  SELECT 
+    m.meeting_date,
+    m.track_name,
+    m.state,
+    m.country,
+    ra.race_number,
+    ra.race_name,
+    ra.distance,
+    ra.start_time,
+    r.horse_name,
+    r.finishing_position,
+    r.tab_number,
+    r.jockey_name,
+    r.trainer_name,
+    r.starting_price,
+    r.margin_to_winner,
+    r.race_id
+  FROM pf_results r
+  JOIN pf_races ra ON r.race_id = ra.race_id
+  JOIN pf_meetings m ON ra.meeting_id = m.meeting_id
+  ${whereClause}
+  ORDER BY m.meeting_date DESC, m.track_name, ra.race_number, r.finishing_position
+  LIMIT $${paramCount} OFFSET $${paramCount + 1}
+`;
 
     const dataResult = await client.query(dataQuery, [...values, limit, offset]);
 

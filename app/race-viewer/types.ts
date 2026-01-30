@@ -1,7 +1,7 @@
 // TypeScript interfaces for Race Viewer
 
 export interface RaceResultData {
-  result_id: number;
+  race_id: number;  // Changed from result_id
   meeting_date: string;
   track_name: string;
   state: string;

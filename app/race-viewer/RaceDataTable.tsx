@@ -287,7 +287,7 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
           </thead>
           <tbody>
             {sortedData.map((row, index) => {
-              const rowKey = `${row.result_id}-${index}`;
+              const rowKey = `${row.race_id}-${row.horse_name}-${index}`;
               return (
                 <tr 
                   key={rowKey}
