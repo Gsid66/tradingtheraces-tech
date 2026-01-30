@@ -10,7 +10,7 @@ async function syncResults(daysAgo: number = 1) {
 
   const pfClient = getPuntingFormClient();
   const dbClient = new Client({
-    connectionString:  process.env.DATABASE_URL,
+    connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
   });
 
@@ -27,7 +27,7 @@ async function syncResults(daysAgo: number = 1) {
     const meetingsResponse = await pfClient.getMeetingsByDate(targetDate);
     const meetings = meetingsResponse.payLoad;
 
-    if (! meetings || meetings.length === 0) {
+    if (!meetings || meetings.length === 0) {
       console.log('⚠️  No meetings found for this date\n');
       return;
     }
@@ -39,7 +39,7 @@ async function syncResults(daysAgo: number = 1) {
     let skippedResults = 0;
 
     for (const meeting of meetings) {
-      console.log(`📍 ${meeting.track. name}... `);
+      console.log(`📍 ${meeting.track.name}... `);
 
       try {
         const resultsResponse = await pfClient.getMeetingResults(meeting.meetingId);
@@ -48,14 +48,10 @@ async function syncResults(daysAgo: number = 1) {
         // Each meeting object has a 'raceResults' property
         const meetingData = resultsResponse.payLoad[0];
         
-        if (! meetingData || !meetingData.raceResults || meetingData.raceResults. length === 0) {
+        if (!meetingData || !meetingData.raceResults || meetingData.raceResults.length === 0) {
           console.log(`   ⚠️  No results available yet\n`);
           continue;
         }
-
-        const races = meetingData.raceResults;
-        totalRaces += races.length;
-        let meetingResultCount = 0;
 
         // Insert meeting first (required for foreign key)
         await dbClient.query(`
@@ -77,20 +73,11 @@ async function syncResults(daysAgo: number = 1) {
           meeting.stage || 'RESULTS'
         ]);
 
+        const races = meetingData.raceResults;
+        totalRaces += races.length;
+        let meetingResultCount = 0;
+
         for (const race of races) {
-          const runners = race. runners || [];
-
-          // Convert winning time string to seconds for numeric field
-          let winningTimeSeconds = null;
-          if (race.officialRaceTimeString) {
-            const timeParts = race.officialRaceTimeString.split(':');
-            if (timeParts.length === 2) {
-              const minutes = parseInt(timeParts[0]);
-              const seconds = parseFloat(timeParts[1]);
-              winningTimeSeconds = (minutes * 60) + seconds;
-            }
-          }
-
           // Insert race (required for foreign key)
           await dbClient.query(`
             INSERT INTO pf_races (
@@ -104,13 +91,15 @@ async function syncResults(daysAgo: number = 1) {
           `, [
             race.raceId,
             meeting.meetingId,
-            race.number,
-            race.name || `Race ${race.number}`,
+            race.raceNumber,  // ✅ FIXED: Changed from race.number
+            race.name || `Race ${race.raceNumber}`,  // ✅ FIXED: Changed from race.number
             race.distance,
             race.jumpTime || null,
             'FINAL',
-            winningTimeSeconds
+            race.officialRaceTimeString
           ]);
+
+          const runners = race.runners || [];
 
           for (const runner of runners) {
             try {
@@ -134,31 +123,31 @@ async function syncResults(daysAgo: number = 1) {
                   stewards_comment, race_comment
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
                 ON CONFLICT (race_id, horse_id) DO UPDATE SET
-                  finishing_position = EXCLUDED. finishing_position,
-                  margin_to_winner = EXCLUDED. margin_to_winner,
-                  finishing_time = EXCLUDED. finishing_time,
-                  finishing_time_display = EXCLUDED. finishing_time_display,
-                  starting_price = EXCLUDED. starting_price,
+                  finishing_position = EXCLUDED.finishing_position,
+                  margin_to_winner = EXCLUDED.margin_to_winner,
+                  finishing_time = EXCLUDED.finishing_time,
+                  finishing_time_display = EXCLUDED.finishing_time_display,
+                  starting_price = EXCLUDED.starting_price,
                   stewards_comment = EXCLUDED.stewards_comment,
                   race_comment = EXCLUDED.race_comment,
                   updated_at = NOW()
               `, [
                 race.raceId,                      // $1 race_id
                 runner.formId,                    // $2 runner_id
-                runner. runnerId?. toString(),      // $3 horse_id
+                runner.runnerId?.toString(),      // $3 horse_id
                 runner.runner,                    // $4 horse_name
                 runner.position,                  // $5 finishing_position
                 runner.tabNo,                     // $6 tab_number
                 runner.barrier,                   // $7 barrier_number
                 finishingTimeSeconds,             // $8 finishing_time (numeric for sorting/calculations)
-                race.officialRaceTimeString,      // $9 finishing_time_display (e.g.  "01:44.30")
+                race.officialRaceTimeString,      // $9 finishing_time_display (e.g. "01:44.30")
                 runner.margin,                    // $10 margin_to_winner
                 runner.jockeyId?.toString(),      // $11 jockey_id
-                runner. jockey,                    // $12 jockey_name
+                runner.jockey,                    // $12 jockey_name
                 runner.trainerId?.toString(),     // $13 trainer_id
                 runner.trainer,                   // $14 trainer_name
                 runner.weight,                    // $15 weight_carried
-                runner. price,                     // $16 starting_price
+                runner.price,                     // $16 starting_price
                 null,                             // $17 prize_money_won
                 runner.stewardsReports,           // $18 stewards_comment
                 runner.inRun                      // $19 race_comment
@@ -166,7 +155,7 @@ async function syncResults(daysAgo: number = 1) {
 
               totalResults++;
               meetingResultCount++;
-            } catch (error:  any) {
+            } catch (error: any) {
               console.error(`      ❌ Error inserting result for ${runner.runner}:`, error.message);
               skippedResults++;
             }
@@ -176,7 +165,7 @@ async function syncResults(daysAgo: number = 1) {
         console.log(`   ✅ ${races.length} races, ${meetingResultCount} results\n`);
 
       } catch (error: any) {
-        console.error(`   ❌ Error fetching results: `, error.message, '\n');
+        console.error(`   ❌ Error fetching results:`, error.message, '\n');
       }
     }
 
@@ -184,7 +173,7 @@ async function syncResults(daysAgo: number = 1) {
 
     console.log('🎉 Results sync completed!\n');
     console.log(`📊 Summary:`);
-    console.log(`   Meetings:  ${meetings.length}`);
+    console.log(`   Meetings: ${meetings.length}`);
     console.log(`   Races: ${totalRaces}`);
     console.log(`   Results: ${totalResults}`);
     console.log(`   Skipped: ${skippedResults}`);
@@ -200,5 +189,5 @@ async function syncResults(daysAgo: number = 1) {
 }
 
 // Get daysAgo from command line args, default to 1 (yesterday)
-const daysAgo = process.argv[2] ?  parseInt(process.argv[2]) : 1;
+const daysAgo = process.argv[2] ? parseInt(process.argv[2]) : 1;
 syncResults(daysAgo);
