@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { FiX } from 'react-icons/fi';
 
 export default function FilterPanel() {
   const router = useRouter();
@@ -70,10 +71,108 @@ export default function FilterPanel() {
     router.push('/race-viewer');
   };
 
+  const removeFilter = (filterName: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete(filterName);
+    
+    // Update state
+    switch (filterName) {
+      case 'horseName':
+        setHorseName('');
+        break;
+      case 'jockeyName':
+        setJockeyName('');
+        break;
+      case 'trainerName':
+        setTrainerName('');
+        break;
+      case 'trackName':
+        setTrackName('');
+        break;
+      case 'state':
+        setState('');
+        break;
+      case 'position':
+        setPosition('');
+        break;
+    }
+    
+    router.push(`/race-viewer?${params.toString()}`);
+  };
+
+  // Get active filters (excluding dates)
+  const activeFilters = [];
+  if (horseName) activeFilters.push({ name: 'horseName', label: 'Horse', value: horseName });
+  if (jockeyName) activeFilters.push({ name: 'jockeyName', label: 'Jockey', value: jockeyName });
+  if (trainerName) activeFilters.push({ name: 'trainerName', label: 'Trainer', value: trainerName });
+  if (trackName) activeFilters.push({ name: 'trackName', label: 'Track', value: trackName });
+  if (state) activeFilters.push({ name: 'state', label: 'State', value: state });
+  if (position) activeFilters.push({ name: 'position', label: 'Position', value: getPositionLabel(position) });
+
+  function getPositionLabel(pos: string): string {
+    const positions: { [key: string]: string } = {
+      '1': '1st 🥇',
+      '2': '2nd 🥈',
+      '3': '3rd 🥉',
+      '4': '4th',
+      '5': '5th',
+      '6': '6th',
+      '7': '7th',
+      '8': '8th',
+      '9': '9th',
+      '10': '10th',
+    };
+    return positions[pos] || pos;
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 mb-6 border-2 border-purple-100">
       <h2 className="text-2xl font-bold text-purple-900 mb-4">🔍 Search Race Results</h2>
       
+      {/* Active Filters Display */}
+      {activeFilters.length > 0 && (
+        <div className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-semibold text-purple-900">Active Filters:</h3>
+            <button
+              onClick={() => {
+                setHorseName('');
+                setJockeyName('');
+                setTrainerName('');
+                setTrackName('');
+                setState('');
+                setPosition('');
+                const params = new URLSearchParams();
+                params.set('dateFrom', dateFrom);
+                params.set('dateTo', dateTo);
+                router.push(`/race-viewer?${params.toString()}`);
+              }}
+              className="text-xs text-purple-600 hover:text-purple-800 font-medium"
+            >
+              Clear All Filters
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {activeFilters.map((filter) => (
+              <div
+                key={filter.name}
+                className="inline-flex items-center gap-2 bg-white border-2 border-purple-300 rounded-full px-3 py-1.5 text-sm"
+              >
+                <span className="font-semibold text-purple-700">{filter.label}:</span>
+                <span className="text-gray-700">{filter.value}</span>
+                <button
+                  onClick={() => removeFilter(filter.name)}
+                  className="ml-1 text-purple-600 hover:text-purple-800 hover:bg-purple-100 rounded-full p-0.5"
+                  title={`Remove ${filter.label} filter`}
+                >
+                  <FiX size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Date Range Section */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-3">📅 Date Range</h3>
@@ -122,6 +221,11 @@ export default function FilterPanel() {
               placeholder="e.g. Black Caviar"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
+            {horseName && (
+              <div className="mt-1 text-xs text-purple-600 font-medium">
+                Searching: "{horseName}"
+              </div>
+            )}
           </div>
 
           {/* Jockey Name */}
@@ -136,6 +240,11 @@ export default function FilterPanel() {
               placeholder="e.g. James McDonald"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
+            {jockeyName && (
+              <div className="mt-1 text-xs text-purple-600 font-medium">
+                Searching: "{jockeyName}"
+              </div>
+            )}
           </div>
 
           {/* Trainer Name */}
@@ -150,6 +259,11 @@ export default function FilterPanel() {
               placeholder="e.g. Chris Waller"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
+            {trainerName && (
+              <div className="mt-1 text-xs text-purple-600 font-medium">
+                Searching: "{trainerName}"
+              </div>
+            )}
           </div>
 
           {/* Track Name */}
@@ -164,6 +278,11 @@ export default function FilterPanel() {
               placeholder="e.g. Flemington"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
+            {trackName && (
+              <div className="mt-1 text-xs text-purple-600 font-medium">
+                Searching: "{trackName}"
+              </div>
+            )}
           </div>
 
           {/* State */}
@@ -186,6 +305,11 @@ export default function FilterPanel() {
               <option value="NT">NT</option>
               <option value="ACT">ACT</option>
             </select>
+            {state && (
+              <div className="mt-1 text-xs text-purple-600 font-medium">
+                Selected: {state}
+              </div>
+            )}
           </div>
 
           {/* Position */}
@@ -210,6 +334,11 @@ export default function FilterPanel() {
               <option value="9">9th Place</option>
               <option value="10">10th Place</option>
             </select>
+            {position && (
+              <div className="mt-1 text-xs text-purple-600 font-medium">
+                Selected: {getPositionLabel(position)}
+              </div>
+            )}
           </div>
         </div>
       </div>
