@@ -26,17 +26,21 @@ function formatMargin(margin: string | number): string {
 }
 
 // Format price
-function formatPrice(price: number): string {
-  if (!price || price === 0) return '-';
-  return `$${price.toFixed(2)}`;
+function formatPrice(price: number | string): string {
+  if (!price) return '-';
+  const num = parseFloat(String(price));
+  if (isNaN(num) || num === 0) return '-';
+  return `$${num.toFixed(2)}`;
 }
 
 // Format prize money
-function formatPrizeMoney(amount: number): string {
-  if (!amount || amount === 0) return '-';
-  if (amount >= 1000000) return `$${(amount / 1000000).toFixed(2)}M`;
-  if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
-  return `$${amount}`;
+function formatPrizeMoney(amount: number | string): string {
+  if (!amount) return '-';
+  const num = parseFloat(String(amount));
+  if (isNaN(num) || num === 0) return '-';
+  if (num >= 1000000) return `$${(num / 1000000).toFixed(2)}M`;
+  if (num >= 1000) return `$${(num / 1000).toFixed(0)}K`;
+  return `$${num}`;
 }
 
 // Get position badge colors
