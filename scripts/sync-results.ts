@@ -78,6 +78,17 @@ async function syncResults(daysAgo: number = 1) {
         let meetingResultCount = 0;
 
         for (const race of races) {
+          // Convert winning time string to seconds
+          let winningTimeSeconds = null;
+          if (race.officialRaceTimeString) {
+            const timeParts = race.officialRaceTimeString.split(':');
+            if (timeParts.length === 2) {
+              const minutes = parseInt(timeParts[0]);
+              const seconds = parseFloat(timeParts[1]);
+              winningTimeSeconds = (minutes * 60) + seconds;
+            }
+          }
+
           // Insert race (required for foreign key)
           await dbClient.query(`
             INSERT INTO pf_races (
@@ -91,18 +102,57 @@ async function syncResults(daysAgo: number = 1) {
           `, [
             race.raceId,
             meeting.meetingId,
-            race.raceNumber,  // ✅ FIXED: Changed from race.number
-            race.name || `Race ${race.raceNumber}`,  // ✅ FIXED: Changed from race.number
+            race.raceNumber,
+            race.name || `Race ${race.raceNumber}`,
             race.distance,
             race.jumpTime || null,
             'FINAL',
-            race.officialRaceTimeString
+            winningTimeSeconds
           ]);
 
           const runners = race.runners || [];
 
           for (const runner of runners) {
             try {
+              // Insert horse first (required for foreign key)
+              if (runner.runnerId) {
+                await dbClient.query(`
+                  INSERT INTO pf_horses (
+                    horse_id, horse_name
+                  ) VALUES ($1, $2)
+                  ON CONFLICT (horse_id) DO NOTHING
+                `, [
+                  runner.runnerId?.toString(),
+                  runner.runner
+                ]);
+              }
+
+              // Insert jockey (required for foreign key)
+              if (runner.jockeyId) {
+                await dbClient.query(`
+                  INSERT INTO pf_jockeys (
+                    jockey_id, full_name
+                  ) VALUES ($1, $2)
+                  ON CONFLICT (jockey_id) DO NOTHING
+                `, [
+                  runner.jockeyId?.toString(),
+                  runner.jockey
+                ]);
+              }
+
+              // Insert trainer (required for foreign key)
+              if (runner.trainerId) {
+                await dbClient.query(`
+                  INSERT INTO pf_trainers (
+                    trainer_id, full_name
+                  ) VALUES ($1, $2)
+                  ON CONFLICT (trainer_id) DO NOTHING
+                `, [
+                  runner.trainerId?.toString(),
+                  runner.trainer
+                ]);
+              }
+
               // Convert time string "01:44.30" to seconds for numeric field
               let finishingTimeSeconds = null;
               if (race.officialRaceTimeString) {
