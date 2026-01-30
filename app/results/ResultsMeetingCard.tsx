@@ -9,7 +9,7 @@ interface Props {
 
 export default function ResultsMeetingCard({ meeting }: Props) {
   const track = meeting.track || {};
-  const raceResults = meeting.raceResults || [];
+  const raceResults = meeting.races || [];
   
   // Sort races by race number - memoized
   const sortedRaces = useMemo(() => 
