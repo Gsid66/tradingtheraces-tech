@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { CombinedRaceData, SortField, SortDirection } from './types';
 import { FiArrowUp, FiArrowDown, FiDownload } from 'react-icons/fi';
 
@@ -50,6 +50,38 @@ function PositionBadge({ position }: { position?: number }) {
 export default function RaceDataTable({ data }: RaceDataTableProps) {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  
+  // Refs for synchronized scrolling
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+
+  // Sync scroll between top bar and table
+  useEffect(() => {
+    const topScroll = topScrollRef.current;
+    const tableScroll = tableScrollRef.current;
+
+    if (!topScroll || !tableScroll) return;
+
+    const handleTopScroll = () => {
+      if (tableScroll) {
+        tableScroll.scrollLeft = topScroll.scrollLeft;
+      }
+    };
+
+    const handleTableScroll = () => {
+      if (topScroll) {
+        topScroll.scrollLeft = tableScroll.scrollLeft;
+      }
+    };
+
+    topScroll.addEventListener('scroll', handleTopScroll);
+    tableScroll.addEventListener('scroll', handleTableScroll);
+
+    return () => {
+      topScroll.removeEventListener('scroll', handleTopScroll);
+      tableScroll.removeEventListener('scroll', handleTableScroll);
+    };
+  }, []);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -240,83 +272,93 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
           </button>
         </div>
       </div>
-{/* Table */}
-<div className="overflow-x-auto max-w-full">
-  <table className="w-full min-w-[1400px]">
-    
-       <thead className="bg-purple-600 text-white sticky top-0">
-  <tr>
-    <th className="px-3 py-2 text-left text-xs font-semibold cursor-pointer hover:bg-purple-700"   
+
+      {/* Top Scroll Bar */}
+      <div 
+        ref={topScrollRef}
+        className="overflow-x-auto bg-purple-100 border-b border-purple-200"
+        style={{ height: '20px' }}
+      >
+        <div style={{ width: '1600px', height: '1px' }}></div>
+      </div>
+
+      {/* Table */}
+      <div ref={tableScrollRef} className="overflow-x-auto">
+        <table className="w-full" style={{ minWidth: '1600px' }}>
+          <thead className="bg-purple-600 text-white sticky top-0">
+            <tr>
+              <th 
+                className="px-3 py-2 text-left text-xs font-semibold cursor-pointer hover:bg-purple-700 whitespace-nowrap"
                 onClick={() => handleSort('race_date')}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   Date <SortIcon field="race_date" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
               <th 
-                className="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-purple-700"
+                className="px-3 py-2 text-left text-xs font-semibold cursor-pointer hover:bg-purple-700 whitespace-nowrap"
                 onClick={() => handleSort('track_name')}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   Track <SortIcon field="track_name" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
-              <th className="px-4 py-3 text-center text-sm font-semibold">
+              <th className="px-3 py-2 text-center text-xs font-semibold whitespace-nowrap">
                 State
               </th>
               <th 
-                className="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-purple-700"
+                className="px-3 py-2 text-left text-xs font-semibold cursor-pointer hover:bg-purple-700 whitespace-nowrap"
                 onClick={() => handleSort('race_number')}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   Race <SortIcon field="race_number" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
-              <th className="px-4 py-3 text-center text-sm font-semibold">
+              <th className="px-3 py-2 text-center text-xs font-semibold whitespace-nowrap">
                 Saddle
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold">
+              <th className="px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">
                 Horse
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold">
+              <th className="px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">
                 Jockey
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold">
+              <th className="px-3 py-2 text-left text-xs font-semibold whitespace-nowrap">
                 Trainer
               </th>
               <th 
-                className="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-purple-700"
+                className="px-3 py-2 text-center text-xs font-semibold cursor-pointer hover:bg-purple-700 whitespace-nowrap"
                 onClick={() => handleSort('rating')}
               >
-                <div className="flex items-center gap-2 justify-center">
+                <div className="flex items-center gap-1 justify-center">
                   Rating <SortIcon field="rating" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
               <th 
-                className="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-purple-700"
+                className="px-3 py-2 text-center text-xs font-semibold cursor-pointer hover:bg-purple-700 whitespace-nowrap"
                 onClick={() => handleSort('price')}
               >
-                <div className="flex items-center gap-2 justify-center">
+                <div className="flex items-center gap-1 justify-center">
                   Price <SortIcon field="price" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
               <th 
-                className="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-purple-700"
+                className="px-3 py-2 text-center text-xs font-semibold cursor-pointer hover:bg-purple-700 whitespace-nowrap"
                 onClick={() => handleSort('finishing_position')}
               >
-                <div className="flex items-center gap-2 justify-center">
+                <div className="flex items-center gap-1 justify-center">
                   Result <SortIcon field="finishing_position" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
               <th 
-                className="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-purple-700"
+                className="px-3 py-2 text-center text-xs font-semibold cursor-pointer hover:bg-purple-700 whitespace-nowrap"
                 onClick={() => handleSort('starting_price')}
               >
-                <div className="flex items-center gap-2 justify-center">
+                <div className="flex items-center gap-1 justify-center">
                   SP <SortIcon field="starting_price" sortField={sortField} sortDirection={sortDirection} />
                 </div>
               </th>
-              <th className="px-4 py-3 text-center text-sm font-semibold">
+              <th className="px-3 py-2 text-center text-xs font-semibold whitespace-nowrap">
                 Margin
               </th>
             </tr>
@@ -332,56 +374,56 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
                   className={`border-b border-gray-200 hover:bg-purple-50 transition-colors ${hasResult ? 'bg-green-50' : ''}`}
                   style={{ backgroundColor: hasResult ? '#f0fdf4' : (index % 2 === 0 ? 'white' : '#fafafa') }}
                 >
-                  <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                  <td className="px-3 py-2 text-xs text-gray-700 whitespace-nowrap">
                     {formatDate(row.race_date)}
                   </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-block bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    <span className="inline-block bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
                       {row.track_name}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center text-sm font-medium text-gray-700">
+                  <td className="px-3 py-2 text-center text-xs font-medium text-gray-700">
                     {row.state || '-'}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                  <td className="px-3 py-2 text-xs text-gray-700">
                     <div className="font-medium">R{row.race_number}</div>
-                    <div className="text-xs text-gray-500 truncate max-w-[120px]">{row.race_name}</div>
+                    <div className="text-xs text-gray-500 truncate max-w-[100px]">{row.race_name}</div>
                   </td>
-                  <td className="px-4 py-3 text-center text-sm font-semibold text-gray-800">
+                  <td className="px-3 py-2 text-center text-xs font-semibold text-gray-800">
                     {row.saddle_cloth}
                   </td>
-                  <td className="px-4 py-3 text-sm font-bold text-gray-900">
+                  <td className="px-3 py-2 text-xs font-bold text-gray-900 whitespace-nowrap">
                     {row.horse_name}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                  <td className="px-3 py-2 text-xs text-gray-700 whitespace-nowrap">
                     {row.jockey_name}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                  <td className="px-3 py-2 text-xs text-gray-700 whitespace-nowrap">
                     {row.trainer_name}
                   </td>
-                  <td className="px-4 py-3 text-center">
-                    <span className="inline-block bg-cyan-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                  <td className="px-3 py-2 text-center">
+                    <span className="inline-block bg-cyan-500 text-white px-2 py-1 rounded-full text-xs font-bold">
                       {formatRating(row.rating)}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center">
-                    <span className="inline-block bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                  <td className="px-3 py-2 text-center">
+                    <span className="inline-block bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-semibold">
                       {formatPrice(row.price)}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-3 py-2 text-center">
                     <PositionBadge position={row.finishing_position} />
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-3 py-2 text-center">
                     {row.starting_price ? (
-                      <span className="inline-block bg-green-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                      <span className="inline-block bg-green-600 text-white px-2 py-1 rounded-full text-xs font-semibold">
                         {formatPrice(row.starting_price)}
                       </span>
                     ) : (
-                      <span className="text-gray-400 text-sm">-</span>
+                      <span className="text-gray-400 text-xs">-</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-center text-sm text-gray-700">
+                  <td className="px-3 py-2 text-center text-xs text-gray-700">
                     {formatMargin(row.margin_to_winner)}
                   </td>
                 </tr>
