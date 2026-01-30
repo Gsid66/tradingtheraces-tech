@@ -57,6 +57,12 @@ export default async function ResultsPage({
     `;
     
     const result = await query(queryText, [targetDateStr]);
+
+console.log('📊 Query result:', {
+  rowCount: result.rows.length,
+  targetDate: targetDateStr,
+  firstRow: result.rows[0]
+});
     
     // Group results by meeting
     const meetingsMap = new Map();
