@@ -244,10 +244,9 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
 <div className="overflow-x-auto max-w-full">
   <table className="w-full min-w-[1400px]">
     
-          <thead className="bg-purple-600 text-white sticky top-0">
-            <tr>
-              <th 
-                className="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-purple-700"
+       <thead className="bg-purple-600 text-white sticky top-0">
+  <tr>
+    <th className="px-3 py-2 text-left text-xs font-semibold cursor-pointer hover:bg-purple-700"   
                 onClick={() => handleSort('race_date')}
               >
                 <div className="flex items-center gap-2">
