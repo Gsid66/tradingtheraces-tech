@@ -18,17 +18,30 @@ async function syncResults(daysAgo: number = 1) {
     await dbClient.connect();
     console.log('✅ Connected to database\n');
 
-    // Get target date in Australian timezone
-    const now = new Date();
-    const australianDate = new Date(now.toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
-    australianDate.setDate(australianDate.getDate() - daysAgo);
+    // ✅ GET TODAY IN SYDNEY AS YYYY-MM-DD STRING
+    const sydneyFormatter = new Intl.DateTimeFormat('en-CA', { 
+      timeZone: 'Australia/Sydney',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    
+    const todayInSydney = sydneyFormatter.format(new Date());
+    console.log(`🕐 Today in Sydney: ${todayInSydney}\n`);
+    
+    // ✅ CALCULATE TARGET DATE BY SUBTRACTING DAYS FROM SYDNEY DATE
+    const [year, month, day] = todayInSydney.split('-').map(Number);
+    const sydneyDateObject = new Date(year, month - 1, day); // Local date object
+    sydneyDateObject.setDate(sydneyDateObject.getDate() - daysAgo);
+    
+    const targetDateString = sydneyDateObject.toISOString().split('T')[0];
+    
+    // ✅ CREATE API DATE OBJECT
+    const targetDate = new Date(targetDateString + 'T12:00:00+11:00'); // Noon in Sydney
 
-    // Format as YYYY-MM-DD
-    const targetDateString = australianDate.toISOString().split('T')[0];
-    const targetDate = new Date(targetDateString + 'T00:00:00Z');
-
-    console.log(`📅 Fetching results for ${targetDateString} (Australian time)...\n`);
-    console.log(`   Current time in Sydney: ${now.toLocaleString('en-AU', { timeZone: 'Australia/Sydney' })}\n`);
+    console.log(`📅 Target date: ${targetDateString}`);
+    console.log(`📅 API will fetch: ${targetDate.toISOString()}`);
+    console.log(`📅 Database will store: ${targetDateString}\n`);
 
     // Get meetings for that date
     const meetingsResponse = await pfClient.getMeetingsByDate(targetDate);
@@ -68,6 +81,7 @@ async function syncResults(daysAgo: number = 1) {
           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
           ON CONFLICT (meeting_id) DO UPDATE SET
             rail_position = EXCLUDED.rail_position,
+            meeting_date = EXCLUDED.meeting_date,
             updated_at = NOW()
         `, [
           meeting.meetingId,
@@ -75,7 +89,7 @@ async function syncResults(daysAgo: number = 1) {
           meeting.track.trackId || null,
           meeting.track.state,
           meeting.track.country,
-          targetDateString, // ✅ FIXED: Use Australian timezone date string
+          targetDateString, // ✅ FIXED: Use Sydney timezone date string
           meetingData.railPosition || null,
           meeting.stage || 'RESULTS'
         ]);
