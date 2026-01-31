@@ -6,7 +6,7 @@ import { getPuntingFormClient } from '../lib/integrations/punting-form/client';
 
 async function syncResults(daysAgo: number = 1) {
   const startTime = Date.now();
-  console.log(`🏁 Syncing race results.. .\n`);
+  console.log(`🏁 Syncing race results...\n`);
 
   const pfClient = getPuntingFormClient();
   const dbClient = new Client({
@@ -18,10 +18,17 @@ async function syncResults(daysAgo: number = 1) {
     await dbClient.connect();
     console.log('✅ Connected to database\n');
 
-    // Get target date
-    const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() - daysAgo);
-    console.log(`📅 Fetching results for ${targetDate.toLocaleDateString()}...\n`);
+    // Get target date in Australian timezone
+    const now = new Date();
+    const australianDate = new Date(now.toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
+    australianDate.setDate(australianDate.getDate() - daysAgo);
+
+    // Format as YYYY-MM-DD
+    const targetDateString = australianDate.toISOString().split('T')[0];
+    const targetDate = new Date(targetDateString + 'T00:00:00Z');
+
+    console.log(`📅 Fetching results for ${targetDateString} (Australian time)...\n`);
+    console.log(`   Current time in Sydney: ${now.toLocaleString('en-AU', { timeZone: 'Australia/Sydney' })}\n`);
 
     // Get meetings for that date
     const meetingsResponse = await pfClient.getMeetingsByDate(targetDate);
@@ -68,7 +75,7 @@ async function syncResults(daysAgo: number = 1) {
           meeting.track.trackId || null,
           meeting.track.state,
           meeting.track.country,
-          targetDate.toISOString().split('T')[0], // YYYY-MM-DD format
+          targetDateString, // ✅ FIXED: Use Australian timezone date string
           meetingData.railPosition || null,
           meeting.stage || 'RESULTS'
         ]);
@@ -223,6 +230,7 @@ async function syncResults(daysAgo: number = 1) {
 
     console.log('🎉 Results sync completed!\n');
     console.log(`📊 Summary:`);
+    console.log(`   Date: ${targetDateString}`);
     console.log(`   Meetings: ${meetings.length}`);
     console.log(`   Races: ${totalRaces}`);
     console.log(`   Results: ${totalResults}`);
