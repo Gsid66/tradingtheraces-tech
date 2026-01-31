@@ -4,7 +4,7 @@ config({ path: '.env.local' });
 import { Client } from 'pg';
 import { getPuntingFormClient } from '../lib/integrations/punting-form/client';
 
-async function syncResults(daysAgo: number = 1) {
+async function syncResults(targetDateString?: string) {
   const startTime = Date.now();
   console.log(`🏁 Syncing race results...\n`);
 
@@ -18,30 +18,24 @@ async function syncResults(daysAgo: number = 1) {
     await dbClient.connect();
     console.log('✅ Connected to database\n');
 
-    // ✅ GET TODAY IN SYDNEY AS YYYY-MM-DD STRING
-    const sydneyFormatter = new Intl.DateTimeFormat('en-CA', { 
-      timeZone: 'Australia/Sydney',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-    
-    const todayInSydney = sydneyFormatter.format(new Date());
-    console.log(`🕐 Today in Sydney: ${todayInSydney}\n`);
-    
-    // ✅ CALCULATE TARGET DATE BY SUBTRACTING DAYS FROM SYDNEY DATE
-    const [year, month, day] = todayInSydney.split('-').map(Number);
-    const sydneyDateObject = new Date(year, month - 1, day); // Local date object
-    sydneyDateObject.setDate(sydneyDateObject.getDate() - daysAgo);
-    
-    const targetDateString = sydneyDateObject.toISOString().split('T')[0];
-    
-    // ✅ CREATE API DATE OBJECT
-    const targetDate = new Date(targetDateString + 'T12:00:00+11:00'); // Noon in Sydney
+    // ✅ USE PROVIDED DATE OR DEFAULT TO YESTERDAY
+    if (!targetDateString) {
+      // Default to yesterday in Sydney
+      const now = new Date();
+      const sydneyOffset = 11 * 60; // 11 hours in minutes
+      const sydneyTime = new Date(now.getTime() + sydneyOffset * 60 * 1000);
+      sydneyTime.setUTCDate(sydneyTime.getUTCDate() - 1); // Yesterday
+      
+      const year = sydneyTime.getUTCFullYear();
+      const month = String(sydneyTime.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(sydneyTime.getUTCDate()).padStart(2, '0');
+      targetDateString = `${year}-${month}-${day}`;
+    }
 
-    console.log(`📅 Target date: ${targetDateString}`);
-    console.log(`📅 API will fetch: ${targetDate.toISOString()}`);
-    console.log(`📅 Database will store: ${targetDateString}\n`);
+    console.log(`📅 Target date: ${targetDateString}\n`);
+    
+    // Create date for API
+    const targetDate = new Date(`${targetDateString}T12:00:00Z`);
 
     // Get meetings for that date
     const meetingsResponse = await pfClient.getMeetingsByDate(targetDate);
@@ -64,8 +58,6 @@ async function syncResults(daysAgo: number = 1) {
       try {
         const resultsResponse = await pfClient.getMeetingResults(meeting.meetingId);
         
-        // The response is an array of meeting objects
-        // Each meeting object has a 'raceResults' property
         const meetingData = resultsResponse.payLoad[0];
         
         if (!meetingData || !meetingData.raceResults || meetingData.raceResults.length === 0) {
@@ -89,7 +81,7 @@ async function syncResults(daysAgo: number = 1) {
           meeting.track.trackId || null,
           meeting.track.state,
           meeting.track.country,
-          targetDateString, // ✅ FIXED: Use Sydney timezone date string
+          targetDateString,
           meetingData.railPosition || null,
           meeting.stage || 'RESULTS'
         ]);
@@ -110,7 +102,7 @@ async function syncResults(daysAgo: number = 1) {
             }
           }
 
-          // Insert race (required for foreign key)
+          // Insert race
           await dbClient.query(`
             INSERT INTO pf_races (
               race_id, meeting_id, race_number, race_name, distance, 
@@ -135,7 +127,7 @@ async function syncResults(daysAgo: number = 1) {
 
           for (const runner of runners) {
             try {
-              // Insert horse first (required for foreign key)
+              // Insert horse
               if (runner.runnerId) {
                 await dbClient.query(`
                   INSERT INTO pf_horses (
@@ -148,7 +140,7 @@ async function syncResults(daysAgo: number = 1) {
                 ]);
               }
 
-              // Insert jockey (required for foreign key)
+              // Insert jockey
               if (runner.jockeyId) {
                 await dbClient.query(`
                   INSERT INTO pf_jockeys (
@@ -161,7 +153,7 @@ async function syncResults(daysAgo: number = 1) {
                 ]);
               }
 
-              // Insert trainer (required for foreign key)
+              // Insert trainer
               if (runner.trainerId) {
                 await dbClient.query(`
                   INSERT INTO pf_trainers (
@@ -174,7 +166,7 @@ async function syncResults(daysAgo: number = 1) {
                 ]);
               }
 
-              // Convert time string "01:44.30" to seconds for numeric field
+              // Convert time string to seconds
               let finishingTimeSeconds = null;
               if (race.officialRaceTimeString) {
                 const timeParts = race.officialRaceTimeString.split(':');
@@ -203,25 +195,25 @@ async function syncResults(daysAgo: number = 1) {
                   race_comment = EXCLUDED.race_comment,
                   updated_at = NOW()
               `, [
-                race.raceId,                      // $1 race_id
-                runner.formId,                    // $2 runner_id
-                runner.runnerId?.toString(),      // $3 horse_id
-                runner.runner,                    // $4 horse_name
-                runner.position,                  // $5 finishing_position
-                runner.tabNo,                     // $6 tab_number
-                runner.barrier,                   // $7 barrier_number
-                finishingTimeSeconds,             // $8 finishing_time (numeric for sorting/calculations)
-                race.officialRaceTimeString,      // $9 finishing_time_display (e.g. "01:44.30")
-                runner.margin,                    // $10 margin_to_winner
-                runner.jockeyId?.toString(),      // $11 jockey_id
-                runner.jockey,                    // $12 jockey_name
-                runner.trainerId?.toString(),     // $13 trainer_id
-                runner.trainer,                   // $14 trainer_name
-                runner.weight,                    // $15 weight_carried
-                runner.price,                     // $16 starting_price
-                null,                             // $17 prize_money_won
-                runner.stewardsReports,           // $18 stewards_comment
-                runner.inRun                      // $19 race_comment
+                race.raceId,
+                runner.formId,
+                runner.runnerId?.toString(),
+                runner.runner,
+                runner.position,
+                runner.tabNo,
+                runner.barrier,
+                finishingTimeSeconds,
+                race.officialRaceTimeString,
+                runner.margin,
+                runner.jockeyId?.toString(),
+                runner.jockey,
+                runner.trainerId?.toString(),
+                runner.trainer,
+                runner.weight,
+                runner.price,
+                null,
+                runner.stewardsReports,
+                runner.inRun
               ]);
 
               totalResults++;
@@ -260,6 +252,6 @@ async function syncResults(daysAgo: number = 1) {
   }
 }
 
-// Get daysAgo from command line args, default to 1 (yesterday)
-const daysAgo = process.argv[2] ? parseInt(process.argv[2]) : 1;
-syncResults(daysAgo);
+// Get date from command line args (YYYY-MM-DD format)
+const dateArg = process.argv[2];
+syncResults(dateArg);
