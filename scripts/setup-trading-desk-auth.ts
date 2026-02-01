@@ -104,7 +104,7 @@ async function setupTradingDeskAuth() {
 
     console.log('\n✨ Setup complete!\n');
     console.log('📍 Access URLs:');
-    console.log('   Admin Panel: http://localhost:3000/trading-desk/admin');
+    console.log('   Admin Panel: http://localhost:3000/trading-desk-admin');
     console.log('   User Login:  http://localhost:3000/trading-desk');
     console.log('\n📝 Admin Credentials:');
     console.log(`   Username: ${adminUsername}`);

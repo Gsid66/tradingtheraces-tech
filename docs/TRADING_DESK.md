@@ -54,7 +54,7 @@ Clear-History
 After setup, you can access:
 
 - **User Login**: http://localhost:3000/trading-desk
-- **Admin Panel**: http://localhost:3000/trading-desk/admin
+- **Admin Panel**: http://localhost:3000/trading-desk-admin
 
 ## Features
 
@@ -70,7 +70,7 @@ After setup, you can access:
 
 ### Admin Panel
 
-1. **Admin Login**: Admins access `/trading-desk/admin` with username and password
+1. **Admin Login**: Admins access `/trading-desk-admin` with username and password
 2. **Password Management**:
    - Generate random 8-character passwords (cryptographically secure)
    - Enter custom passwords (minimum 6 characters)
@@ -186,17 +186,18 @@ Requires valid `trading_desk_admin` cookie.
 
 ```
 app/
+├── (admin)/                            # Route group for admin (bypasses trading-desk layout)
+│   └── trading-desk-admin/
+│       ├── page.tsx                    # Admin page wrapper
+│       ├── AdminLoginForm.tsx          # Admin login
+│       └── PasswordManager.tsx         # Password manager UI
 ├── trading-desk/
 │   ├── layout.tsx                      # Protected layout with sidebar
 │   ├── page.tsx                        # Redirects to today's date
 │   ├── LoginForm.tsx                   # User login component
 │   ├── DateNavigation.tsx              # Sidebar date menu
-│   ├── [date]/
-│   │   └── page.tsx                    # Daily analysis page
-│   └── admin/
-│       ├── page.tsx                    # Admin page wrapper
-│       ├── AdminLoginForm.tsx          # Admin login
-│       └── PasswordManager.tsx         # Password manager UI
+│   └── [date]/
+│       └── page.tsx                    # Daily analysis page
 ├── api/
 │   └── trading-desk/
 │       ├── auth/
@@ -218,7 +219,7 @@ drizzle/
 ### For Administrators
 
 1. Run setup script to initialize the system
-2. Log in to admin panel at `/trading-desk/admin`
+2. Log in to admin panel at `/trading-desk-admin`
 3. Generate or create a new password for users
 4. Copy the password to clipboard
 5. Share the password with authorized users through secure channels
