@@ -80,12 +80,12 @@ async function searchRaceData(filters: FilterParams): Promise<{ data: CombinedRa
     const countQuery = `
       SELECT COUNT(*) as total
       FROM race_cards_ratings rcr
-      LEFT JOIN pf_results r ON LOWER(TRIM(rcr.horse_name)) = LOWER(TRIM(r.horse_name))
-      LEFT JOIN pf_races ra ON r.race_id = ra.race_id 
-        AND rcr.race_number = ra.race_number
-      LEFT JOIN pf_meetings m ON ra.meeting_id = m.meeting_id
-        AND rcr.race_date = m.meeting_date
+      LEFT JOIN pf_meetings m ON rcr.race_date = m.meeting_date
         AND LOWER(TRIM(rcr.track)) = LOWER(TRIM(m.track_name))
+      LEFT JOIN pf_races ra ON ra.meeting_id = m.meeting_id 
+        AND rcr.race_number = ra.race_number
+      LEFT JOIN pf_results r ON r.race_id = ra.race_id
+        AND LOWER(TRIM(rcr.horse_name)) = LOWER(TRIM(r.horse_name))
       ${whereClause}
     `;
 
@@ -113,12 +113,12 @@ async function searchRaceData(filters: FilterParams): Promise<{ data: CombinedRa
         m.state,
         m.country
       FROM race_cards_ratings rcr
-      LEFT JOIN pf_results r ON LOWER(TRIM(rcr.horse_name)) = LOWER(TRIM(r.horse_name))
-      LEFT JOIN pf_races ra ON r.race_id = ra.race_id 
-        AND rcr.race_number = ra.race_number
-      LEFT JOIN pf_meetings m ON ra.meeting_id = m.meeting_id
-        AND rcr.race_date = m.meeting_date
+      LEFT JOIN pf_meetings m ON rcr.race_date = m.meeting_date
         AND LOWER(TRIM(rcr.track)) = LOWER(TRIM(m.track_name))
+      LEFT JOIN pf_races ra ON ra.meeting_id = m.meeting_id 
+        AND rcr.race_number = ra.race_number
+      LEFT JOIN pf_results r ON r.race_id = ra.race_id
+        AND LOWER(TRIM(rcr.horse_name)) = LOWER(TRIM(r.horse_name))
       ${whereClause}
       ORDER BY rcr.race_date DESC, rcr.track, rcr.race_number, rcr.saddle_cloth
     `;
