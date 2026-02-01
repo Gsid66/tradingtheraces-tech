@@ -11,8 +11,10 @@ export default function PasswordManager() {
   const generatePassword = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
     let password = '';
+    const array = new Uint32Array(8);
+    crypto.getRandomValues(array);
     for (let i = 0; i < 8; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
+      password += chars.charAt(array[i] % chars.length);
     }
     setNewPassword(password);
     setMessage('');

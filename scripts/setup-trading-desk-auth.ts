@@ -111,7 +111,8 @@ async function setupTradingDeskAuth() {
     console.log(`   Password: ${adminPassword}`);
     console.log('\n🔐 User Password:');
     console.log(`   Password: ${initialUserPassword}`);
-    console.log('\n⚠️  Save these credentials securely!\n');
+    console.log('\n⚠️  SECURITY WARNING: Save these credentials securely and clear your terminal history!');
+    console.log('   Run: history -c (Linux/Mac) or Clear-History (PowerShell)\n');
 
   } catch (error) {
     console.error('❌ Error during setup:', error);
