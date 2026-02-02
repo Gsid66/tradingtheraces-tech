@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function AdminPage() {
   const [newPassword, setNewPassword] = useState('');
@@ -50,7 +51,7 @@ export default function AdminPage() {
       } else {
         setError(data.message || 'Failed to update password');
       }
-    } catch (err) {
+    } catch {
       setError('Connection error. Please try again.');
     } finally {
       setLoading(false);
@@ -144,10 +145,10 @@ export default function AdminPage() {
             <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <h3 className="font-semibold text-blue-900 mb-2">📝 Instructions:</h3>
               <ol className="list-decimal list-inside space-y-1 text-sm text-blue-800">
-                <li>Click "Generate" to create a secure random password</li>
+                <li>Click &quot;Generate&quot; to create a secure random password</li>
                 <li>Or type your own password (minimum 6 characters)</li>
-                <li>Click "Copy to Clipboard" to copy the password</li>
-                <li>Click "Update Password" to save the new user password</li>
+                <li>Click &quot;Copy to Clipboard&quot; to copy the password</li>
+                <li>Click &quot;Update Password&quot; to save the new user password</li>
                 <li>Share the password securely with authorized users</li>
               </ol>
             </div>
@@ -158,12 +159,12 @@ export default function AdminPage() {
         <div className="mt-6 bg-white rounded-lg shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Links</h3>
           <div className="space-y-2">
-            <a
+            <Link
               href="/trading-desk"
               className="block px-4 py-2 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors"
             >
               → View Trading Desk
-            </a>
+            </Link>
           </div>
         </div>
       </div>

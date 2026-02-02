@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function AdminLoginForm() {
   const [username, setUsername] = useState('');
@@ -29,7 +30,7 @@ export default function AdminLoginForm() {
       } else {
         setError(data.message || 'Invalid credentials');
       }
-    } catch (error) {
+    } catch {
       setError('Connection error. Please try again.');
     } finally {
       setLoading(false);
@@ -94,9 +95,9 @@ export default function AdminLoginForm() {
         </form>
 
         <div className="mt-6 text-center">
-          <a href="/trading-desk" className="text-sm text-purple-600 hover:text-purple-700">
+          <Link href="/trading-desk" className="text-sm text-purple-600 hover:text-purple-700">
             ← Back to Trading Desk
-          </a>
+          </Link>
         </div>
       </div>
     </div>
