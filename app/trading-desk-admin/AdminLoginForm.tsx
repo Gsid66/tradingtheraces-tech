@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function AdminLoginForm() {
   const [username, setUsername] = useState('');
@@ -29,19 +30,20 @@ export default function AdminLoginForm() {
       } else {
         setError(data.message || 'Invalid credentials');
       }
-    } catch (error) {
-      setError('Connection error. Please try again.');
+    } catch {
+      setError('Failed to connect to authentication service. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900">
       <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
+          <div className="text-4xl mb-4">🔐</div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Admin Panel</h1>
-          <p className="text-gray-600">Trading Desk Administration</p>
+          <p className="text-gray-600">Trading Desk Management</p>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -54,7 +56,7 @@ export default function AdminLoginForm() {
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-600 focus:border-transparent text-gray-900"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent text-gray-900"
               placeholder="Enter username"
               required
               disabled={loading}
@@ -70,7 +72,7 @@ export default function AdminLoginForm() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-600 focus:border-transparent text-gray-900"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent text-gray-900"
               placeholder="Enter password"
               required
               disabled={loading}
@@ -86,11 +88,17 @@ export default function AdminLoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gray-800 text-white py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors disabled:bg-gray-400"
+            className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors disabled:bg-gray-400"
           >
             {loading ? 'Authenticating...' : 'Login'}
           </button>
         </form>
+
+        <div className="mt-6 text-center">
+          <Link href="/trading-desk" className="text-sm text-purple-600 hover:text-purple-700">
+            ← Back to Trading Desk
+          </Link>
+        </div>
       </div>
     </div>
   );

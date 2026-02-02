@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     // Check if admin is authenticated
     const cookieStore = await cookies();
-    const adminCookie = cookieStore.get('trading_desk_admin');
+    const adminCookie = cookieStore.get('trading_desk_admin_auth');
 
     if (!adminCookie || adminCookie.value !== 'authenticated') {
       return NextResponse.json(
@@ -16,9 +16,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { newPassword } = await request.json();
+    const { password } = await request.json();
 
-    if (!newPassword || newPassword.length < 6) {
+    if (!password || password.length < 6) {
       return NextResponse.json(
         { success: false, message: 'Password must be at least 6 characters' },
         { status: 400 }
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Hash the new password
-    const passwordHash = await bcrypt.hash(newPassword, 10);
+    const passwordHash = await bcrypt.hash(password, 10);
 
     // Insert new password into database
     await query(
