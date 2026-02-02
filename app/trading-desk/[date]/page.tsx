@@ -1,5 +1,5 @@
 import { Client } from 'pg';
-import { format } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +15,7 @@ interface RaceData {
   race_number: number;
   horse_name: string;
   rating: number;
-  predicted_odds: number;
+  price: number;
   jockey: string;
   trainer: string;
   finishing_position: number | null;
@@ -25,7 +25,7 @@ interface RaceData {
 async function getDailyData(date: string): Promise<RaceData[]> {
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    ssl: { rejectUnauthorized: false }
   });
 
   try {
@@ -40,7 +40,7 @@ async function getDailyData(date: string): Promise<RaceData[]> {
         rcr.race_number,
         rcr.horse_name,
         rcr.rating,
-        rcr.predicted_odds,
+        rcr.price,
         rcr.jockey,
         rcr.trainer,
         r.finishing_position,
@@ -68,26 +68,42 @@ async function getDailyData(date: string): Promise<RaceData[]> {
 
 export default async function DailyTradingDeskPage({ params }: PageProps) {
   const { date } = await params;
+  
+  // Validate date format
+  const parsedDate = parseISO(date);
+  if (!isValid(parsedDate)) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <h2 className="text-xl font-bold text-red-800 mb-2">Invalid Date</h2>
+          <p className="text-red-600">The date "{date}" is not valid. Please select a valid date.</p>
+        </div>
+      </div>
+    );
+  }
+
   const data = await getDailyData(date);
 
   // Calculate statistics
   const totalRaces = new Set(data.map(d => `${d.track_name}-${d.race_number}`)).size;
   const ratedHorses = data.length;
-  const valueOpportunities = data.filter(d => d.actual_sp && d.predicted_odds && d.actual_sp > d.predicted_odds * 1.2).length;
+  const valueOpportunities = data.filter(d => 
+    d.actual_sp && d.price && Number(d.actual_sp) > Number(d.price) * 1.2
+  ).length;
   const winners = data.filter(d => d.finishing_position === 1);
 
   // Get top value plays (horses with best odds differential)
   const valuePlays = data
-    .filter(d => d.actual_sp && d.predicted_odds)
+    .filter(d => d.actual_sp && d.price && Number(d.price) > 0)
     .map(d => ({
       ...d,
-      oddsValue: ((d.actual_sp! - d.predicted_odds) / d.predicted_odds) * 100
+      oddsValue: ((Number(d.actual_sp!) - Number(d.price)) / Number(d.price)) * 100
     }))
     .sort((a, b) => b.oddsValue - a.oddsValue)
     .slice(0, 10);
 
   // Format date for display
-  const formattedDate = format(new Date(date), 'EEEE, MMMM d, yyyy');
+  const formattedDate = format(parsedDate, 'EEEE, MMMM d, yyyy');
 
   return (
     <div className="p-8">
@@ -128,7 +144,7 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Race</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horse</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Predicted</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actual SP</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
@@ -140,9 +156,9 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{play.track_name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">R{play.race_number}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{play.horse_name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{play.rating.toFixed(1)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${play.predicted_odds.toFixed(2)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${play.actual_sp?.toFixed(2)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{play.rating ? Number(play.rating).toFixed(1) : '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{play.price ? `$${Number(play.price).toFixed(2)}` : '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{play.actual_sp ? `$${Number(play.actual_sp).toFixed(2)}` : '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
                         +{play.oddsValue.toFixed(0)}%
@@ -183,7 +199,7 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jockey</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trainer</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Predicted</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actual SP</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
                 </tr>
@@ -196,10 +212,10 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{race.horse_name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{race.jockey}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{race.trainer}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{race.rating.toFixed(1)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${race.predicted_odds.toFixed(2)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{race.rating ? Number(race.rating).toFixed(1) : '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{race.price ? `$${Number(race.price).toFixed(2)}` : '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {race.actual_sp ? `$${race.actual_sp.toFixed(2)}` : '-'}
+                      {race.actual_sp ? `$${Number(race.actual_sp).toFixed(2)}` : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {race.finishing_position ? (

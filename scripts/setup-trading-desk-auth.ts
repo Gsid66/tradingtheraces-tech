@@ -5,7 +5,7 @@ import * as dotenv from 'dotenv';
 import * as path from 'path';
 
 // Load environment variables
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -46,9 +46,9 @@ async function setupTradingDeskAuth() {
   console.log('\n📊 Connecting to database...');
 
   const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-  });
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false } // ✅ Always use SSL for Render
+});
 
   try {
     await client.connect();
