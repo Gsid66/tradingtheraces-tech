@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     
     // Set cookie for 24 hours
     const isProduction = process.env.NODE_ENV === 'production';
-    response.cookies.set('trading_desk_admin', 'authenticated', {
+    response.cookies.set('trading_desk_admin_auth', 'authenticated', {
       httpOnly: true,
       secure: isProduction,
       sameSite: 'lax',
