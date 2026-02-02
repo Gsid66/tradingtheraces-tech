@@ -60,7 +60,6 @@ export default function AdminPage() {
 
   const logout = async () => {
     await fetch('/api/trading-desk/admin/logout', { method: 'POST' });
-    router.push('/trading-desk-admin');
     router.refresh();
   };
 

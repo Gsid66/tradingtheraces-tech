@@ -31,7 +31,7 @@ export default function AdminLoginForm() {
         setError(data.message || 'Invalid credentials');
       }
     } catch {
-      setError('Connection error. Please try again.');
+      setError('Failed to connect to authentication service. Please try again.');
     } finally {
       setLoading(false);
     }
