@@ -5,8 +5,8 @@
 
 export interface PLData {
   totalValuePlays: number;
-  winners: number;
-  winRate: number;
+  winners: number;  // 1st place only
+  winRate: number;  // Percentage of 1st place finishes
   totalStaked: number;
   totalReturns: number;
   profitLoss: number;
@@ -24,9 +24,7 @@ const STAKE_AMOUNT = 10;
 
 /**
  * Calculate return for a single horse bet
- * Win (1st): $10 × Price
- * Place (2nd/3rd): $10 × (Price / 4) - simplified place dividend
- * Loss (other): $0
+ * Only returns on 1st place wins
  */
 export function calculateReturn(
   finishingPosition: number | null | undefined,
@@ -37,20 +35,18 @@ export function calculateReturn(
 
   const oddsToUse = actual_sp && actual_sp > 0 ? actual_sp : price;
 
+  // Only return on 1st place wins
   if (finishingPosition === 1) {
-    // Win: full odds
     return STAKE_AMOUNT * oddsToUse;
-  } else if (finishingPosition === 2 || finishingPosition === 3) {
-    // Place: simplified - quarter of the odds
-    return STAKE_AMOUNT * (oddsToUse / 4);
   }
 
-  return 0; // Loss
+  return 0; // No return for 2nd, 3rd, or worse
 }
 
 /**
  * Calculate P&L statistics for a set of horses
  * Only includes horses with value score > 25 AND have completed their race
+ * Winners = 1st place finishes only
  */
 export function calculatePL(horses: HorseResult[]): PLData {
   const valuePlays = horses.filter(horse => {
@@ -75,11 +71,7 @@ export function calculatePL(horses: HorseResult[]): PLData {
     );
     totalReturns += returns;
 
-    if (
-      horse.finishing_position === 1 ||
-      horse.finishing_position === 2 ||
-      horse.finishing_position === 3
-    ) {
+    if (horse.finishing_position === 1) {
       winners++;
     }
   });

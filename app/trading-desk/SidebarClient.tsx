@@ -71,6 +71,13 @@ export default function SidebarClient() {
           >
             📊 Statistics & Charts
           </Link>
+          <Link
+            href="/trading-desk/place-performance"
+            onClick={() => setIsSidebarOpen(false)}
+            className="block px-4 py-2 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-purple-400 transition-colors mt-1"
+          >
+            🏆 Place Performance
+          </Link>
         </div>
       </aside>
 
