@@ -29,6 +29,8 @@ interface PlaceStats {
 }
 
 const STAKE_AMOUNT = 10;
+const LOOKBACK_DAYS = 30;
+const PLACE_DIVIDEND_MULTIPLIER = 0.25; // Estimated place return (odds / 4)
 
 async function getPlaceData(): Promise<RaceData[]> {
   const client = new Client({
@@ -40,7 +42,7 @@ async function getPlaceData(): Promise<RaceData[]> {
     await client.connect();
 
     // Get last 30 days of data
-    const thirtyDaysAgo = format(subDays(new Date(), 30), 'yyyy-MM-dd');
+    const thirtyDaysAgo = format(subDays(new Date(), LOOKBACK_DAYS), 'yyyy-MM-dd');
 
     const query = `
       SELECT 
@@ -97,10 +99,10 @@ function calculatePlaceStats(horses: RaceData[]): PlaceStats {
       estimatedReturns += STAKE_AMOUNT * oddsToUse; // Full odds
     } else if (horse.finishing_position === 2) {
       secondPlace++;
-      estimatedReturns += STAKE_AMOUNT * (oddsToUse / 4); // Estimated place return
+      estimatedReturns += STAKE_AMOUNT * (oddsToUse * PLACE_DIVIDEND_MULTIPLIER); // Estimated place return
     } else if (horse.finishing_position === 3) {
       thirdPlace++;
-      estimatedReturns += STAKE_AMOUNT * (oddsToUse / 4); // Estimated place return
+      estimatedReturns += STAKE_AMOUNT * (oddsToUse * PLACE_DIVIDEND_MULTIPLIER); // Estimated place return
     }
   });
 
@@ -132,7 +134,7 @@ export default async function PlacePerformancePage() {
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Place Performance</h1>
         <p className="text-sm sm:text-base text-gray-600">
-          Track performance of value plays that finish 1st-3rd (Last 30 days)
+          Track performance of value plays that finish 1st-3rd (Last {LOOKBACK_DAYS} days)
         </p>
       </div>
 
