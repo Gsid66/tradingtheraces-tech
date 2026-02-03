@@ -9,7 +9,7 @@ export interface RaceHorse {
 }
 
 export function calculateValueScore(rating: number, price: number): number {
-  if (price <= 0 || !rating) {
+  if (price <= 0 || rating <= 0) {
     return 0;
   }
   return (rating / price) * 10;

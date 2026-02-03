@@ -2,8 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
 // Rate limiting map (in production, use Redis or similar)
+// Note: This is a simple in-memory implementation suitable for single-instance deployments.
+// For serverless/multi-instance deployments, use Redis or a database-backed solution.
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const MAX_REQUESTS_PER_MINUTE = 10;
+
+// Cleanup old entries periodically to prevent memory leaks
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of rateLimitMap.entries()) {
+    if (now > value.resetTime) {
+      rateLimitMap.delete(key);
+    }
+  }
+}, 60000); // Clean up every minute
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now();

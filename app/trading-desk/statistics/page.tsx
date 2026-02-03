@@ -68,6 +68,9 @@ export default async function StatisticsPage() {
     valueScore: calculateValueScore(Number(d.rating), Number(d.price))
   }));
 
+  // Constants for performance
+  const MAX_SCATTER_POINTS = 200; // Limit scatter plot points for performance
+
   // 1. Value Distribution Data
   const valueRanges = [
     { range: '0-10', min: 0, max: 10 },
@@ -152,7 +155,7 @@ export default async function StatisticsPage() {
   // 4. Rating vs Price Scatter Data
   const scatterData = dataWithValueScores
     .filter(d => d.rating > 0 && d.price > 0)
-    .slice(0, 200) // Limit to 200 points for performance
+    .slice(0, MAX_SCATTER_POINTS) // Limit points for performance
     .map(d => ({
       rating: Number(d.rating),
       price: Number(d.price),

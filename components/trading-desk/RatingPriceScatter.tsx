@@ -24,15 +24,15 @@ export default function RatingPriceScatter({ data }: RatingPriceScatterProps) {
       <h3 className="text-lg font-bold text-gray-800 mb-4">Rating vs Price Analysis</h3>
       <div className="mb-2 flex gap-4 text-xs">
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+          <div className="w-3 h-3 rounded-full bg-green-500" aria-label="Great value indicator"></div>
           <span>Great Value (&gt;25)</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+          <div className="w-3 h-3 rounded-full bg-yellow-500" aria-label="Fair value indicator"></div>
           <span>Fair Value (15-25)</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+          <div className="w-3 h-3 rounded-full bg-gray-400" aria-label="Avoid indicator"></div>
           <span>Avoid (&lt;15)</span>
         </div>
       </div>
