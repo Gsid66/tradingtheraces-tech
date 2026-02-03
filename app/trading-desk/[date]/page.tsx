@@ -1,5 +1,9 @@
 import { Client } from 'pg';
 import { format, parseISO, isValid } from 'date-fns';
+import { calculateValueScore, getValueBackgroundColor } from '@/lib/trading-desk/valueCalculator';
+import { calculatePL } from '@/lib/trading-desk/plCalculator';
+import StatsCard from './StatsCard';
+import AICommentary from './AICommentary';
 
 export const dynamic = 'force-dynamic';
 
@@ -84,22 +88,32 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
 
   const data = await getDailyData(date);
 
+  // Calculate value scores for all horses
+  const dataWithValueScores = data.map(d => ({
+    ...d,
+    valueScore: calculateValueScore(Number(d.rating), Number(d.price))
+  }));
+
   // Calculate statistics
   const totalRaces = new Set(data.map(d => `${d.track_name}-${d.race_number}`)).size;
   const ratedHorses = data.length;
-  const valueOpportunities = data.filter(d => 
-    d.actual_sp && d.price && Number(d.actual_sp) > Number(d.price) * 1.2
-  ).length;
+  
+  // Update value opportunities to use new value score
+  const valueOpportunities = dataWithValueScores.filter(d => d.valueScore > 25).length;
   const winners = data.filter(d => d.finishing_position === 1);
 
-  // Get top value plays (horses with best odds differential)
-  const valuePlays = data
-    .filter(d => d.actual_sp && d.price && Number(d.price) > 0)
-    .map(d => ({
-      ...d,
-      oddsValue: ((Number(d.actual_sp!) - Number(d.price)) / Number(d.price)) * 100
-    }))
-    .sort((a, b) => b.oddsValue - a.oddsValue)
+  // Calculate P&L stats
+  const plData = calculatePL(data.map(d => ({
+    rating: Number(d.rating),
+    price: Number(d.price),
+    actual_sp: d.actual_sp,
+    finishing_position: d.finishing_position
+  })));
+
+  // Get top value plays (horses with best value score)
+  const valuePlays = dataWithValueScores
+    .filter(d => d.valueScore > 0)
+    .sort((a, b) => b.valueScore - a.valueScore)
     .slice(0, 10);
 
   // Format date for display
@@ -111,6 +125,9 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
         <h1 className="text-3xl font-bold text-gray-800 mb-2">{formattedDate}</h1>
         <p className="text-gray-600">Race day analysis and ratings</p>
       </div>
+
+      {/* P&L Statistics Dashboard */}
+      <StatsCard plData={plData} />
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -145,36 +162,54 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horse</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value Score</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actual SP</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AI</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {valuePlays.map((play) => (
-                  <tr key={play.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{play.track_name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">R{play.race_number}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{play.horse_name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{play.rating ? Number(play.rating).toFixed(1) : '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{play.price ? `$${Number(play.price).toFixed(2)}` : '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{play.actual_sp ? `$${Number(play.actual_sp).toFixed(2)}` : '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                        +{play.oddsValue.toFixed(0)}%
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {play.finishing_position ? (
-                        <span className={`font-medium ${play.finishing_position === 1 ? 'text-green-600' : 'text-gray-600'}`}>
-                          {play.finishing_position === 1 ? '🏆 1st' : `${play.finishing_position}${getOrdinalSuffix(play.finishing_position)}`}
+                {valuePlays.map((play) => {
+                  const bgColor = getValueBackgroundColor(play.valueScore);
+                  return (
+                    <tr key={play.id} className={`hover:bg-gray-100 ${bgColor}`}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{play.track_name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">R{play.race_number}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{play.horse_name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{play.rating ? Number(play.rating).toFixed(1) : '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{play.price ? `$${Number(play.price).toFixed(2)}` : '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          play.valueScore > 25 ? 'bg-green-100 text-green-800' :
+                          play.valueScore >= 15 ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {play.valueScore.toFixed(1)}
                         </span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{play.actual_sp ? `$${Number(play.actual_sp).toFixed(2)}` : '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {play.finishing_position ? (
+                          <span className={`font-medium ${play.finishing_position === 1 ? 'text-green-600' : 'text-gray-600'}`}>
+                            {play.finishing_position === 1 ? '🏆 1st' : `${play.finishing_position}${getOrdinalSuffix(play.finishing_position)}`}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <AICommentary
+                          raceId={play.id}
+                          horseName={play.horse_name}
+                          rating={Number(play.rating)}
+                          price={Number(play.price)}
+                          jockey={play.jockey}
+                          trainer={play.trainer}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -184,7 +219,7 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
       {/* All Races */}
       <div>
         <h2 className="text-2xl font-bold text-gray-800 mb-4">All Races</h2>
-        {data.length === 0 ? (
+        {dataWithValueScores.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
             No race data available for this date
           </div>
@@ -200,34 +235,58 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trainer</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value Score</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actual SP</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AI</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {data.map((race) => (
-                  <tr key={race.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{race.track_name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">R{race.race_number}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{race.horse_name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{race.jockey}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{race.trainer}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{race.rating ? Number(race.rating).toFixed(1) : '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{race.price ? `$${Number(race.price).toFixed(2)}` : '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {race.actual_sp ? `$${Number(race.actual_sp).toFixed(2)}` : '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {race.finishing_position ? (
-                        <span className={`font-medium ${race.finishing_position === 1 ? 'text-green-600' : 'text-gray-600'}`}>
-                          {race.finishing_position === 1 ? '🏆 1st' : `${race.finishing_position}${getOrdinalSuffix(race.finishing_position)}`}
+                {dataWithValueScores.map((race) => {
+                  const bgColor = getValueBackgroundColor(race.valueScore);
+                  return (
+                    <tr key={race.id} className={`hover:bg-gray-100 ${bgColor}`}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{race.track_name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">R{race.race_number}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{race.horse_name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{race.jockey}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{race.trainer}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{race.rating ? Number(race.rating).toFixed(1) : '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{race.price ? `$${Number(race.price).toFixed(2)}` : '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          race.valueScore > 25 ? 'bg-green-100 text-green-800' :
+                          race.valueScore >= 15 ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {race.valueScore.toFixed(1)}
                         </span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {race.actual_sp ? `$${Number(race.actual_sp).toFixed(2)}` : '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {race.finishing_position ? (
+                          <span className={`font-medium ${race.finishing_position === 1 ? 'text-green-600' : 'text-gray-600'}`}>
+                            {race.finishing_position === 1 ? '🏆 1st' : `${race.finishing_position}${getOrdinalSuffix(race.finishing_position)}`}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <AICommentary
+                          raceId={race.id}
+                          horseName={race.horse_name}
+                          rating={Number(race.rating)}
+                          price={Number(race.price)}
+                          jockey={race.jockey}
+                          trainer={race.trainer}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
