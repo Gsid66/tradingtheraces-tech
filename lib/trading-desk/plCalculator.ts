@@ -50,11 +50,13 @@ export function calculateReturn(
 
 /**
  * Calculate P&L statistics for a set of horses
- * Only includes horses with value score > 25
+ * Only includes horses with value score > 25 AND have completed their race
  */
 export function calculatePL(horses: HorseResult[]): PLData {
   const valuePlays = horses.filter(horse => {
     if (horse.price <= 0 || !horse.rating) return false;
+    // Only include horses that have actually raced (have a finishing position)
+    if (!horse.finishing_position) return false;
     const valueScore = (horse.rating / horse.price) * 10;
     return valueScore > 25;
   });
