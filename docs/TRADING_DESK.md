@@ -68,6 +68,20 @@ After setup, you can access:
    - Complete race listing with ratings, odds, and results
 4. **Session**: User sessions last 7 days
 
+## P&L Tracking
+
+### Win Performance (Main Dashboard)
+- Tracks 1st place finishes only
+- $10 stake per value play (value score > 25)
+- Returns calculated at full odds (actual SP if available, otherwise morning price)
+- Clean ROI calculation for win-only betting
+
+### Place Performance (Separate Page)
+- Tracks all placings (1st, 2nd, 3rd)
+- Shows breakdown by position
+- **Note:** Place dividends currently estimated using odds ÷ 4 for 2nd/3rd
+- Will be updated to use actual place dividends when data source is available
+
 ### Admin Panel
 
 1. **Admin Login**: Admins access `/trading-desk-admin` with username and password
