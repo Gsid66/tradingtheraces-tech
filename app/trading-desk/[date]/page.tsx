@@ -120,10 +120,10 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
   const formattedDate = format(parsedDate, 'EEEE, MMMM d, yyyy');
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">{formattedDate}</h1>
-        <p className="text-gray-600">Race day analysis and ratings</p>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">{formattedDate}</h1>
+        <p className="text-sm sm:text-base text-gray-600">Race day analysis and ratings</p>
       </div>
 
       {/* P&L Statistics Dashboard */}
@@ -153,7 +153,7 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
       {valuePlays.length > 0 && (
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Top Value Plays</h2>
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="bg-white rounded-lg shadow overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -224,8 +224,11 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
             No race data available for this date
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Track</th>
@@ -289,7 +292,88 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
                 })}
               </tbody>
             </table>
-          </div>
+              </div>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+              {dataWithValueScores.map((race) => {
+                const bgColor = getValueBackgroundColor(race.valueScore);
+                return (
+                  <div
+                    key={race.id}
+                    className={`bg-white rounded-lg shadow p-4 ${bgColor}`}
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <div className="font-bold text-lg text-gray-900">
+                          {race.horse_name}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {race.track_name} - R{race.race_number}
+                        </div>
+                      </div>
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        race.valueScore > 25 ? 'bg-green-100 text-green-800' :
+                        race.valueScore >= 15 ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {race.valueScore.toFixed(1)}
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                      <div>
+                        <span className="text-gray-600">Rating:</span>
+                        <span className="ml-1 font-medium">{race.rating ? Number(race.rating).toFixed(1) : '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Price:</span>
+                        <span className="ml-1 font-medium">{race.price ? `$${Number(race.price).toFixed(2)}` : '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Actual SP:</span>
+                        <span className="ml-1 font-medium">{race.actual_sp ? `$${Number(race.actual_sp).toFixed(2)}` : '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Result:</span>
+                        <span className="ml-1 font-medium">
+                          {race.finishing_position ? (
+                            <span className={race.finishing_position === 1 ? 'text-green-600' : 'text-gray-600'}>
+                              {race.finishing_position === 1 ? '🏆 1st' : `${race.finishing_position}${getOrdinalSuffix(race.finishing_position)}`}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    <details className="text-sm">
+                      <summary className="cursor-pointer text-purple-600 font-medium">
+                        View Details
+                      </summary>
+                      <div className="mt-2 space-y-1 text-gray-600">
+                        <div><span className="font-medium">Jockey:</span> {race.jockey}</div>
+                        <div><span className="font-medium">Trainer:</span> {race.trainer}</div>
+                      </div>
+                    </details>
+
+                    <div className="mt-3">
+                      <AICommentary
+                        raceId={race.id}
+                        horseName={race.horse_name}
+                        rating={Number(race.rating)}
+                        price={Number(race.price)}
+                        jockey={race.jockey}
+                        trainer={race.trainer}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>
