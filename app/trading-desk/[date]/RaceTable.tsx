@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import AICommentary from './AICommentary';
 import { getValueBackgroundColor } from '@/lib/trading-desk/valueCalculator';
+import { getOrdinalSuffix } from '@/lib/utils/formatting';
 
 interface RaceData {
   id: number;
@@ -38,15 +39,6 @@ export default function RaceTable({ data }: Props) {
   const toggleColumn = (column: keyof typeof visibleColumns) => {
     setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }));
   };
-
-  function getOrdinalSuffix(num: number): string {
-    const j = num % 10;
-    const k = num % 100;
-    if (j === 1 && k !== 11) return 'st';
-    if (j === 2 && k !== 12) return 'nd';
-    if (j === 3 && k !== 13) return 'rd';
-    return 'th';
-  }
 
   return (
     <>
@@ -106,7 +98,7 @@ export default function RaceTable({ data }: Props) {
 
       {/* Desktop Table */}
       <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+        <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
               <tr>
