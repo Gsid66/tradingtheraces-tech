@@ -3,10 +3,19 @@
  * 
  * This service ensures all track names in the database match the canonical
  * track names used by PuntingForm API.
+ * 
+ * Enhanced with surface-aware mappings to handle tracks with different names
+ * based on racing surface (e.g., Newcastle turf vs Beaumont synthetic).
  */
 
 import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
 import { format, subDays, addDays } from 'date-fns';
+import {
+  TTR_TO_PUNTINGFORM,
+  PUNTINGFORM_TO_TTR,
+  SURFACE_SPECIFIC_TRACKS,
+  normalizeTrackKey
+} from './track-name-mappings';
 
 // Debug mode for verbose logging (set via environment variable)
 const DEBUG_MODE = process.env.TRACK_NAME_DEBUG === 'true';
@@ -291,4 +300,193 @@ export function clearTrackNameCache(): void {
   if (DEBUG_MODE) {
     console.log('🗑️ Track name cache cleared');
   }
+}
+
+/**
+ * Convert TTR track name to PuntingForm track name(s)
+ * 
+ * Returns all possible PuntingForm names for a TTR track.
+ * If surface is provided, prioritizes that surface variant.
+ * 
+ * @param ttrTrackName - The TTR track name
+ * @param surface - Optional surface type ('turf' or 'synthetic')
+ * @returns Array of possible PuntingForm track names
+ * 
+ * @example
+ * convertTTRToPuntingForm('Newcastle') // ['Newcastle', 'Beaumont']
+ * convertTTRToPuntingForm('Newcastle', 'synthetic') // ['Beaumont', 'Newcastle']
+ * convertTTRToPuntingForm('Flemington') // ['Flemington']
+ */
+export function convertTTRToPuntingForm(
+  ttrTrackName: string,
+  surface?: string
+): string[] {
+  if (!ttrTrackName) return [];
+  
+  const key = normalizeTrackKey(ttrTrackName);
+  const possibleNames = TTR_TO_PUNTINGFORM[key] || [ttrTrackName];
+  
+  // If surface is specified and this is a surface-specific track, prioritize
+  if (surface && SURFACE_SPECIFIC_TRACKS[key]) {
+    const trackInfo = SURFACE_SPECIFIC_TRACKS[key];
+    const normalizedSurface = surface.toLowerCase();
+    
+    if (normalizedSurface.includes('synthetic') || normalizedSurface.includes('poly')) {
+      // Prioritize synthetic name
+      return [trackInfo.syntheticName, trackInfo.turfName];
+    } else if (normalizedSurface.includes('turf') || normalizedSurface.includes('grass')) {
+      // Prioritize turf name
+      return [trackInfo.turfName, trackInfo.syntheticName];
+    }
+  }
+  
+  if (DEBUG_MODE) {
+    console.log(`🔄 TTR to PuntingForm: "${ttrTrackName}" -> [${possibleNames.join(', ')}]`);
+  }
+  
+  return possibleNames;
+}
+
+/**
+ * Convert PuntingForm track name to TTR track name(s)
+ * 
+ * Returns all possible TTR names for a PuntingForm track.
+ * Handles reverse mapping from surface-specific names.
+ * 
+ * @param puntingFormTrackName - The PuntingForm track name
+ * @param surface - Optional surface type for context
+ * @returns Array of possible TTR track names
+ * 
+ * @example
+ * convertPuntingFormToTTR('Beaumont') // ['Newcastle']
+ * convertPuntingFormToTTR('Newcastle') // ['Newcastle']
+ * convertPuntingFormToTTR('Canterbury Park') // ['Canterbury']
+ */
+export function convertPuntingFormToTTR(
+  puntingFormTrackName: string,
+  surface?: string
+): string[] {
+  if (!puntingFormTrackName) return [];
+  
+  const key = normalizeTrackKey(puntingFormTrackName);
+  const ttrName = PUNTINGFORM_TO_TTR[key];
+  
+  if (ttrName) {
+    if (DEBUG_MODE) {
+      console.log(`🔄 PuntingForm to TTR: "${puntingFormTrackName}" -> ["${ttrName}"]`);
+    }
+    return [ttrName];
+  }
+  
+  // If no explicit mapping, return the original name
+  if (DEBUG_MODE) {
+    console.log(`⚠️ No TTR mapping for: "${puntingFormTrackName}" (using original)`);
+  }
+  return [puntingFormTrackName];
+}
+
+/**
+ * Get all possible track name matches for joining data
+ * 
+ * Returns both TTR and PuntingForm variations for comprehensive matching.
+ * Useful for database queries that need to match across systems.
+ * 
+ * @param trackName - Track name from either system
+ * @param surface - Optional surface type
+ * @returns Object with both TTR and PuntingForm variations
+ * 
+ * @example
+ * getAllPossibleMatches('Newcastle')
+ * // Returns: { ttr: ['Newcastle'], puntingForm: ['Newcastle', 'Beaumont'] }
+ */
+export function getAllPossibleMatches(
+  trackName: string,
+  surface?: string
+): { ttr: string[]; puntingForm: string[] } {
+  if (!trackName) {
+    return { ttr: [], puntingForm: [] };
+  }
+  
+  const key = normalizeTrackKey(trackName);
+  
+  // Try as TTR name first
+  if (TTR_TO_PUNTINGFORM[key]) {
+    return {
+      ttr: [trackName],
+      puntingForm: convertTTRToPuntingForm(trackName, surface)
+    };
+  }
+  
+  // Try as PuntingForm name
+  if (PUNTINGFORM_TO_TTR[key]) {
+    const ttrNames = convertPuntingFormToTTR(trackName, surface);
+    const puntingFormNames = ttrNames.flatMap(ttr => 
+      convertTTRToPuntingForm(ttr, surface)
+    );
+    
+    return {
+      ttr: ttrNames,
+      puntingForm: [...new Set([trackName, ...puntingFormNames])]
+    };
+  }
+  
+  // Unknown track, return original for both
+  return {
+    ttr: [trackName],
+    puntingForm: [trackName]
+  };
+}
+
+/**
+ * Smart track name standardization with surface awareness
+ * 
+ * Standardizes track names considering the racing surface.
+ * Can convert between TTR and PuntingForm formats.
+ * 
+ * Note: This function is async because it may fall back to the API-based
+ * standardizeTrackName() function for non-surface-specific tracks.
+ * 
+ * @param trackName - The track name to standardize
+ * @param surface - Optional surface type ('turf' or 'synthetic')
+ * @param targetFormat - Target format ('TTR' or 'PuntingForm')
+ * @returns Standardized track name
+ * 
+ * @example
+ * standardizeTrackNameWithSurface('Newcastle', 'synthetic', 'PuntingForm')
+ * // Returns: 'Beaumont'
+ * 
+ * standardizeTrackNameWithSurface('Beaumont', undefined, 'TTR')
+ * // Returns: 'Newcastle'
+ */
+export async function standardizeTrackNameWithSurface(
+  trackName: string,
+  surface?: string,
+  targetFormat: 'TTR' | 'PuntingForm' = 'PuntingForm'
+): Promise<string> {
+  if (!trackName) return trackName;
+  
+  const key = normalizeTrackKey(trackName);
+  
+  // Check if this is a surface-specific track
+  if (SURFACE_SPECIFIC_TRACKS[key]) {
+    const trackInfo = SURFACE_SPECIFIC_TRACKS[key];
+    const normalizedSurface = surface?.toLowerCase() || '';
+    
+    if (targetFormat === 'PuntingForm') {
+      // For PuntingForm format, use surface to determine name
+      if (normalizedSurface.includes('synthetic') || normalizedSurface.includes('poly')) {
+        return trackInfo.syntheticName;
+      } else if (normalizedSurface.includes('turf') || normalizedSurface.includes('grass')) {
+        return trackInfo.turfName;
+      }
+      // If surface unknown, use API standardization as fallback
+    } else if (targetFormat === 'TTR') {
+      // For TTR format, always use turf name (canonical TTR name)
+      return trackInfo.turfName;
+    }
+  }
+  
+  // Fall back to standard standardization for non-surface-specific tracks
+  // or when surface information is unavailable
+  return await standardizeTrackName(trackName);
 }
