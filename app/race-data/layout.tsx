@@ -1,8 +1,8 @@
 import { cookies } from 'next/headers';
-import LoginForm from './LoginForm';
-import SidebarClient from './SidebarClient';
+import LoginForm from '../trading-desk/LoginForm';
+import SidebarClient from '../trading-desk/SidebarClient';
 
-export default async function TradingDeskLayout({
+export default async function RaceDataLayout({
   children,
 }: {
   children: React.ReactNode;

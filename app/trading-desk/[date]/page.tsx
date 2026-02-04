@@ -4,7 +4,6 @@ import { calculateValueScore, getValueBackgroundColor } from '@/lib/trading-desk
 import { calculatePL } from '@/lib/trading-desk/plCalculator';
 import { getOrdinalSuffix } from '@/lib/utils/formatting';
 import StatsCard from './StatsCard';
-import RaceTable from './RaceTable';
 
 export const dynamic = 'force-dynamic';
 
@@ -81,7 +80,7 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
       <div className="p-8">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
           <h2 className="text-xl font-bold text-red-800 mb-2">Invalid Date</h2>
-          <p className="text-red-600">The date "{date}" is not valid. Please select a valid date.</p>
+          <p className="text-red-600">The date &quot;{date}&quot; is not valid. Please select a valid date.</p>
         </div>
       </div>
     );
@@ -206,17 +205,6 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
         </div>
       )}
 
-      {/* All Races */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">All Races</h2>
-        {dataWithValueScores.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-            No race data available for this date
-          </div>
-        ) : (
-          <RaceTable data={dataWithValueScores} />
-        )}
-      </div>
     </div>
   );
 }
