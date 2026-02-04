@@ -69,7 +69,7 @@ async function getMeetingData(date: string): Promise<RaceData[]> {
         rcr.trainer
       FROM race_cards_ratings rcr
       LEFT JOIN pf_meetings m ON rcr.race_date = m.meeting_date
-        AND LOWER(TRIM(rcr.track)) = LOWER(TRIM(m.track_name))
+        AND rcr.track = m.track_name
       WHERE rcr.race_date = $1
         AND rcr.rating IS NOT NULL
         AND rcr.price IS NOT NULL
