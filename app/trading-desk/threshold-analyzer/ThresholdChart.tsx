@@ -56,7 +56,7 @@ export default function ThresholdChart({ results }: ThresholdChartProps) {
               label={{ value: 'ROI (%)', angle: -90, position: 'insideLeft' }}
             />
             <Tooltip 
-              formatter={(value: number) => `${value.toFixed(2)}%`}
+              formatter={(value: number | undefined) => value !== undefined ? `${value.toFixed(2)}%` : 'N/A'}
               labelFormatter={(label) => `Threshold: ${label}`}
             />
             <Legend />
@@ -86,7 +86,7 @@ export default function ThresholdChart({ results }: ThresholdChartProps) {
               label={{ value: 'Win Rate (%)', angle: -90, position: 'insideLeft' }}
             />
             <Tooltip 
-              formatter={(value: number) => `${value.toFixed(2)}%`}
+              formatter={(value: number | undefined) => value !== undefined ? `${value.toFixed(2)}%` : 'N/A'}
               labelFormatter={(label) => `Threshold: ${label}`}
             />
             <Legend />
@@ -116,7 +116,7 @@ export default function ThresholdChart({ results }: ThresholdChartProps) {
               label={{ value: 'Total Bets', angle: -90, position: 'insideLeft' }}
             />
             <Tooltip 
-              formatter={(value: number) => value.toLocaleString()}
+              formatter={(value: number | undefined) => value !== undefined ? value.toLocaleString() : 'N/A'}
               labelFormatter={(label) => `Threshold: ${label}`}
             />
             <Legend />
