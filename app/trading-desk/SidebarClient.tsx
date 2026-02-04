@@ -65,9 +65,16 @@ export default function SidebarClient() {
             Navigation
           </h2>
           <Link
-            href="/trading-desk/statistics"
+            href="/trading-desk/ai-race-analysis"
             onClick={() => setIsSidebarOpen(false)}
             className="block px-4 py-2 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-purple-400 transition-colors"
+          >
+            🕵️ AI Race Analysis
+          </Link>
+          <Link
+            href="/trading-desk/statistics"
+            onClick={() => setIsSidebarOpen(false)}
+            className="block px-4 py-2 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-purple-400 transition-colors mt-1"
           >
             📊 Statistics & Charts
           </Link>

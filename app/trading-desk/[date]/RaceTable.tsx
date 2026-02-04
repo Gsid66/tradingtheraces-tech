@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import AICommentary from './AICommentary';
 import { getValueBackgroundColor } from '@/lib/trading-desk/valueCalculator';
 import { getOrdinalSuffix } from '@/lib/utils/formatting';
 
@@ -31,7 +30,6 @@ export default function RaceTable({ data }: Props) {
     trainer: true,
     valueScore: true,
     actualSP: true,
-    ai: true,
   });
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -74,7 +72,6 @@ export default function RaceTable({ data }: Props) {
                     { key: 'trainer' as const, label: 'Trainer' },
                     { key: 'valueScore' as const, label: 'Value Score' },
                     { key: 'actualSP' as const, label: 'Actual SP' },
-                    { key: 'ai' as const, label: 'AI Commentary' },
                   ].map(({ key, label }) => (
                     <label
                       key={key}
@@ -120,9 +117,6 @@ export default function RaceTable({ data }: Props) {
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actual SP</th>
                 )}
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
-                {visibleColumns.ai && (
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AI</th>
-                )}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -166,18 +160,6 @@ export default function RaceTable({ data }: Props) {
                         <span className="text-gray-400">-</span>
                       )}
                     </td>
-                    {visibleColumns.ai && (
-                      <td className="px-4 py-2 whitespace-nowrap text-sm">
-                        <AICommentary
-                          raceId={race.id}
-                          horseName={race.horse_name}
-                          rating={Number(race.rating)}
-                          price={Number(race.price)}
-                          jockey={race.jockey}
-                          trainer={race.trainer}
-                        />
-                      </td>
-                    )}
                   </tr>
                 );
               })}
@@ -249,17 +231,6 @@ export default function RaceTable({ data }: Props) {
                   <div><span className="font-medium">Trainer:</span> {race.trainer}</div>
                 </div>
               </details>
-
-              <div className="mt-3">
-                <AICommentary
-                  raceId={race.id}
-                  horseName={race.horse_name}
-                  rating={Number(race.rating)}
-                  price={Number(race.price)}
-                  jockey={race.jockey}
-                  trainer={race.trainer}
-                />
-              </div>
             </div>
           );
         })}

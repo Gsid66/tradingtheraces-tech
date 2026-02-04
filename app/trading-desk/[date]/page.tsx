@@ -4,7 +4,6 @@ import { calculateValueScore, getValueBackgroundColor } from '@/lib/trading-desk
 import { calculatePL } from '@/lib/trading-desk/plCalculator';
 import { getOrdinalSuffix } from '@/lib/utils/formatting';
 import StatsCard from './StatsCard';
-import AICommentary from './AICommentary';
 import RaceTable from './RaceTable';
 
 export const dynamic = 'force-dynamic';
@@ -167,7 +166,6 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value Score</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actual SP</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AI</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -198,16 +196,6 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
                         ) : (
                           <span className="text-gray-400">-</span>
                         )}
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm">
-                        <AICommentary
-                          raceId={play.id}
-                          horseName={play.horse_name}
-                          rating={Number(play.rating)}
-                          price={Number(play.price)}
-                          jockey={play.jockey}
-                          trainer={play.trainer}
-                        />
                       </td>
                     </tr>
                   );
