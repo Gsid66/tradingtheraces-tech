@@ -42,7 +42,7 @@ async function syncPuntingFormData() {
       
       // Convert PuntingForm track name to TTR format for consistency
       // This ensures Beaumont (synthetic) is stored as Newcastle to match TTR data
-      const ttrTrackNames = convertPuntingFormToTTR(originalTrackName, surface);
+      const ttrTrackNames = convertPuntingFormToTTR(originalTrackName, surface ?? undefined);
       const ttrTrackName = ttrTrackNames[0]; // Use first (canonical) name
       
       console.log(`📍 Processing: ${originalTrackName} (${meeting.track.state})${originalTrackName !== ttrTrackName ? ` -> ${ttrTrackName}` : ''}`);
