@@ -194,6 +194,13 @@ The system handles these common variations:
 - Cache is rebuilt when expired or on force refresh
 - Cache includes mappings from last 3 days of meetings (yesterday, today, tomorrow)
 
+**Note:** The current implementation uses in-memory module-level caching. In serverless or multi-instance environments, each instance will maintain its own cache. For high-traffic applications with multiple instances, consider:
+- Using a distributed cache like Redis
+- Using request-scoped caching
+- Accepting eventual consistency across instances (cache refreshes independently)
+
+**Debug Mode:** Set `TRACK_NAME_DEBUG=true` environment variable to enable verbose logging of track name standardization operations.
+
 ### Safety Features
 
 - **Transactional:** Migration uses database transactions (rollback on error)

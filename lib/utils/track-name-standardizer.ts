@@ -8,6 +8,9 @@
 import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
 import { format, subDays, addDays } from 'date-fns';
 
+// Debug mode for verbose logging (set via environment variable)
+const DEBUG_MODE = process.env.TRACK_NAME_DEBUG === 'true';
+
 // Cache for track name mapping
 let trackNameCache: Map<string, string> | null = null;
 let cacheTimestamp: number | null = null;
@@ -154,12 +157,16 @@ async function getTrackNameMapping(forceRefresh: boolean = false): Promise<Map<s
   
   // Check if cache is valid
   if (!forceRefresh && trackNameCache && cacheTimestamp && (now - cacheTimestamp) < CACHE_DURATION_MS) {
-    console.log('📦 Using cached track name mapping');
+    if (DEBUG_MODE) {
+      console.log('📦 Using cached track name mapping');
+    }
     return trackNameCache;
   }
   
   // Rebuild cache
-  console.log('🔄 Rebuilding track name mapping cache');
+  if (DEBUG_MODE) {
+    console.log('🔄 Rebuilding track name mapping cache');
+  }
   trackNameCache = await buildTrackNameMapping();
   cacheTimestamp = now;
   
@@ -188,7 +195,9 @@ export async function standardizeTrackName(
   const lowerTrackName = trackName.toLowerCase();
   if (mapping.has(lowerTrackName)) {
     const result = mapping.get(lowerTrackName)!;
-    console.log(`🔄 Standardized track name: "${trackName}" -> "${result}"`);
+    if (DEBUG_MODE) {
+      console.log(`🔄 Standardized track name: "${trackName}" -> "${result}"`);
+    }
     return result;
   }
   
@@ -196,14 +205,18 @@ export async function standardizeTrackName(
   const normalized = normalizeForComparison(trackName);
   if (mapping.has(normalized)) {
     const result = mapping.get(normalized)!;
-    console.log(`🔄 Standardized track name: "${trackName}" -> "${result}" (via normalization)`);
+    if (DEBUG_MODE) {
+      console.log(`🔄 Standardized track name: "${trackName}" -> "${result}" (via normalization)`);
+    }
     return result;
   }
   
   // Try fuzzy match
   for (const [key, canonical] of mapping) {
     if (tracksMatch(trackName, key) || tracksMatch(trackName, canonical)) {
-      console.log(`🔄 Standardized track name: "${trackName}" -> "${canonical}" (via fuzzy match)`);
+      if (DEBUG_MODE) {
+        console.log(`🔄 Standardized track name: "${trackName}" -> "${canonical}" (via fuzzy match)`);
+      }
       return canonical;
     }
   }
@@ -275,5 +288,7 @@ export async function getAllCanonicalTrackNames(): Promise<string[]> {
 export function clearTrackNameCache(): void {
   trackNameCache = null;
   cacheTimestamp = null;
-  console.log('🗑️ Track name cache cleared');
+  if (DEBUG_MODE) {
+    console.log('🗑️ Track name cache cleared');
+  }
 }

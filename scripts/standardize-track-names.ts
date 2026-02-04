@@ -18,6 +18,7 @@
 
 import { Client } from 'pg';
 import * as dotenv from 'dotenv';
+import * as readline from 'readline';
 import { standardizeTrackName, validateTrackName } from '../lib/utils/track-name-standardizer';
 
 // Load environment variables
@@ -237,16 +238,16 @@ async function main() {
     
     // Ask for confirmation (skip in CI/automated environments)
     if (process.env.CI !== 'true' && process.stdin.isTTY) {
-      const readline = require('readline').createInterface({
+      const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
       });
       
       const answer = await new Promise<string>(resolve => {
-        readline.question('\n⚠️ Proceed with updates? (yes/no): ', resolve);
+        rl.question('\n⚠️ Proceed with updates? (yes/no): ', resolve);
       });
       
-      readline.close();
+      rl.close();
       
       if (answer.toLowerCase() !== 'yes') {
         console.log('\n❌ Migration cancelled by user');
