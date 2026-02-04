@@ -33,6 +33,7 @@ interface ThresholdResult {
 
 const STAKE_AMOUNT = 10;
 const THRESHOLDS = [15, 20, 25, 30, 35, 40, 45, 50];
+const CURRENT_THRESHOLD = 25;
 
 async function getHistoricalData(): Promise<RaceData[]> {
   const client = new Client({
@@ -170,7 +171,7 @@ export default async function ThresholdAnalyzerPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
           <div className="text-sm text-gray-600 mb-1">Current Threshold</div>
-          <div className="text-3xl font-bold text-gray-800">25</div>
+          <div className="text-3xl font-bold text-gray-800">{CURRENT_THRESHOLD}</div>
           <div className="text-xs text-gray-500 mt-1">
             Currently in use across the platform
           </div>
@@ -203,9 +204,9 @@ export default async function ThresholdAnalyzerPage() {
             <h3 className="text-sm font-medium text-blue-800 mb-2">Key Insights</h3>
             <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
               <li>
-                {bestByROI.threshold > 25 
+                {bestByROI.threshold > CURRENT_THRESHOLD 
                   ? `Raising threshold to ${bestByROI.threshold} could improve ROI to ${bestByROI.roi.toFixed(1)}%`
-                  : `Current threshold of 25 is already optimal or close to optimal`
+                  : `Current threshold of ${CURRENT_THRESHOLD} is already optimal or close to optimal`
                 }
               </li>
               <li>
@@ -226,7 +227,7 @@ export default async function ThresholdAnalyzerPage() {
 
       {/* Detailed Comparison Table */}
       <div className="mb-8">
-        <ThresholdComparisonTable results={results} currentThreshold={25} />
+        <ThresholdComparisonTable results={results} currentThreshold={CURRENT_THRESHOLD} />
       </div>
 
       {/* Methodology */}
