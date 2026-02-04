@@ -7,17 +7,19 @@ import { calculateValueScore } from '@/lib/trading-desk/valueCalculator';
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const MAX_REQUESTS_PER_MINUTE = 5; // Lower limit for comprehensive analysis
 
-// Cleanup old entries periodically
-setInterval(() => {
+function cleanupRateLimitMap() {
   const now = Date.now();
   for (const [key, value] of rateLimitMap.entries()) {
     if (now > value.resetTime) {
       rateLimitMap.delete(key);
     }
   }
-}, 60000);
+}
 
 function checkRateLimit(ip: string): boolean {
+  // Cleanup expired entries during rate limit check
+  cleanupRateLimitMap();
+  
   const now = Date.now();
   const userLimit = rateLimitMap.get(ip);
 
@@ -219,7 +221,7 @@ Keep your tone witty and British. Be specific with horse names, tracks, and numb
           content: prompt,
         },
       ],
-      max_tokens: 1000,
+      max_tokens: 1500,
       temperature: 0.7,
     });
 
