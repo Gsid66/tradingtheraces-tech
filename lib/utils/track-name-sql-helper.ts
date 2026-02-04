@@ -39,10 +39,10 @@ export function buildTrackMatchCondition(
  * @param surface - Optional surface type
  * @returns Array of track name variations
  */
-export async function getTrackVariationsForSQL(
+export function getTrackVariationsForSQL(
   trackName: string,
   surface?: string
-): Promise<string[]> {
+): string[] {
   const matches = getAllPossibleMatches(trackName, surface);
   
   // Combine both TTR and PuntingForm variations

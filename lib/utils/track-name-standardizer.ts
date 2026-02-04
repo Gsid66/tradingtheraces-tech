@@ -443,6 +443,9 @@ export function getAllPossibleMatches(
  * Standardizes track names considering the racing surface.
  * Can convert between TTR and PuntingForm formats.
  * 
+ * Note: This function is async because it may fall back to the API-based
+ * standardizeTrackName() function for non-surface-specific tracks.
+ * 
  * @param trackName - The track name to standardize
  * @param surface - Optional surface type ('turf' or 'synthetic')
  * @param targetFormat - Target format ('TTR' or 'PuntingForm')

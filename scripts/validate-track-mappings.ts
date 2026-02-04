@@ -205,8 +205,11 @@ async function main() {
   const daysIndex = args.indexOf('--days');
   const days = daysIndex !== -1 ? parseInt(args[daysIndex + 1]) : 30;
 
-  if (isNaN(days) || days < 1) {
-    console.error('❌ Invalid --days value. Must be a positive number.');
+  if (isNaN(days) || days < 1 || daysIndex !== -1 && !args[daysIndex + 1]) {
+    console.error('❌ Invalid --days value.');
+    console.error('   Usage: npx tsx scripts/validate-track-mappings.ts --days <number>');
+    console.error('   Example: npx tsx scripts/validate-track-mappings.ts --days 90');
+    console.error('   The number must be a positive integer.');
     process.exit(1);
   }
 
