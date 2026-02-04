@@ -6,7 +6,7 @@ import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
 import { getPostgresAPIClient } from '@/lib/integrations/postgres-api';
 import { getRaceCardRatingsClient } from '@/lib/integrations/race-card-ratings';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
-import { standardizeTrackName } from '@/lib/utils/track-name-standardizer';
+import { convertPuntingFormToTTR } from '@/lib/utils/track-name-standardizer';
 import RaceTabs from './RaceTabs';
 import RaceDetails from './RaceDetails';
 import RunnerList from './RunnerList';
@@ -130,27 +130,47 @@ export default async function RacePage({ params }: Props) {
     
     if (ttrClient) {
       const dateStr = format(new Date(meeting.meetingDate), 'yyyy-MM-dd');
+      const puntingFormTrackName = meeting.track.name;
+      const surface = meeting.track.surface;
       
-      // Standardize track name to match database
-      const standardizedTrackName = await standardizeTrackName(meeting.track.name);
+      // Get all possible TTR track name variations
+      const possibleTTRNames = convertPuntingFormToTTR(puntingFormTrackName, surface);
       
-      console.log('🔍 Fetching TTR data:', {
-        originalTrackName: meeting.track.name,
-        standardizedTrackName,
+      console.log('🔍 Fetching TTR data with multiple track variations:', {
+        puntingFormTrackName,
+        surface,
+        possibleTTRNames,
         date: dateStr,
         raceNumber: raceNum
       });
       
-      const ttrResponse = await ttrClient.getRatingsForRace(
-        dateStr,
-        standardizedTrackName,
-        raceNum
-      );
-      ttrData = ttrResponse.data;
+      // Try each variation until we find ratings
+      for (const ttrTrackName of possibleTTRNames) {
+        try {
+          console.log(`  🔍 Trying TTR track name: "${ttrTrackName}"`);
+          
+          const ttrResponse = await ttrClient.getRatingsForRace(
+            dateStr,
+            ttrTrackName,
+            raceNum
+          );
+          
+          if (ttrResponse.data && ttrResponse.data.length > 0) {
+            ttrData = ttrResponse.data;
+            console.log(`  ✅ Found TTR data with track name: "${ttrTrackName}" (${ttrData.length} ratings)`);
+            break; // Found it!
+          } else {
+            console.log(`  ⚠️ No data found for track name: "${ttrTrackName}"`);
+          }
+        } catch (error: any) {
+          console.log(`  ❌ Error fetching with track name "${ttrTrackName}":`, error.message);
+          // Try next variation
+        }
+      }
       
-      console.log('✅ TTR data fetched:', {
-        recordCount: ttrData?.length || 0
-      });
+      if (!ttrData) {
+        console.log('⚠️ No TTR data found after trying all track name variations');
+      }
     }
   } catch (error: any) {
     console.warn('⚠️ TTR data unavailable:', error.message);
