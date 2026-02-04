@@ -134,7 +134,7 @@ export default async function RacePage({ params }: Props) {
       const surface = meeting.track.surface;
       
       // Get all possible TTR track name variations
-      const possibleTTRNames = convertPuntingFormToTTR(puntingFormTrackName, surface);
+      const possibleTTRNames = convertPuntingFormToTTR(puntingFormTrackName, surface ?? undefined);
       
       console.log('🔍 Fetching TTR data with multiple track variations:', {
         puntingFormTrackName,
