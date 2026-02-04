@@ -6,6 +6,7 @@ import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
 import { getPostgresAPIClient } from '@/lib/integrations/postgres-api';
 import { getRaceCardRatingsClient } from '@/lib/integrations/race-card-ratings';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
+import { standardizeTrackName } from '@/lib/utils/track-name-standardizer';
 import RaceTabs from './RaceTabs';
 import RaceDetails from './RaceDetails';
 import RunnerList from './RunnerList';
@@ -129,12 +130,27 @@ export default async function RacePage({ params }: Props) {
     
     if (ttrClient) {
       const dateStr = format(new Date(meeting.meetingDate), 'yyyy-MM-dd');
+      
+      // Standardize track name to match database
+      const standardizedTrackName = await standardizeTrackName(meeting.track.name);
+      
+      console.log('🔍 Fetching TTR data:', {
+        originalTrackName: meeting.track.name,
+        standardizedTrackName,
+        date: dateStr,
+        raceNumber: raceNum
+      });
+      
       const ttrResponse = await ttrClient.getRatingsForRace(
         dateStr,
-        meeting.track.name,
+        standardizedTrackName,
         raceNum
       );
       ttrData = ttrResponse.data;
+      
+      console.log('✅ TTR data fetched:', {
+        recordCount: ttrData?.length || 0
+      });
     }
   } catch (error: any) {
     console.warn('⚠️ TTR data unavailable:', error.message);

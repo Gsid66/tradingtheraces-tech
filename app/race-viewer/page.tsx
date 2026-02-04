@@ -81,7 +81,7 @@ async function searchRaceData(filters: FilterParams): Promise<{ data: CombinedRa
       SELECT COUNT(*) as total
       FROM race_cards_ratings rcr
       LEFT JOIN pf_meetings m ON rcr.race_date = m.meeting_date
-        AND LOWER(TRIM(rcr.track)) = LOWER(TRIM(m.track_name))
+        AND rcr.track = m.track_name
       LEFT JOIN pf_races ra ON ra.meeting_id = m.meeting_id 
         AND rcr.race_number = ra.race_number
       LEFT JOIN pf_results r ON r.race_id = ra.race_id
@@ -114,7 +114,7 @@ async function searchRaceData(filters: FilterParams): Promise<{ data: CombinedRa
         m.country
       FROM race_cards_ratings rcr
       LEFT JOIN pf_meetings m ON rcr.race_date = m.meeting_date
-        AND LOWER(TRIM(rcr.track)) = LOWER(TRIM(m.track_name))
+        AND rcr.track = m.track_name
       LEFT JOIN pf_races ra ON ra.meeting_id = m.meeting_id 
         AND rcr.race_number = ra.race_number
       LEFT JOIN pf_results r ON r.race_id = ra.race_id
