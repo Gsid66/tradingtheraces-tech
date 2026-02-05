@@ -84,7 +84,7 @@ export default function AIRaceAnalysisPage() {
         />
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
-            🕵️ Sherlock Hooves&apos; AI Race Analysis
+            Sherlock Hooves&apos; AI Race Analysis
           </h1>
           <p className="text-sm sm:text-base text-gray-600">
             Professional race-by-race insights and betting recommendations
@@ -169,7 +169,7 @@ export default function AIRaceAnalysisPage() {
               alt="Sherlock Hooves"
               width={80}
               height={80}
-              className="rounded-full border-3 border-purple-400 shadow-lg"
+              className="rounded-full border-4 border-purple-400 shadow-lg"
             />
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-purple-900 mb-2">

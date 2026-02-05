@@ -106,14 +106,14 @@ export default function AICommentary({
                   height={32}
                   className="rounded-full border border-purple-300"
                 />
-                <div>
+                <div className="flex-1">
                   <div className="font-bold text-purple-800 text-sm mb-1">
                     Sherlock Hooves says:
                   </div>
+                  <div className="text-sm text-gray-700 leading-relaxed">
+                    {commentary}
+                  </div>
                 </div>
-              </div>
-              <div className="text-sm text-gray-700 leading-relaxed">
-                {commentary}
               </div>
               <button
                 onClick={() => setIsExpanded(false)}
