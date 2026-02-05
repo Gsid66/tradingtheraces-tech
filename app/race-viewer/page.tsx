@@ -154,7 +154,10 @@ async function searchRaceData(filters: FilterParams): Promise<{ data: CombinedRa
 
     // Apply position filter if specified (after fuzzy matching)
     const filteredData = filters.position
-      ? enrichedData.filter((d: any) => d.finishing_position === parseInt(filters.position!))
+      ? enrichedData.filter((d: any) => {
+          const positionNum = parseInt(filters.position!);
+          return !isNaN(positionNum) && d.finishing_position === positionNum;
+        })
       : enrichedData;
 
     const total = filteredData.length;
