@@ -1,6 +1,7 @@
 import { config } from 'dotenv';
 import { Client } from 'pg';
 import { getPuntingFormClient } from '../lib/integrations/punting-form/client';
+import { convertPuntingFormToTTR } from '../lib/utils/track-name-standardizer';
 
 config({ path: '.env.local' });
 
@@ -36,7 +37,18 @@ async function syncPuntingFormData() {
 
     // Process each meeting
     for (const meeting of meetings) {
-      console.log(`📍 Processing: ${meeting.track.name} (${meeting.track.state})`);
+      const originalTrackName = meeting.track.name;
+      const surface = meeting.track.surface;
+      
+      // Convert PuntingForm track name to TTR format for consistency
+      // This ensures Beaumont (synthetic) is stored as Newcastle to match TTR data
+      const ttrTrackNames = convertPuntingFormToTTR(originalTrackName, surface ?? undefined);
+      const ttrTrackName = ttrTrackNames[0]; // Use first (canonical) name
+      
+      // Normalize hyphens to spaces for consistent database storage
+      const normalizedTrackName = ttrTrackName.replace(/-/g, ' ');
+      
+      console.log(`📍 Processing: ${originalTrackName} (${meeting.track.state})${originalTrackName !== normalizedTrackName ? ` -> ${normalizedTrackName}` : ''}`);
 
       // Insert meeting
       await dbClient.query(`
@@ -49,7 +61,7 @@ async function syncPuntingFormData() {
           updated_at = NOW()
       `, [
         meeting.meetingId,
-        meeting.track.name,
+        normalizedTrackName,  // Use normalized name (no hyphens)
         meeting.track.trackId,
         meeting.track.location,
         meeting.track.state,

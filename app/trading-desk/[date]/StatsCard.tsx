@@ -35,7 +35,7 @@ export default function StatsCard({ plData }: StatsCardProps) {
 
         {/* Winners */}
         <div className="bg-green-50 rounded-lg p-4">
-          <div className="text-xs text-gray-600 mb-1">Winners (1st-3rd)</div>
+          <div className="text-xs text-gray-600 mb-1">Winners (1st only)</div>
           <div className="text-2xl font-bold text-green-600">
             {winners}
           </div>
@@ -43,7 +43,7 @@ export default function StatsCard({ plData }: StatsCardProps) {
 
         {/* Win Rate */}
         <div className="bg-blue-50 rounded-lg p-4">
-          <div className="text-xs text-gray-600 mb-1">Win Rate</div>
+          <div className="text-xs text-gray-600 mb-1">Win Rate (1st only)</div>
           <div className="text-2xl font-bold text-blue-600">
             {winRate.toFixed(1)}%
           </div>
@@ -75,7 +75,7 @@ export default function StatsCard({ plData }: StatsCardProps) {
       </div>
 
       <div className="mt-4 text-xs text-gray-500 text-center">
-        Based on $10 stakes on horses with value score &gt; 25
+        Based on $10 stakes on top 10 value plays displayed in the table
       </div>
     </div>
   );

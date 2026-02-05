@@ -2,10 +2,17 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { format } from 'date-fns';
 import DateNavigation from './DateNavigation';
 
 export default function SidebarClient() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const pathname = usePathname();
+  
+  // Extract date from pathname if it exists (e.g., /trading-desk/2024-01-15 or /race-data/2024-01-15)
+  const dateMatch = pathname.match(/\/(\d{4}-\d{2}-\d{2})/);
+  const currentDate = dateMatch ? dateMatch[1] : format(new Date(), 'yyyy-MM-dd');
 
   return (
     <>
@@ -65,11 +72,39 @@ export default function SidebarClient() {
             Navigation
           </h2>
           <Link
-            href="/trading-desk/statistics"
+            href={`/race-data/${currentDate}`}
             onClick={() => setIsSidebarOpen(false)}
             className="block px-4 py-2 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-purple-400 transition-colors"
           >
+            🏁 Race Viewer
+          </Link>
+          <Link
+            href="/trading-desk/ai-race-analysis"
+            onClick={() => setIsSidebarOpen(false)}
+            className="block px-4 py-2 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-purple-400 transition-colors mt-1"
+          >
+            🕵️ AI Race Analysis
+          </Link>
+          <Link
+            href="/trading-desk/statistics"
+            onClick={() => setIsSidebarOpen(false)}
+            className="block px-4 py-2 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-purple-400 transition-colors mt-1"
+          >
             📊 Statistics & Charts
+          </Link>
+          <Link
+            href="/trading-desk/place-performance"
+            onClick={() => setIsSidebarOpen(false)}
+            className="block px-4 py-2 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-purple-400 transition-colors mt-1"
+          >
+            🏆 Place Performance
+          </Link>
+          <Link
+            href="/trading-desk/threshold-analyzer"
+            onClick={() => setIsSidebarOpen(false)}
+            className="block px-4 py-2 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-purple-400 transition-colors mt-1"
+          >
+            🎯 Threshold Analyzer
           </Link>
         </div>
       </aside>
