@@ -87,33 +87,31 @@ async function getHistoricalData(): Promise<RaceData[]> {
     const resultsResult = await client.query(resultsQuery, [ninetyDaysAgo]);
     const results = resultsResult.rows;
 
+    // Filter ratings to only those with race_id before matching (optimization)
+    const ratingsWithRaceId = ratings.filter((rating: any) => rating.race_id);
+
     // Match ratings with results using fuzzy matching
-    const enrichedData = ratings.map((rating: any) => {
-      let matchedResult = null;
-      
-      if (rating.race_id) {
-        matchedResult = results.find((result: any) => 
+    const enrichedData = ratingsWithRaceId
+      .map((rating: any) => {
+        const matchedResult = results.find((result: any) => 
           result.race_id === rating.race_id &&
           horseNamesMatch(rating.horse_name, result.horse_name)
         );
-      }
 
-      return {
-        race_date: rating.race_date,
-        horse_name: rating.horse_name,
-        track_name: rating.track_name,
-        race_number: rating.race_number,
-        rating: rating.rating,
-        price: rating.price,
-        finishing_position: matchedResult?.finishing_position || null,
-        actual_sp: matchedResult?.starting_price || null
-      };
-    });
+        return {
+          race_date: rating.race_date,
+          horse_name: rating.horse_name,
+          track_name: rating.track_name,
+          race_number: rating.race_number,
+          rating: rating.rating,
+          price: rating.price,
+          finishing_position: matchedResult?.finishing_position || null,
+          actual_sp: matchedResult?.starting_price || null
+        };
+      })
+      .filter((d: any) => d.finishing_position !== null); // Only include records with finishing_position
 
-    // Filter to only include records with finishing_position (matching the original WHERE clause)
-    const filteredData = enrichedData.filter((d: any) => d.finishing_position !== null);
-
-    return filteredData;
+    return enrichedData;
   } catch (error) {
     console.error('Error fetching historical data:', error);
     return [];

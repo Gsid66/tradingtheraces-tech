@@ -153,11 +153,9 @@ async function searchRaceData(filters: FilterParams): Promise<{ data: CombinedRa
     });
 
     // Apply position filter if specified (after fuzzy matching)
-    let filteredData = enrichedData;
-    if (filters.position) {
-      const positionFilter = parseInt(filters.position);
-      filteredData = enrichedData.filter((d: any) => d.finishing_position === positionFilter);
-    }
+    const filteredData = filters.position
+      ? enrichedData.filter((d: any) => d.finishing_position === parseInt(filters.position!))
+      : enrichedData;
 
     const total = filteredData.length;
 
