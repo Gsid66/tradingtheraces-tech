@@ -14,7 +14,7 @@ export interface PFAIRunner {
   pfaiPrice: number;
   timeRank?: number;
   weightClassRank?: number;
-  predictedSettlePostion?: number;
+  predictedSettlePosition?: number;
   runStyle?: string;
   isReliable?: boolean;
 }
@@ -58,7 +58,9 @@ export class TTRRatingsClient {
   }
 
   private async get<T>(endpoint: string): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}&apiKey=${this.apiKey}`;
+    // Build URL with proper query parameter handling
+    const separator = endpoint.includes('?') ? '&' : '?';
+    const url = `${this.baseUrl}${endpoint}${separator}apiKey=${this.apiKey}`;
     
     // Don't log API key in production
     if (process.env.NODE_ENV === 'development') {
@@ -89,9 +91,9 @@ export class TTRRatingsClient {
       // Optional metadata
       time_rank: runner.timeRank ?? null,
       class_rank: runner.weightClassRank ?? null,
-      predicted_settle: runner.predictedSettlePostion ?? null,
+      predicted_settle: runner.predictedSettlePosition ?? null,
       run_style: runner.runStyle?.trim() || null,
-      is_reliable: runner.isReliable !== false,
+      is_reliable: runner.isReliable ?? true,
     };
   }
 
