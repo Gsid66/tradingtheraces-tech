@@ -509,6 +509,20 @@ Potential improvements:
    - Track mapping accuracy over time
    - Alert on declining match rates
 
+## Known Track Name Variations
+
+### Hyphenated vs Spaced Names
+
+Some tracks may appear with hyphens or spaces between words:
+- "Sandown-Hillside" vs "Sandown Hillside"
+- "Sandown-Lakeside" vs "Sandown Lakeside"
+
+**Solution:** The normalization function `normalizeForComparison()` automatically replaces hyphens with spaces to ensure consistent matching. Database records should always use the space-separated format.
+
+**Migration Script:** Run `scripts/fix-sandown-track-names.ts` to update existing records.
+
+**Prevention:** The `sync-pf-data.ts` script now normalizes hyphens during data import.
+
 ## Support
 
 For issues or questions:
@@ -526,6 +540,14 @@ For issues or questions:
 - [Trading Desk](./TRADING_DESK.md) - Trading desk features
 
 ## Changelog
+
+### 2026-02-05 - Sandown Track Name Fix
+- Fixed track name mismatch: "Sandown-Hillside" vs "Sandown Hillside"
+- Added hyphenated track name handling to mappings
+- Enhanced normalizeForComparison() to replace hyphens with spaces
+- Created migration script to update existing database records
+- Updated sync-pf-data.ts to normalize hyphens during future syncs
+- Resolved JOIN failures affecting Race Viewer and Trading Desk
 
 ### 2026-02-05 - Initial Implementation
 - Added surface-specific track mappings
