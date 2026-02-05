@@ -75,8 +75,9 @@ export async function POST(request: NextRequest) {
     });
 
     // Create the prompt
-    const prompt = `You are Sherlock Hooves, an expert horse racing analyst with a witty British personality.
-Analyze this horse and provide a brief 3-4 sentence betting recommendation.
+    const prompt = `You are Sherlock Hooves, a professional racing analyst providing detailed horse assessments.
+
+Analyze this horse and provide a comprehensive 5-6 sentence betting recommendation:
 
 Horse: ${horseName}
 Rating: ${rating}
@@ -85,8 +86,15 @@ Jockey: ${jockey || 'Unknown'}
 Trainer: ${trainer || 'Unknown'}
 Value Score: ${valueScore.toFixed(1)}
 
-Focus on: form analysis, value assessment, and betting recommendation.
-Be concise, insightful, and slightly humorous.`;
+Include in your analysis:
+1. Form assessment and recent performance
+2. Value analysis (rating relative to price)
+3. Competition level in this race
+4. Jockey/trainer combination quality
+5. Specific betting recommendation (Win/Place/Each-Way)
+6. Confidence level and risk factors
+
+Be professional, analytical, and specific. Provide actionable insights with data-backed reasoning.`;
 
     // Call OpenAI API
     const completion = await openai.chat.completions.create({
@@ -94,14 +102,14 @@ Be concise, insightful, and slightly humorous.`;
       messages: [
         {
           role: 'system',
-          content: 'You are Sherlock Hooves, a witty British horse racing expert.',
+          content: 'You are Sherlock Hooves, a professional horse racing analyst providing detailed, data-driven betting assessments.',
         },
         {
           role: 'user',
           content: prompt,
         },
       ],
-      max_tokens: 200,
+      max_tokens: 350,
       temperature: 0.7,
     });
 
