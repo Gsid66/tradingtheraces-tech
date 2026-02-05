@@ -5,6 +5,7 @@ import StatisticsCards from './StatisticsCards';
 import FilterPanel from './FilterPanel';
 import DateRangeDisplay from './DateRangeDisplay';
 import RaceDataTable from './RaceDataTable';
+import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,72 +29,51 @@ async function searchRaceData(filters: FilterParams): Promise<{ data: CombinedRa
   try {
     await client.connect();
 
-    // Build WHERE clause dynamically
-    const conditions: string[] = [];
-    const values: any[] = [];
+    // Build WHERE clause dynamically for ratings query
+    const ratingsConditions: string[] = [];
+    const ratingsValues: any[] = [];
     let paramCount = 1;
 
     // Date filters (always applied)
-    conditions.push(`rcr.race_date >= $${paramCount}::date`);
-    values.push(filters.dateFrom);
+    ratingsConditions.push(`rcr.race_date >= $${paramCount}::date`);
+    ratingsValues.push(filters.dateFrom);
     paramCount++;
     
-    conditions.push(`rcr.race_date <= $${paramCount}::date`);
-    values.push(filters.dateTo);
+    ratingsConditions.push(`rcr.race_date <= $${paramCount}::date`);
+    ratingsValues.push(filters.dateTo);
     paramCount++;
 
     // Search filters
     if (filters.horseName) {
-      conditions.push(`LOWER(rcr.horse_name) LIKE LOWER($${paramCount})`);
-      values.push(`%${filters.horseName}%`);
+      ratingsConditions.push(`LOWER(rcr.horse_name) LIKE LOWER($${paramCount})`);
+      ratingsValues.push(`%${filters.horseName}%`);
       paramCount++;
     }
     if (filters.jockeyName) {
-      conditions.push(`LOWER(rcr.jockey) LIKE LOWER($${paramCount})`);
-      values.push(`%${filters.jockeyName}%`);
+      ratingsConditions.push(`LOWER(rcr.jockey) LIKE LOWER($${paramCount})`);
+      ratingsValues.push(`%${filters.jockeyName}%`);
       paramCount++;
     }
     if (filters.trainerName) {
-      conditions.push(`LOWER(rcr.trainer) LIKE LOWER($${paramCount})`);
-      values.push(`%${filters.trainerName}%`);
+      ratingsConditions.push(`LOWER(rcr.trainer) LIKE LOWER($${paramCount})`);
+      ratingsValues.push(`%${filters.trainerName}%`);
       paramCount++;
     }
     if (filters.trackName) {
-      conditions.push(`LOWER(rcr.track) LIKE LOWER($${paramCount})`);
-      values.push(`%${filters.trackName}%`);
+      ratingsConditions.push(`LOWER(rcr.track) LIKE LOWER($${paramCount})`);
+      ratingsValues.push(`%${filters.trackName}%`);
       paramCount++;
     }
     if (filters.state) {
-      conditions.push(`m.state = $${paramCount}`);
-      values.push(filters.state);
-      paramCount++;
-    }
-    if (filters.position) {
-      conditions.push(`r.finishing_position = $${paramCount}`);
-      values.push(parseInt(filters.position));
+      ratingsConditions.push(`m.state = $${paramCount}`);
+      ratingsValues.push(filters.state);
       paramCount++;
     }
 
-    const whereClause = `WHERE ${conditions.join(' AND ')}`;
+    const ratingsWhereClause = `WHERE ${ratingsConditions.join(' AND ')}`;
 
-    // Get total count
-    const countQuery = `
-      SELECT COUNT(*) as total
-      FROM race_cards_ratings rcr
-      LEFT JOIN pf_meetings m ON rcr.race_date = m.meeting_date
-        AND rcr.track = m.track_name
-      LEFT JOIN pf_races ra ON ra.meeting_id = m.meeting_id 
-        AND rcr.race_number = ra.race_number
-      LEFT JOIN pf_results r ON r.race_id = ra.race_id
-        AND LOWER(TRIM(rcr.horse_name)) = LOWER(TRIM(r.horse_name))
-      ${whereClause}
-    `;
-
-    const countResult = await client.query(countQuery, values);
-    const total = parseInt(countResult.rows[0].total);
-
-    // Get ALL data (no pagination)
-    const dataQuery = `
+    // Query 1: Get ratings data with race context
+    const ratingsQuery = `
       SELECT 
         rcr.id,
         rcr.race_date::date as race_date,
@@ -106,35 +86,91 @@ async function searchRaceData(filters: FilterParams): Promise<{ data: CombinedRa
         rcr.trainer as trainer_name,
         rcr.rating::integer as rating,
         rcr.price::numeric(10,2) as price,
-        r.finishing_position,
-        r.starting_price,
-        r.margin_to_winner,
-        r.tab_number,
         m.state,
-        m.country
+        m.country,
+        ra.race_id
       FROM race_cards_ratings rcr
       LEFT JOIN pf_meetings m ON rcr.race_date = m.meeting_date
         AND rcr.track = m.track_name
       LEFT JOIN pf_races ra ON ra.meeting_id = m.meeting_id 
         AND rcr.race_number = ra.race_number
-      LEFT JOIN pf_results r ON r.race_id = ra.race_id
-        AND LOWER(TRIM(rcr.horse_name)) = LOWER(TRIM(r.horse_name))
-      ${whereClause}
+      ${ratingsWhereClause}
       ORDER BY rcr.race_date DESC, rcr.track, rcr.race_number, rcr.saddle_cloth
     `;
 
-    const dataResult = await client.query(dataQuery, values);
+    const ratingsResult = await client.query(ratingsQuery, ratingsValues);
+    const ratings = ratingsResult.rows;
+
+    // Query 2: Get all results for the date range
+    const resultsQuery = `
+      SELECT 
+        r.race_id,
+        r.horse_name,
+        r.finishing_position,
+        r.starting_price,
+        r.margin_to_winner,
+        r.tab_number
+      FROM pf_results r
+      INNER JOIN pf_races ra ON r.race_id = ra.race_id
+      INNER JOIN pf_meetings m ON ra.meeting_id = m.meeting_id
+      WHERE m.meeting_date >= $1::date
+        AND m.meeting_date <= $2::date
+    `;
+
+    const resultsResult = await client.query(resultsQuery, [filters.dateFrom, filters.dateTo]);
+    const results = resultsResult.rows;
+
+    // Match ratings with results using fuzzy matching
+    const enrichedData = ratings.map((rating: any) => {
+      let matchedResult = null;
+      
+      if (rating.race_id) {
+        matchedResult = results.find((result: any) => 
+          result.race_id === rating.race_id &&
+          horseNamesMatch(rating.horse_name, result.horse_name)
+        );
+      }
+
+      return {
+        id: rating.id,
+        race_date: rating.race_date,
+        track_name: rating.track_name,
+        race_name: rating.race_name,
+        race_number: rating.race_number,
+        saddle_cloth: rating.saddle_cloth,
+        horse_name: rating.horse_name,
+        jockey_name: rating.jockey_name,
+        trainer_name: rating.trainer_name,
+        rating: rating.rating,
+        price: rating.price,
+        finishing_position: matchedResult?.finishing_position || null,
+        starting_price: matchedResult?.starting_price || null,
+        margin_to_winner: matchedResult?.margin_to_winner || null,
+        tab_number: matchedResult?.tab_number || null,
+        state: rating.state,
+        country: rating.country
+      };
+    });
+
+    // Apply position filter if specified (after fuzzy matching)
+    let filteredData = enrichedData;
+    if (filters.position) {
+      const positionFilter = parseInt(filters.position);
+      filteredData = enrichedData.filter((d: any) => d.finishing_position === positionFilter);
+    }
+
+    const total = filteredData.length;
 
     console.log('🔍 Search results:', {
       filters,
       total,
-      returned: dataResult.rows.length,
-      withResults: dataResult.rows.filter((r: any) => r.finishing_position).length,
-      sampleRow: dataResult.rows[0]
+      returned: filteredData.length,
+      withResults: filteredData.filter((r: any) => r.finishing_position).length,
+      sampleRow: filteredData[0]
     });
 
     return {
-      data: dataResult.rows,
+      data: filteredData,
       total: total
     };
 
