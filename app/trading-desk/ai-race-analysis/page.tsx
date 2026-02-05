@@ -98,7 +98,6 @@ export default function AIRaceAnalysisPage() {
         
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
           {availableDates.map((date) => {
-            const formattedDate = format(new Date(date), 'EEE, MMM d');
             const isSelected = selectedDate === date;
             
             return (
