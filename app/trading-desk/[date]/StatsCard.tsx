@@ -75,7 +75,7 @@ export default function StatsCard({ plData }: StatsCardProps) {
       </div>
 
       <div className="mt-4 text-xs text-gray-500 text-center">
-        Based on $10 stakes on horses with value score &gt; 25
+        Based on $10 stakes on top 10 value plays displayed in the table
       </div>
     </div>
   );

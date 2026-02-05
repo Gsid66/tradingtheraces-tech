@@ -102,19 +102,19 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
   const valueOpportunities = dataWithValueScores.filter(d => d.valueScore > 25).length;
   const winners = data.filter(d => d.finishing_position === 1);
 
-  // Calculate P&L stats
-  const plData = calculatePL(data.map(d => ({
-    rating: Number(d.rating),
-    price: Number(d.price),
-    actual_sp: d.actual_sp,
-    finishing_position: d.finishing_position
-  })));
-
   // Get top value plays (horses with best value score)
   const valuePlays = dataWithValueScores
     .filter(d => d.valueScore > 0)
     .sort((a, b) => b.valueScore - a.valueScore)
     .slice(0, 10);
+
+  // Calculate P&L stats from only the top 10 value plays displayed in the table
+  const plData = calculatePL(valuePlays.map(d => ({
+    rating: Number(d.rating),
+    price: Number(d.price),
+    actual_sp: d.actual_sp,
+    finishing_position: d.finishing_position
+  })));
 
   // Format date for display
   const formattedDate = format(parsedDate, 'EEEE, MMMM d, yyyy');
