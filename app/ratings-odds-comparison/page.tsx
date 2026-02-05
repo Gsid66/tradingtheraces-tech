@@ -2,6 +2,8 @@ import React from 'react';
 import { RatingsOddsData } from './types';
 import RatingsOddsTable from './RatingsOddsTable';
 import { getPostgresAPIClient, TabRace, TabRunner } from '@/lib/integrations/postgres-api';
+import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
+import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 
 export const dynamic = 'force-dynamic';
@@ -54,37 +56,73 @@ function tracksMatch(track1: string, track2: string): boolean {
          (normalized2.length >= 5 && normalized1.includes(normalized2));
 }
 
-// Fetch today's race cards from TTR API
+// Fetch today's race cards from PFAI
 async function fetchTodayRaceCards(): Promise<RatingsOddsData[]> {
-  const raceCardsApiUrl = process.env.RACE_CARD_RATINGS_API_URL || 'https://race-cards-ratings.onrender.com';
-
   try {
-    const today = getToday();
+    const pfClient = getPuntingFormClient();
+    const ttrClient = getTTRRatingsClient();
 
-    const params = new URLSearchParams();
-    params.append('start_date', today);
-    params.append('end_date', today);
-    params.append('limit', '1000'); // Get all today's races
-
-    const url = `${raceCardsApiUrl}/api/races?${params.toString()}`;
-    console.log('🔍 Fetching today&apos;s race cards:', url);
-
-    const response = await fetch(url, {
-      cache: 'no-store',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      console.error('API response not OK:', response.status, response.statusText);
-      throw new Error(`API responded with status ${response.status}`);
+    if (!pfClient) {
+      console.error('❌ Punting Form client not available');
+      return [];
     }
 
-    const responseData = await response.json();
-    return responseData.data || [];
+    if (!ttrClient) {
+      console.warn('⚠️ TTR Ratings client not available');
+      return [];
+    }
+
+    const today = getToday();
+    console.log('🔍 Fetching today\'s meetings from Punting Form:', today);
+
+    // Get today's meetings
+    const meetingsResponse = await pfClient.getTodaysMeetings();
+    const meetings = meetingsResponse.payLoad || [];
+    
+    console.log(`📊 Retrieved ${meetings.length} meetings for today`);
+
+    if (meetings.length === 0) {
+      console.warn('⚠️ No meetings found for today');
+      return [];
+    }
+
+    // Fetch ratings for all meetings
+    const allRatingsData: RatingsOddsData[] = [];
+
+    for (const meeting of meetings) {
+      console.log(`🔍 Fetching ratings for ${meeting.track.name}...`);
+      
+      const ttrResponse = await ttrClient.getRatingsForMeeting(meeting.meetingId);
+      
+      if (ttrResponse.success && ttrResponse.data && ttrResponse.data.length > 0) {
+        // Transform PFAI data to RatingsOddsData format
+        const meetingRatings = ttrResponse.data.map(rating => ({
+          race_date: meeting.meetingDate,
+          track: meeting.track.name,
+          meeting_name: meeting.track.name,
+          race_number: rating.race_number,
+          race_name: '', // Not available in PFAI ratings
+          saddle_cloth: rating.tab_number,
+          horse_name: rating.horse_name,
+          jockey: null, // Not available in PFAI ratings
+          trainer: null, // Not available in PFAI ratings
+          rating: rating.rating,
+          price: rating.price,
+          tab_fixed_win: null, // Will be merged later
+          tab_fixed_place: null // Will be merged later
+        }));
+
+        allRatingsData.push(...meetingRatings);
+        console.log(`✅ Added ${meetingRatings.length} ratings for ${meeting.track.name}`);
+      } else {
+        console.warn(`⚠️ No ratings found for ${meeting.track.name}`);
+      }
+    }
+
+    console.log(`✅ Total ratings fetched: ${allRatingsData.length}`);
+    return allRatingsData;
   } catch (error) {
-    console.error('Error fetching race cards:', error);
+    console.error('❌ Error fetching race cards from PFAI:', error);
     return [];
   }
 }
