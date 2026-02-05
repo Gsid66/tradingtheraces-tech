@@ -53,8 +53,11 @@ function normalizeForComparison(trackName: string): string {
   
   let normalized = trackName.toLowerCase().trim();
   
+  // Replace hyphens with spaces for consistent matching
+  normalized = normalized.replace(/-/g, ' ');
+  
   // Remove common suffixes
-  const suffixes = ['racecourse', 'gardens', 'hillside', 'park', 'racing', 'raceway'];
+  const suffixes = ['racecourse', 'gardens', 'hillside', 'lakeside', 'park', 'racing', 'raceway'];
   for (const suffix of suffixes) {
     normalized = normalized.replace(new RegExp(`\\s+${suffix}$`, 'i'), '');
   }

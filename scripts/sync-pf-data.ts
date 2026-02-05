@@ -45,7 +45,10 @@ async function syncPuntingFormData() {
       const ttrTrackNames = convertPuntingFormToTTR(originalTrackName, surface ?? undefined);
       const ttrTrackName = ttrTrackNames[0]; // Use first (canonical) name
       
-      console.log(`📍 Processing: ${originalTrackName} (${meeting.track.state})${originalTrackName !== ttrTrackName ? ` -> ${ttrTrackName}` : ''}`);
+      // Normalize hyphens to spaces for consistent database storage
+      const normalizedTrackName = ttrTrackName.replace(/-/g, ' ');
+      
+      console.log(`📍 Processing: ${originalTrackName} (${meeting.track.state})${originalTrackName !== normalizedTrackName ? ` -> ${normalizedTrackName}` : ''}`);
 
       // Insert meeting
       await dbClient.query(`
@@ -58,7 +61,7 @@ async function syncPuntingFormData() {
           updated_at = NOW()
       `, [
         meeting.meetingId,
-        ttrTrackName,  // Use converted TTR track name
+        normalizedTrackName,  // Use normalized name (no hyphens)
         meeting.track.trackId,
         meeting.track.location,
         meeting.track.state,

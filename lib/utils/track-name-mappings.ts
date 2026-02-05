@@ -44,7 +44,9 @@ export const TTR_TO_PUNTINGFORM: Record<string, string[]> = {
   'newcastle': ['Newcastle', 'Beaumont'],
   
   // Common name variations
-  'sandown': ['Sandown Hillside', 'Sandown Lakeside'],
+  'sandown': ['Sandown Hillside', 'Sandown Lakeside', 'Sandown-Hillside', 'Sandown-Lakeside'],
+  'sandown hillside': ['Sandown Hillside', 'Sandown-Hillside'],
+  'sandown lakeside': ['Sandown Lakeside', 'Sandown-Lakeside'],
   'canterbury': ['Canterbury Park'],
   'rosehill': ['Rosehill Gardens'],
   'moonee valley': ['Moonee Valley', 'The Valley'],
@@ -157,7 +159,10 @@ export const PUNTINGFORM_TO_TTR: Record<string, string> = {
   
   // Common variations
   'sandown hillside': 'Sandown',
+  'sandown-hillside': 'Sandown',  // Handle hyphenated version
   'sandown lakeside': 'Sandown',
+  'sandown-lakeside': 'Sandown',  // Handle hyphenated version
+  'sandown': 'Sandown',  // Default to Sandown
   'canterbury park': 'Canterbury',
   'rosehill gardens': 'Rosehill',
   'moonee valley': 'Moonee Valley',
