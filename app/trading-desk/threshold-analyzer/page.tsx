@@ -3,6 +3,7 @@ import { format, subDays } from 'date-fns';
 import { calculateValueScore } from '@/lib/trading-desk/valueCalculator';
 import ThresholdComparisonTable from './ThresholdComparisonTable';
 import ThresholdChart from './ThresholdChart';
+import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,7 +48,8 @@ async function getHistoricalData(): Promise<RaceData[]> {
     // Get last 90 days of data
     const ninetyDaysAgo = format(subDays(new Date(), 90), 'yyyy-MM-dd');
 
-    const query = `
+    // Query 1: Get ratings data
+    const ratingsQuery = `
       SELECT 
         rcr.race_date::date as race_date,
         rcr.horse_name,
@@ -55,22 +57,61 @@ async function getHistoricalData(): Promise<RaceData[]> {
         rcr.race_number,
         rcr.rating,
         rcr.price,
-        r.finishing_position,
-        r.starting_price as actual_sp
+        ra.race_id
       FROM race_cards_ratings rcr
       LEFT JOIN pf_meetings m ON rcr.race_date = m.meeting_date
         AND rcr.track = m.track_name
       LEFT JOIN pf_races ra ON ra.meeting_id = m.meeting_id 
         AND rcr.race_number = ra.race_number
-      LEFT JOIN pf_results r ON r.race_id = ra.race_id
-        AND LOWER(TRIM(rcr.horse_name)) = LOWER(TRIM(r.horse_name))
       WHERE rcr.race_date >= $1
-        AND r.finishing_position IS NOT NULL
       ORDER BY rcr.race_date DESC
     `;
 
-    const result = await client.query(query, [ninetyDaysAgo]);
-    return result.rows;
+    const ratingsResult = await client.query(ratingsQuery, [ninetyDaysAgo]);
+    const ratings = ratingsResult.rows;
+
+    // Query 2: Get all results for the date range (only with finishing_position)
+    const resultsQuery = `
+      SELECT 
+        r.race_id,
+        r.horse_name,
+        r.finishing_position,
+        r.starting_price
+      FROM pf_results r
+      INNER JOIN pf_races ra ON r.race_id = ra.race_id
+      INNER JOIN pf_meetings m ON ra.meeting_id = m.meeting_id
+      WHERE m.meeting_date >= $1
+        AND r.finishing_position IS NOT NULL
+    `;
+
+    const resultsResult = await client.query(resultsQuery, [ninetyDaysAgo]);
+    const results = resultsResult.rows;
+
+    // Filter ratings to only those with race_id before matching (optimization)
+    const ratingsWithRaceId = ratings.filter((rating: any) => rating.race_id);
+
+    // Match ratings with results using fuzzy matching
+    const enrichedData = ratingsWithRaceId
+      .map((rating: any) => {
+        const matchedResult = results.find((result: any) => 
+          result.race_id === rating.race_id &&
+          horseNamesMatch(rating.horse_name, result.horse_name)
+        );
+
+        return {
+          race_date: rating.race_date,
+          horse_name: rating.horse_name,
+          track_name: rating.track_name,
+          race_number: rating.race_number,
+          rating: rating.rating,
+          price: rating.price,
+          finishing_position: matchedResult?.finishing_position || null,
+          actual_sp: matchedResult?.starting_price || null
+        };
+      })
+      .filter((d: any) => d.finishing_position !== null); // Only include records with finishing_position
+
+    return enrichedData;
   } catch (error) {
     console.error('Error fetching historical data:', error);
     return [];
