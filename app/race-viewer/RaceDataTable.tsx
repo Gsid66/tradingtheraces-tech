@@ -238,7 +238,8 @@ export default function RaceDataTable({ data }: RaceDataTableProps) {
       <div className="bg-white rounded-lg shadow-lg p-12 text-center border-2 border-purple-100">
         <div className="text-6xl mb-4">🔍</div>
         <p className="text-gray-500 text-lg font-medium">No results found</p>
-        <p className="text-gray-400 text-sm mt-2">Try adjusting your search filters</p>
+        <p className="text-gray-400 text-sm mt-2">Try adjusting your search filters or date range</p>
+        <p className="text-gray-400 text-xs mt-1">Note: This database shows historical TTR ratings data</p>
       </div>
     );
   }

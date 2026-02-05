@@ -20,6 +20,15 @@ function getToday(): string {
   });
 }
 
+// Get date 7 days ago
+function getLastWeek(): string {
+  const date = new Date();
+  date.setDate(date.getDate() - 7);
+  return date.toLocaleDateString('en-CA', { 
+    timeZone: 'Australia/Sydney' 
+  });
+}
+
 async function searchRaceData(filters: FilterParams): Promise<{ data: CombinedRaceData[], total: number }> {
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
@@ -100,6 +109,13 @@ async function searchRaceData(filters: FilterParams): Promise<{ data: CombinedRa
 
     const ratingsResult = await client.query(ratingsQuery, ratingsValues);
     const ratings = ratingsResult.rows;
+
+    console.log('🔍 Race data query results:', {
+      filters,
+      ratingsCount: ratings.length,
+      dateRange: `${filters.dateFrom} to ${filters.dateTo}`,
+      sampleRating: ratings[0] || null
+    });
 
     // Query 2: Get all results for the date range
     const resultsQuery = `
@@ -190,10 +206,12 @@ export default async function RaceViewerPage({ searchParams }: PageProps) {
   const params = await searchParams;
   
   const todayFormatted = getToday();
+  const lastWeekFormatted = getLastWeek();
 
   // Extract all filter params from URL
+  // Default to last 7 days instead of just today to show historical data
   const filters: FilterParams = {
-    dateFrom: typeof params.dateFrom === 'string' ? params.dateFrom : todayFormatted,
+    dateFrom: typeof params.dateFrom === 'string' ? params.dateFrom : lastWeekFormatted,
     dateTo: typeof params.dateTo === 'string' ? params.dateTo : todayFormatted,
   };
 
@@ -226,7 +244,10 @@ export default async function RaceViewerPage({ searchParams }: PageProps) {
         <div className="max-w-7xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">🏇 TTR Race Database</h1>
           <p className="text-purple-200 text-lg">
-            47,000+ Records • TTR Ratings • Prices • Results
+            Historical Racing Data • TTR Ratings • Prices • Results
+          </p>
+          <p className="text-purple-300 text-sm mt-2">
+            Browse past race data with advanced filtering options
           </p>
         </div>
       </div>
@@ -241,7 +262,7 @@ export default async function RaceViewerPage({ searchParams }: PageProps) {
 
         {/* Date Range Display */}
         <DateRangeDisplay 
-          dateFrom={filters.dateFrom || todayFormatted} 
+          dateFrom={filters.dateFrom || lastWeekFormatted} 
           dateTo={filters.dateTo || todayFormatted} 
         />
 
