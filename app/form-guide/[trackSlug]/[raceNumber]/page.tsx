@@ -4,9 +4,8 @@ import { FiArrowLeft } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
 import { getPostgresAPIClient } from '@/lib/integrations/postgres-api';
-import { getRaceCardRatingsClient } from '@/lib/integrations/race-card-ratings';
+import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
-import { convertPuntingFormToTTR } from '@/lib/utils/track-name-standardizer';
 import RaceTabs from './RaceTabs';
 import RaceDetails from './RaceDetails';
 import RunnerList from './RunnerList';
@@ -123,53 +122,27 @@ export default async function RacePage({ params }: Props) {
     console.error('❌ TAB data fetch failed:', error.message);
   }
 
-  // Fetch TTR data (don't crash if it fails)
+  // Fetch TTR data from PFAI (don't crash if it fails)
   let ttrData: any = null;
   try {
-    const ttrClient = getRaceCardRatingsClient();
+    const ttrClient = getTTRRatingsClient();
     
     if (ttrClient) {
-      const dateStr = format(new Date(meeting.meetingDate), 'yyyy-MM-dd');
-      const puntingFormTrackName = meeting.track.name;
-      const surface = meeting.track.surface;
-      
-      // Get all possible TTR track name variations
-      const possibleTTRNames = convertPuntingFormToTTR(puntingFormTrackName, surface ?? undefined);
-      
-      console.log('🔍 Fetching TTR data with multiple track variations:', {
-        puntingFormTrackName,
-        surface,
-        possibleTTRNames,
-        date: dateStr,
+      console.log('🔍 Fetching TTR data from PFAI:', {
+        meetingId: meeting.meetingId,
         raceNumber: raceNum
       });
       
-      // Try each variation until we find ratings
-      for (const ttrTrackName of possibleTTRNames) {
-        try {
-          console.log(`  🔍 Trying TTR track name: "${ttrTrackName}"`);
-          
-          const ttrResponse = await ttrClient.getRatingsForRace(
-            dateStr,
-            ttrTrackName,
-            raceNum
-          );
-          
-          if (ttrResponse.data && ttrResponse.data.length > 0) {
-            ttrData = ttrResponse.data;
-            console.log(`  ✅ Found TTR data with track name: "${ttrTrackName}" (${ttrData.length} ratings)`);
-            break; // Found it!
-          } else {
-            console.log(`  ⚠️ No data found for track name: "${ttrTrackName}"`);
-          }
-        } catch (error: any) {
-          console.log(`  ❌ Error fetching with track name "${ttrTrackName}":`, error.message);
-          // Try next variation
-        }
-      }
+      const ttrResponse = await ttrClient.getRatingsForRace(
+        meeting.meetingId,
+        raceNum
+      );
       
-      if (!ttrData) {
-        console.log('⚠️ No TTR data found after trying all track name variations');
+      if (ttrResponse.success && ttrResponse.data && ttrResponse.data.length > 0) {
+        ttrData = ttrResponse.data;
+        console.log(`✅ PFAI TTR data retrieved: ${ttrData.length} ratings`);
+      } else {
+        console.log('⚠️ No TTR data found for this race');
       }
     }
   } catch (error: any) {
