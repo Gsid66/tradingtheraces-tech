@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface AICommentaryProps {
   raceId: number;
@@ -70,9 +71,15 @@ export default function AICommentary({
     <div>
       <button
         onClick={fetchCommentary}
-        className="inline-flex items-center gap-2 px-3 py-1 text-xs font-medium text-purple-700 bg-purple-100 rounded-full hover:bg-purple-200 transition-colors"
+        className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-purple-700 bg-purple-100 rounded-full hover:bg-purple-200 transition-colors"
       >
-        <span>🤖</span>
+        <Image 
+          src="/images/sherlock-hooves.png"
+          alt="Sherlock"
+          width={20}
+          height={20}
+          className="rounded-full"
+        />
         <span>Ask Sherlock</span>
       </button>
 
@@ -92,15 +99,21 @@ export default function AICommentary({
           ) : (
             <div>
               <div className="flex items-start gap-2 mb-2">
-                <span className="text-2xl">🕵️</span>
+                <Image 
+                  src="/images/sherlock-hooves.png"
+                  alt="Sherlock Hooves"
+                  width={32}
+                  height={32}
+                  className="rounded-full border border-purple-300"
+                />
                 <div>
                   <div className="font-bold text-purple-800 text-sm mb-1">
                     Sherlock Hooves says:
                   </div>
-                  <div className="text-sm text-gray-700 leading-relaxed">
-                    {commentary}
-                  </div>
                 </div>
+              </div>
+              <div className="text-sm text-gray-700 leading-relaxed">
+                {commentary}
               </div>
               <button
                 onClick={() => setIsExpanded(false)}

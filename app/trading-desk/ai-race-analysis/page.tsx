@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { format, subDays } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
+import Image from 'next/image';
 
 interface AIAnalysisResponse {
   analysis: string;
@@ -73,13 +74,22 @@ export default function AIRaceAnalysisPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
-          🕵️ AI Race Analysis
-        </h1>
-        <p className="text-sm sm:text-base text-gray-600">
-          Comprehensive meeting-level insights from Sherlock Hooves
-        </p>
+      <div className="flex items-center gap-4 mb-6 sm:mb-8">
+        <Image 
+          src="/images/sherlock-hooves.png"
+          alt="Sherlock Hooves"
+          width={64}
+          height={64}
+          className="rounded-full border-2 border-purple-400 shadow-lg"
+        />
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
+            🕵️ Sherlock Hooves&apos; AI Race Analysis
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600">
+            Professional race-by-race insights and betting recommendations
+          </p>
+        </div>
       </div>
 
       {/* Date Selector Card */}
@@ -154,11 +164,17 @@ export default function AIRaceAnalysisPage() {
       {/* Analysis Display */}
       {analysis && (
         <div className="bg-purple-50 border-2 border-purple-300 rounded-lg p-6 animate-fadeIn">
-          <div className="flex items-start gap-3 mb-4">
-            <span className="text-4xl">🕵️</span>
+          <div className="flex items-start gap-4 mb-4">
+            <Image 
+              src="/images/sherlock-hooves.png"
+              alt="Sherlock Hooves"
+              width={80}
+              height={80}
+              className="rounded-full border-3 border-purple-400 shadow-lg"
+            />
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-purple-900 mb-2">
-                Sherlock Hooves&apos; Meeting Analysis
+                Sherlock Hooves&apos; Professional Analysis
               </h2>
               <div className="flex flex-wrap gap-4 text-sm text-purple-700">
                 <div>
@@ -196,14 +212,14 @@ export default function AIRaceAnalysisPage() {
               <h3 className="font-bold text-blue-900 mb-2">About AI Race Analysis</h3>
               <div className="text-blue-800 space-y-2">
                 <p>
-                  Get comprehensive, meeting-level insights from Sherlock Hooves, analyzing:
+                  Get comprehensive, professional race analysis from Sherlock Hooves, featuring:
                 </p>
                 <ul className="list-disc list-inside space-y-1 ml-4">
-                  <li>Overall meeting value opportunities</li>
-                  <li>Top-rated horses across all races</li>
-                  <li>Value plays with best rating-to-price ratios</li>
-                  <li>Race-by-race strategic insights</li>
-                  <li>Track and distance considerations</li>
+                  <li>Detailed race-by-race selections with full analysis</li>
+                  <li>Specific betting recommendations (Win/Place/Each-Way)</li>
+                  <li>Top-rated value opportunities with risk assessment</li>
+                  <li>Strategic betting approach and bankroll management</li>
+                  <li>Professional, data-driven insights</li>
                 </ul>
                 <p className="mt-3">
                   <strong>Select a date above and click &quot;Generate AI Analysis&quot; to begin.</strong>
