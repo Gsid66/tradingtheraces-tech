@@ -2,16 +2,17 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { FiArrowLeft } from 'react-icons/fi';
 import { format } from 'date-fns';
-import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
+import { getPuntingFormClient, PFScratching, PFCondition } from '@/lib/integrations/punting-form/client';
 import { getPostgresAPIClient } from '@/lib/integrations/postgres-api';
-import { getRaceCardRatingsClient } from '@/lib/integrations/race-card-ratings';
+import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
-import { convertPuntingFormToTTR } from '@/lib/utils/track-name-standardizer';
-import RaceTabs from './RaceTabs';
+import { getScratchingInfo } from '@/lib/utils/scratchings-matcher';
+import TrackConditionBadge from '@/components/racing/TrackConditionBadge';
 import RaceDetails from './RaceDetails';
-import RunnerList from './RunnerList';
+import RaceContent from './RaceContent';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 300; // Revalidate every 5 minutes for early morning odds
 
 interface Props {
   params: Promise<{
@@ -36,6 +37,25 @@ export default async function RacePage({ params }: Props) {
   if (!meeting) {
     notFound();
   }
+
+  // Fetch scratchings and conditions for both AU and NZ
+  let scratchings: PFScratching[] = [];
+  let conditions: PFCondition[] = [];
+  try {
+    const [scratchingsAU, scratchingsNZ, conditionsAU, conditionsNZ] = await Promise.all([
+      pfClient.getScratchings(0), // 0 = AU
+      pfClient.getScratchings(1), // 1 = NZ
+      pfClient.getConditions(0),   // 0 = AU
+      pfClient.getConditions(1)    // 1 = NZ
+    ]);
+    scratchings = [...(scratchingsAU.payLoad || []), ...(scratchingsNZ.payLoad || [])];
+    conditions = [...(conditionsAU.payLoad || []), ...(conditionsNZ.payLoad || [])];
+  } catch (error: any) {
+    console.warn('⚠️ Scratchings/conditions unavailable:', error.message);
+  }
+
+  // Get track condition for this meeting
+  const trackCondition = conditions.find(c => c.meetingId === meeting.meetingId);
 
   // Get all races for this meeting
   const racesResponse = await pfClient.getAllRacesForMeeting(meeting.meetingId);
@@ -66,29 +86,52 @@ export default async function RacePage({ params }: Props) {
         raceNumber: raceNum
       });
       
-      const tabRacesResponse = await pgClient.getRacesByDate(dateStr);
+      // Fetch TAB data for both AU and NZ races
+      const [tabRacesResponseAU, tabRacesResponseNZ] = await Promise.all([
+        pgClient.getRacesByDate(dateStr, 'AU').catch(err => {
+          console.error(`❌ Error fetching AU TAB data:`, err);
+          return { success: false, data: [] };
+        }),
+        pgClient.getRacesByDate(dateStr, 'NZ').catch(err => {
+          console.error(`❌ Error fetching NZ TAB data:`, err);
+          return { success: false, data: [] };
+        })
+      ]);
       
-      // Log the RAW response first
-      console.log('📊 TAB API Raw Response:', tabRacesResponse);
+      // Combine both AU and NZ races
+      const allTabRaces = [
+        ...(tabRacesResponseAU.success && Array.isArray(tabRacesResponseAU.data) ? tabRacesResponseAU.data : []),
+        ...(tabRacesResponseNZ.success && Array.isArray(tabRacesResponseNZ.data) ? tabRacesResponseNZ.data : [])
+      ];
       
-      // Then log structured info
-      console.log('📊 TAB API Response:', {
-        success: tabRacesResponse.success,
-        hasData: !!tabRacesResponse.data,
-        isArray: Array.isArray(tabRacesResponse.data),
-        count: Array.isArray(tabRacesResponse.data) ? tabRacesResponse.data.length : 0,
-        races: Array.isArray(tabRacesResponse.data) ? tabRacesResponse.data.map((r: any) => ({
+      // Log the combined response
+      console.log('📊 TAB API Combined Response:', {
+        totalRaces: allTabRaces.length,
+        auRaces: tabRacesResponseAU.success && Array.isArray(tabRacesResponseAU.data) ? tabRacesResponseAU.data.length : 0,
+        nzRaces: tabRacesResponseNZ.success && Array.isArray(tabRacesResponseNZ.data) ? tabRacesResponseNZ.data.length : 0,
+        races: allTabRaces.map((r: any) => ({
           meeting: r.meeting_name,
           raceNum: r.race_number,
           runnerCount: r.runners?.length || 0
-        })) : 'NOT AN ARRAY'
+        }))
       });
       
-      // Find matching race
-      if (tabRacesResponse.success && Array.isArray(tabRacesResponse.data)) {
-        tabData = tabRacesResponse.data.find(
+      // Find matching race from combined AU and NZ data
+      if (allTabRaces.length > 0) {
+        tabData = allTabRaces.find(
           (r: any) => {
-            const meetingMatch = r.meeting_name?.toLowerCase().includes(meeting.track.name.toLowerCase());
+            // Improved track matching: normalize both names before comparison
+            const normalizeForMatch = (s: string) => {
+              if (!s) return '';
+              return s.toLowerCase().replace(/\s*(hillside|lakeside|park|gardens|racecourse)\s*$/, '').trim();
+            };
+            const apiTrack = normalizeForMatch(r.meeting_name);
+            const targetTrack = normalizeForMatch(meeting.track.name);
+            const meetingMatch = apiTrack && targetTrack && (
+              apiTrack === targetTrack || 
+              apiTrack.includes(targetTrack) || 
+              targetTrack.includes(apiTrack)
+            );
             const raceMatch = r.race_number === raceNum;
             
             console.log('🔍 Checking race match:', {
@@ -123,53 +166,27 @@ export default async function RacePage({ params }: Props) {
     console.error('❌ TAB data fetch failed:', error.message);
   }
 
-  // Fetch TTR data (don't crash if it fails)
+  // Fetch TTR data from PFAI (don't crash if it fails)
   let ttrData: any = null;
   try {
-    const ttrClient = getRaceCardRatingsClient();
+    const ttrClient = getTTRRatingsClient();
     
     if (ttrClient) {
-      const dateStr = format(new Date(meeting.meetingDate), 'yyyy-MM-dd');
-      const puntingFormTrackName = meeting.track.name;
-      const surface = meeting.track.surface;
-      
-      // Get all possible TTR track name variations
-      const possibleTTRNames = convertPuntingFormToTTR(puntingFormTrackName, surface ?? undefined);
-      
-      console.log('🔍 Fetching TTR data with multiple track variations:', {
-        puntingFormTrackName,
-        surface,
-        possibleTTRNames,
-        date: dateStr,
+      console.log('🔍 Fetching TTR data from PFAI:', {
+        meetingId: meeting.meetingId,
         raceNumber: raceNum
       });
       
-      // Try each variation until we find ratings
-      for (const ttrTrackName of possibleTTRNames) {
-        try {
-          console.log(`  🔍 Trying TTR track name: "${ttrTrackName}"`);
-          
-          const ttrResponse = await ttrClient.getRatingsForRace(
-            dateStr,
-            ttrTrackName,
-            raceNum
-          );
-          
-          if (ttrResponse.data && ttrResponse.data.length > 0) {
-            ttrData = ttrResponse.data;
-            console.log(`  ✅ Found TTR data with track name: "${ttrTrackName}" (${ttrData.length} ratings)`);
-            break; // Found it!
-          } else {
-            console.log(`  ⚠️ No data found for track name: "${ttrTrackName}"`);
-          }
-        } catch (error: any) {
-          console.log(`  ❌ Error fetching with track name "${ttrTrackName}":`, error.message);
-          // Try next variation
-        }
-      }
+      const ttrResponse = await ttrClient.getRatingsForRace(
+        meeting.meetingId,
+        raceNum
+      );
       
-      if (!ttrData) {
-        console.log('⚠️ No TTR data found after trying all track name variations');
+      if (ttrResponse.success && ttrResponse.data && ttrResponse.data.length > 0) {
+        ttrData = ttrResponse.data;
+        console.log(`✅ PFAI TTR data retrieved: ${ttrData.length} ratings`);
+      } else {
+        console.log('⚠️ No TTR data found for this race');
       }
     }
   } catch (error: any) {
@@ -194,6 +211,14 @@ export default async function RacePage({ params }: Props) {
       (tr: any) => horseNamesMatch(tr.horse_name, runner.horseName || runner.name)
     );
 
+    // Check if horse is scratched
+    const scratchingInfo = getScratchingInfo(
+      scratchings,
+      meeting.meetingId,
+      raceNum,
+      runner.horseName || runner.name
+    );
+
     const enriched = {
       ...runner,
       tabFixedWinPrice: tabRunner?.tab_fixed_win_price || null,
@@ -202,6 +227,8 @@ export default async function RacePage({ params }: Props) {
       tabFixedPlaceTimestamp: tabRunner?.tab_fixed_place_timestamp || null,
       ttrRating: ttrRunner?.rating || null,
       ttrPrice: ttrRunner?.price || null,
+      isScratched: !!scratchingInfo,
+      scratchingReason: scratchingInfo?.reason,
     };
     
     console.log('✅ Enriched Runner:', {
@@ -254,6 +281,17 @@ export default async function RacePage({ params }: Props) {
           </span>
         </div>
 
+        {/* Track Condition */}
+        {trackCondition && (
+          <div className="mb-6">
+            <TrackConditionBadge 
+              condition={trackCondition.trackCondition}
+              railPosition={trackCondition.railPosition}
+              weather={trackCondition.weather}
+            />
+          </div>
+        )}
+
         {/* Race Navigation Pills */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
           {races.map((r) => (
@@ -274,31 +312,8 @@ export default async function RacePage({ params }: Props) {
         {/* Race Details Component */}
         <RaceDetails race={race} meeting={meeting} />
 
-        {/* Tabs */}
-        <RaceTabs />
-
-        {/* Sort & Filter */}
-        <div className="bg-white px-6 py-4 flex gap-4 border-b">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">Sort:  </span>
-            <select className="px-3 py-2 border rounded text-sm">
-              <option>Runner Number</option>
-              <option>Barrier</option>
-              <option>Weight</option>
-            </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">Odds: </span>
-            <select className="px-3 py-2 border rounded text-sm">
-              <option>Best Odds</option>
-              <option>Fixed Odds</option>
-              <option>TAB Odds</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Runner List */}
-        <RunnerList runners={enrichedRunners} />
+        {/* Race Content with Tabs */}
+        <RaceContent runners={enrichedRunners} />
       </div>
     </div>
   );

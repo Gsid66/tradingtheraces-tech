@@ -166,42 +166,58 @@ export async function POST(request: NextRequest) {
       .slice(0, 5);
 
     // Build comprehensive prompt
-    const prompt = `You are Sherlock Hooves, an expert horse racing analyst. Generate a comprehensive meeting-level analysis for ${date}.
+    const prompt = `You are Sherlock Hooves, a professional horse racing analyst providing comprehensive race analysis.
+
+Analyze the ${date} race meeting and provide detailed, data-driven insights.
 
 MEETING OVERVIEW:
 - Total Tracks: ${tracks.size}
-- Total Races: ${races.size}
+- Total Races: ${races.size}  
 - Total Horses: ${meetingData.length}
 - Value Opportunities (Score > 25): ${valueHorses.length}
 
 TOP 10 VALUE PLAYS:
-${topValuePlays.map((h, i) => `${i + 1}. ${h.horse_name} (${h.track_name} R${h.race_number}) - Rating: ${h.rating.toFixed(1)}, Price: $${h.price.toFixed(2)}, Value: ${h.valueScore.toFixed(1)}`).join('\n')}
+${topValuePlays.map((h, i) => `${i + 1}. ${h.horse_name} (${h.track_name} R${h.race_number}): Rating ${h.rating.toFixed(1)} @ $${h.price.toFixed(2)} - Value Score: ${h.valueScore.toFixed(1)}`).join('\n')}
 
-TOP 5 RACES BY VALUE:
-${topRaces.map((r, i) => `${i + 1}. ${r.key} - ${r.valueCount} value horses, Top: ${r.topHorse.horse_name} (${r.topHorse.valueScore.toFixed(1)})`).join('\n')}
+TOP 5 RACES WITH MOST VALUE:
+${topRaces.map((r, i) => `${i + 1}. ${r.key}: ${r.valueCount} value plays, featuring ${r.topHorse.horse_name}`).join('\n')}
 
-Generate a comprehensive analysis with the following sections:
+STRUCTURE YOUR ANALYSIS:
 
-1. MEETING OVERVIEW (2-3 sentences)
-   - Overall quality and value assessment
-   - Key themes or patterns across the meeting
+1. MEETING OVERVIEW (4-5 sentences)
+   - Overall competitive landscape and track conditions
+   - Key themes across the meeting
+   - Weather or track bias considerations
+   
+2. DETAILED RACE-BY-RACE SELECTIONS (Analyze top 5-8 races with value opportunities)
+   
+   For each selected race, provide:
+   
+   **Race [NUMBER] at [TRACK] - [DISTANCE]**
+   
+   PRIMARY SELECTION: [Horse Name] (#[Number])
+   - Rating: [X] | Price: $[X] | Value Score: [X]
+   - Form Analysis: Discuss recent runs, class level, track/distance record
+   - Competition Assessment: Key rivals and why this selection should prevail
+   - Jockey/Trainer: Comment on combination and recent form
+   - Betting Recommendation: Win/Place/Each-Way with confidence level (e.g., "Strong Win bet" or "Each-way value")
+   
+   ALTERNATIVE/VALUE PLAY (if applicable): [Horse Name]
+   - Brief rationale for inclusion as backup selection
+   
+3. TOP VALUE OPPORTUNITIES SUMMARY (5-8 horses not covered above)
+   - List horses with excellent value scores
+   - Explain rating vs price discrepancy
+   - Risk factors to consider
+   - Multi-race betting opportunities (e.g., quinellas, trifectas)
 
-2. TOP VALUE PLAYS (3-4 sentences)
-   - Highlight the standout horses with best value
-   - Mention specific horses, tracks, and why they stand out
-   - Include rating and price context
-
-3. RACE-BY-RACE INSIGHTS (4-5 sentences)
-   - Focus on the races with most value opportunities
-   - Mention specific race numbers and tracks
-   - Strategic recommendations
-
-4. BETTING STRATEGY (2-3 sentences)
-   - Overall approach for the day
+4. STRATEGIC BETTING APPROACH (4-5 sentences)
+   - Bankroll allocation recommendations
+   - Which races offer best value vs which to avoid
+   - Multi-bet strategies if applicable (doubles, trebles)
    - Risk management considerations
-   - Final recommendations
 
-Keep your tone witty and British. Be specific with horse names, tracks, and numbers. Make it actionable and insightful.`;
+TONE: Professional, analytical, authoritative. Minimize humor. Focus on actionable insights with specific data points. Be detailed and comprehensive.`;
 
     // Initialize OpenAI
     const openai = new OpenAI({
@@ -214,14 +230,14 @@ Keep your tone witty and British. Be specific with horse names, tracks, and numb
       messages: [
         {
           role: 'system',
-          content: 'You are Sherlock Hooves, a witty British horse racing expert providing comprehensive meeting-level analysis.',
+          content: 'You are Sherlock Hooves, a professional horse racing analyst providing comprehensive, data-driven meeting-level analysis with detailed race-by-race selections.',
         },
         {
           role: 'user',
           content: prompt,
         },
       ],
-      max_tokens: 1500,
+      max_tokens: 3000,
       temperature: 0.7,
     });
 

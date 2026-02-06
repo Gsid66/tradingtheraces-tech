@@ -47,8 +47,18 @@ export default function Home() {
           <p>Trading Desk</p>
         </div>
         <div className="coming-soon-card">
-          <h4>Coming Soon</h4>
+          <div className="flex items-center gap-3 mb-2">
+            <Image 
+              src="/images/sherlock-hooves.png"
+              alt="Sherlock Hooves"
+              width={48}
+              height={48}
+              className="rounded-full border-2 border-purple-300"
+            />
+            <h4>Available Now</h4>
+          </div>
           <p>Sherlock-Hooves AI Agent</p>
+          <p className="text-sm text-purple-600 mt-2">Professional race analysis</p>
         </div>
       </div>
 

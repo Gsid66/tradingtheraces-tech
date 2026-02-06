@@ -1,9 +1,13 @@
 import { Client } from 'pg';
 import { format, parseISO, isValid } from 'date-fns';
 import { calculateValueScore } from '@/lib/trading-desk/valueCalculator';
+import { getPuntingFormClient, PFScratching, PFCondition } from '@/lib/integrations/punting-form/client';
+import { tracksMatch } from '@/lib/utils/scratchings-matcher';
+import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 import FilterableRaceTable from './FilterableRaceTable';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 300; // Revalidate every 5 minutes for early morning odds
 
 interface PageProps {
   params: Promise<{ date: string }>;
@@ -86,15 +90,46 @@ export default async function RaceViewerPage({ params }: PageProps) {
 
   const data = await getDailyData(date);
 
+  // Fetch scratchings and conditions for both AU and NZ
+  let scratchings: PFScratching[] = [];
+  let conditions: PFCondition[] = [];
+  try {
+    const pfClient = getPuntingFormClient();
+    const [scratchingsAU, scratchingsNZ, conditionsAU, conditionsNZ] = await Promise.all([
+      pfClient.getScratchings(0), // 0 = AU
+      pfClient.getScratchings(1), // 1 = NZ
+      pfClient.getConditions(0),   // 0 = AU
+      pfClient.getConditions(1)    // 1 = NZ
+    ]);
+    scratchings = [...(scratchingsAU.payLoad || []), ...(scratchingsNZ.payLoad || [])];
+    conditions = [...(conditionsAU.payLoad || []), ...(conditionsNZ.payLoad || [])];
+  } catch (error: any) {
+    console.warn('⚠️ Scratchings/conditions unavailable:', error.message);
+  }
+
+  // Enrich data with scratching info
+  const dataWithScratchings = data.map(d => {
+    const isScratched = scratchings.some(s => 
+      horseNamesMatch(s.horseName, d.horse_name) &&
+      s.raceNumber === d.race_number &&
+      (!s.trackName || tracksMatch(s.trackName, d.track_name))
+    );
+    return {
+      ...d,
+      isScratched
+    };
+  });
+
   // Calculate value scores for all horses
-  const dataWithValueScores = data.map(d => ({
+  const dataWithValueScores = dataWithScratchings.map(d => ({
     ...d,
     valueScore: calculateValueScore(Number(d.rating), Number(d.price))
   }));
 
   // Calculate statistics
-  const totalRaces = new Set(data.map(d => `${d.track_name}-${d.race_number}`)).size;
-  const totalHorses = data.length;
+  const totalRaces = new Set(dataWithScratchings.map(d => `${d.track_name}-${d.race_number}`)).size;
+  const totalHorses = dataWithScratchings.length;
+  const scratchedCount = dataWithScratchings.filter(d => d.isScratched).length;
   const valueOpportunities = dataWithValueScores.filter(d => d.valueScore > 25).length;
 
   // Format date for display
@@ -108,7 +143,7 @@ export default async function RaceViewerPage({ params }: PageProps) {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-4">
           <div className="text-sm text-gray-600 mb-1">Total Races</div>
           <div className="text-2xl font-bold text-gray-800">{totalRaces}</div>
@@ -118,10 +153,24 @@ export default async function RaceViewerPage({ params }: PageProps) {
           <div className="text-2xl font-bold text-gray-800">{totalHorses}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
+          <div className="text-sm text-gray-600 mb-1">Scratched Horses</div>
+          <div className="text-2xl font-bold text-red-600">{scratchedCount}</div>
+        </div>
+        <div className="bg-white rounded-lg shadow p-4">
           <div className="text-sm text-gray-600 mb-1">Value Opportunities</div>
           <div className="text-2xl font-bold text-purple-600">{valueOpportunities}</div>
         </div>
       </div>
+
+      {/* Scratchings Alert */}
+      {scratchedCount > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <h3 className="font-semibold text-red-900 mb-2">⚠️ Scratchings Alert</h3>
+          <p className="text-red-800 text-sm">
+            {scratchedCount} horse{scratchedCount !== 1 ? 's' : ''} scratched. Scratched horses are marked in the table below.
+          </p>
+        </div>
+      )}
 
       {/* Race Table with Filters */}
       {dataWithValueScores.length === 0 ? (

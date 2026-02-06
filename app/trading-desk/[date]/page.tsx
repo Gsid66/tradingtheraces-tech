@@ -3,10 +3,13 @@ import { format, parseISO, isValid } from 'date-fns';
 import { calculateValueScore, getValueBackgroundColor } from '@/lib/trading-desk/valueCalculator';
 import { calculatePL } from '@/lib/trading-desk/plCalculator';
 import { getOrdinalSuffix } from '@/lib/utils/formatting';
+import { getPuntingFormClient, PFScratching, PFCondition } from '@/lib/integrations/punting-form/client';
+import { tracksMatch } from '@/lib/utils/scratchings-matcher';
 import StatsCard from './StatsCard';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 300; // Revalidate every 5 minutes for early morning odds
 
 interface PageProps {
   params: Promise<{ date: string }>;
@@ -132,19 +135,48 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
 
   const data = await getDailyData(date);
 
-  // Calculate value scores for all horses
-  const dataWithValueScores = data.map(d => ({
+  // Fetch scratchings and conditions for both AU and NZ
+  let scratchings: PFScratching[] = [];
+  let conditions: PFCondition[] = [];
+  try {
+    const pfClient = getPuntingFormClient();
+    const [scratchingsAU, scratchingsNZ, conditionsAU, conditionsNZ] = await Promise.all([
+      pfClient.getScratchings(0), // 0 = AU
+      pfClient.getScratchings(1), // 1 = NZ
+      pfClient.getConditions(0),   // 0 = AU
+      pfClient.getConditions(1)    // 1 = NZ
+    ]);
+    scratchings = [...(scratchingsAU.payLoad || []), ...(scratchingsNZ.payLoad || [])];
+    conditions = [...(conditionsAU.payLoad || []), ...(conditionsNZ.payLoad || [])];
+  } catch (error: any) {
+    console.warn('⚠️ Scratchings/conditions unavailable:', error.message);
+  }
+
+  // Filter out scratched horses from data
+  const dataWithoutScratched = data.filter(d => {
+    const isScratched = scratchings.some(s => 
+      horseNamesMatch(s.horseName, d.horse_name) &&
+      s.raceNumber === d.race_number &&
+      (!s.trackName || tracksMatch(s.trackName, d.track_name))
+    );
+    return !isScratched;
+  });
+
+  const scratchedCount = data.length - dataWithoutScratched.length;
+
+  // Calculate value scores for all horses (excluding scratched)
+  const dataWithValueScores = dataWithoutScratched.map(d => ({
     ...d,
     valueScore: calculateValueScore(Number(d.rating), Number(d.price))
   }));
 
   // Calculate statistics
-  const totalRaces = new Set(data.map(d => `${d.track_name}-${d.race_number}`)).size;
-  const ratedHorses = data.length;
+  const totalRaces = new Set(dataWithoutScratched.map(d => `${d.track_name}-${d.race_number}`)).size;
+  const ratedHorses = dataWithoutScratched.length;
   
   // Update value opportunities to use new value score
   const valueOpportunities = dataWithValueScores.filter(d => d.valueScore > 25).length;
-  const winners = data.filter(d => d.finishing_position === 1);
+  const winners = dataWithoutScratched.filter(d => d.finishing_position === 1);
 
   // Get top value plays (horses with best value score)
   const valuePlays = dataWithValueScores
@@ -169,6 +201,16 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">{formattedDate}</h1>
         <p className="text-sm sm:text-base text-gray-600">Race day analysis and ratings</p>
       </div>
+
+      {/* Scratchings Alert */}
+      {scratchedCount > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <h3 className="font-semibold text-red-900 mb-2">⚠️ Scratchings Alert</h3>
+          <p className="text-red-800 text-sm">
+            {scratchedCount} horse{scratchedCount !== 1 ? 's' : ''} scratched. Scratched horses have been excluded from value calculations.
+          </p>
+        </div>
+      )}
 
       {/* P&L Statistics Dashboard */}
       <StatsCard plData={plData} />

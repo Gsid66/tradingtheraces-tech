@@ -106,8 +106,8 @@ export default function RatingsOddsTable({ data }: RatingsOddsTableProps) {
       row.track || row.meeting_name || '-',
       `Race ${row.race_number}`,
       row.horse_name,
-      row.jockey,
-      row.trainer,
+      row.jockey || '-',
+      row.trainer || '-',
       formatRating(row.rating),
       formatPrice(row.price).replace('$', ''),
       row.tab_fixed_win ? formatPrice(row.tab_fixed_win).replace('$', '') : '-',
@@ -300,10 +300,10 @@ export default function RatingsOddsTable({ data }: RatingsOddsTableProps) {
                     {row.horse_name}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-700">
-                    {row.jockey}
+                    {row.jockey || '-'}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-700">
-                    {row.trainer}
+                    {row.trainer || '-'}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span className="inline-block bg-cyan-500 text-white px-3 py-1 rounded-full text-xs font-bold">

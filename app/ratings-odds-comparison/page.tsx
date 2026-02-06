@@ -2,9 +2,12 @@ import React from 'react';
 import { RatingsOddsData } from './types';
 import RatingsOddsTable from './RatingsOddsTable';
 import { getPostgresAPIClient, TabRace, TabRunner } from '@/lib/integrations/postgres-api';
+import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
+import { getPuntingFormClient, PFScratching, PFCondition } from '@/lib/integrations/punting-form/client';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 300; // Revalidate every 5 minutes for early morning odds
 
 // Utility function to format date to YYYY-MM-DD
 function formatDate(date: Date): string {
@@ -54,37 +57,73 @@ function tracksMatch(track1: string, track2: string): boolean {
          (normalized2.length >= 5 && normalized1.includes(normalized2));
 }
 
-// Fetch today's race cards from TTR API
+// Fetch today's race cards from PFAI
 async function fetchTodayRaceCards(): Promise<RatingsOddsData[]> {
-  const raceCardsApiUrl = process.env.RACE_CARD_RATINGS_API_URL || 'https://race-cards-ratings.onrender.com';
-
   try {
-    const today = getToday();
+    const pfClient = getPuntingFormClient();
+    const ttrClient = getTTRRatingsClient();
 
-    const params = new URLSearchParams();
-    params.append('start_date', today);
-    params.append('end_date', today);
-    params.append('limit', '1000'); // Get all today's races
-
-    const url = `${raceCardsApiUrl}/api/races?${params.toString()}`;
-    console.log('🔍 Fetching today&apos;s race cards:', url);
-
-    const response = await fetch(url, {
-      cache: 'no-store',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      console.error('API response not OK:', response.status, response.statusText);
-      throw new Error(`API responded with status ${response.status}`);
+    if (!pfClient) {
+      console.error('❌ Punting Form client not available');
+      return [];
     }
 
-    const responseData = await response.json();
-    return responseData.data || [];
+    if (!ttrClient) {
+      console.warn('⚠️ TTR Ratings client not available');
+      return [];
+    }
+
+    const today = getToday();
+    console.log('🔍 Fetching today\'s meetings from Punting Form:', today);
+
+    // Get today's meetings
+    const meetingsResponse = await pfClient.getTodaysMeetings();
+    const meetings = meetingsResponse.payLoad || [];
+    
+    console.log(`📊 Retrieved ${meetings.length} meetings for today`);
+
+    if (meetings.length === 0) {
+      console.warn('⚠️ No meetings found for today');
+      return [];
+    }
+
+    // Fetch ratings for all meetings
+    const allRatingsData: RatingsOddsData[] = [];
+
+    for (const meeting of meetings) {
+      console.log(`🔍 Fetching ratings for ${meeting.track.name}...`);
+      
+      const ttrResponse = await ttrClient.getRatingsForMeeting(meeting.meetingId);
+      
+      if (ttrResponse.success && ttrResponse.data && ttrResponse.data.length > 0) {
+        // Transform PFAI data to RatingsOddsData format
+        const meetingRatings = ttrResponse.data.map(rating => ({
+          race_date: meeting.meetingDate,
+          track: meeting.track.name,
+          meeting_name: meeting.track.name,
+          race_number: rating.race_number,
+          race_name: '', // Not available in PFAI ratings
+          saddle_cloth: rating.tab_number,
+          horse_name: rating.horse_name,
+          jockey: null, // Not available in PFAI ratings
+          trainer: null, // Not available in PFAI ratings
+          rating: rating.rating,
+          price: rating.price,
+          tab_fixed_win: null, // Will be merged later
+          tab_fixed_place: null // Will be merged later
+        }));
+
+        allRatingsData.push(...meetingRatings);
+        console.log(`✅ Added ${meetingRatings.length} ratings for ${meeting.track.name}`);
+      } else {
+        console.warn(`⚠️ No ratings found for ${meeting.track.name}`);
+      }
+    }
+
+    console.log(`✅ Total ratings fetched: ${allRatingsData.length}`);
+    return allRatingsData;
   } catch (error) {
-    console.error('Error fetching race cards:', error);
+    console.error('❌ Error fetching race cards from PFAI:', error);
     return [];
   }
 }
@@ -106,18 +145,33 @@ async function mergeTABOdds(raceCards: RatingsOddsData[]): Promise<RatingsOddsDa
     const today = getToday();
     console.log('🔍 Fetching TAB odds for today:', today);
 
-    const tabResponse = await pgClient.getRacesByDate(today).catch(err => {
-      console.error(`Error fetching TAB data:`, err);
-      return { success: false, data: [] };
-    });
+    // Fetch TAB odds for both AU and NZ races separately
+    const [tabResponseAU, tabResponseNZ] = await Promise.all([
+      pgClient.getRacesByDate(today, 'AU').catch(err => {
+        console.error(`Error fetching AU TAB data:`, err);
+        return { success: false, data: [] };
+      }),
+      pgClient.getRacesByDate(today, 'NZ').catch(err => {
+        console.error(`Error fetching NZ TAB data:`, err);
+        return { success: false, data: [] };
+      })
+    ]);
 
-    if (!tabResponse.success || !Array.isArray(tabResponse.data)) {
-      console.warn('⚠️ TAB data not available');
+    // Combine both AU and NZ races
+    const allTabRaces = [
+      ...(tabResponseAU.success && Array.isArray(tabResponseAU.data) ? tabResponseAU.data : []),
+      ...(tabResponseNZ.success && Array.isArray(tabResponseNZ.data) ? tabResponseNZ.data : [])
+    ];
+
+    const auCount = tabResponseAU.success && Array.isArray(tabResponseAU.data) ? tabResponseAU.data.length : 0;
+    const nzCount = tabResponseNZ.success && Array.isArray(tabResponseNZ.data) ? tabResponseNZ.data.length : 0;
+    console.log(`📊 Fetched ${allTabRaces.length} TAB races for today (AU: ${auCount}, NZ: ${nzCount})`);
+
+    // Check if we have any TAB data
+    if (allTabRaces.length === 0) {
+      console.warn('⚠️ No TAB data available for either AU or NZ');
       return raceCards;
     }
-
-    const allTabRaces = tabResponse.data;
-    console.log(`📊 Fetched ${allTabRaces.length} TAB races for today`);
 
     // Merge TAB odds into race cards
     const mergedRaceCards = raceCards.map(card => {
@@ -176,6 +230,35 @@ export default async function RatingsOddsComparisonPage() {
   // Merge TAB odds
   const dataWithOdds = await mergeTABOdds(raceCards);
 
+  // Fetch scratchings and conditions for both AU and NZ
+  let scratchings: PFScratching[] = [];
+  let conditions: PFCondition[] = [];
+  try {
+    const pfClient = getPuntingFormClient();
+    const [scratchingsAU, scratchingsNZ, conditionsAU, conditionsNZ] = await Promise.all([
+      pfClient.getScratchings(0), // 0 = AU
+      pfClient.getScratchings(1), // 1 = NZ
+      pfClient.getConditions(0),   // 0 = AU
+      pfClient.getConditions(1)    // 1 = NZ
+    ]);
+    scratchings = [...(scratchingsAU.payLoad || []), ...(scratchingsNZ.payLoad || [])];
+    conditions = [...(conditionsAU.payLoad || []), ...(conditionsNZ.payLoad || [])];
+  } catch (error: any) {
+    console.warn('⚠️ Scratchings/conditions unavailable:', error.message);
+  }
+
+  // Filter out scratched horses from value calculations
+  const dataWithoutScratched = dataWithOdds.filter(card => {
+    const isScratched = scratchings.some(s => 
+      horseNamesMatch(s.horseName, card.horse_name) &&
+      s.raceNumber === card.race_number &&
+      (!s.trackName || !card.track || tracksMatch(s.trackName, card.track))
+    );
+    return !isScratched;
+  });
+
+  const scratchedCount = dataWithOdds.length - dataWithoutScratched.length;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white">
       {/* Header */}
@@ -207,8 +290,18 @@ export default async function RatingsOddsComparisonPage() {
           </p>
         </div>
 
+        {/* Scratchings Alert */}
+        {scratchedCount > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <h3 className="font-semibold text-red-900 mb-2">⚠️ Scratchings Alert</h3>
+            <p className="text-red-800 text-sm">
+              {scratchedCount} horse{scratchedCount !== 1 ? 's' : ''} scratched today. Scratched horses have been excluded from the table below.
+            </p>
+          </div>
+        )}
+
         {/* Data Table */}
-        <RatingsOddsTable data={dataWithOdds} />
+        <RatingsOddsTable data={dataWithoutScratched} />
       </div>
     </div>
   );
