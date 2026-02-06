@@ -210,16 +210,6 @@ export default function RatingsOddsView({ runners }: Props) {
           </tbody>
         </table>
       </div>
-
-      {/* Missing Data Warning */}
-      {sortedRunners.length > 0 && (
-        <div className="px-6 py-4 bg-gray-50 border-t">
-          <div className="text-sm text-gray-600">
-            <strong>Note:</strong> TAB Fixed Odds are fetched from an external API.
-            If odds show as &quot;-&quot;, the data may not be available yet or the API connection needs to be configured.
-          </div>
-        </div>
-      )}
     </div>
   );
 }

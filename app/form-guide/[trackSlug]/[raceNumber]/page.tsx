@@ -109,7 +109,7 @@ export default async function RacePage({ params }: Props) {
         tabData = tabRacesResponse.data.find(
           (r: any) => {
             // Improved track matching: normalize both names before comparison
-            const normalizeForMatch = (s: string) => s?.toLowerCase().replace(/\s*(hillside|lakeside|park|gardens|racecourse)\s*$/i, '').trim();
+            const normalizeForMatch = (s: string) => s?.toLowerCase().replace(/\s*(hillside|lakeside|park|gardens|racecourse)\s*$/, '').trim();
             const apiTrack = normalizeForMatch(r.meeting_name);
             const targetTrack = normalizeForMatch(meeting.track.name);
             const meetingMatch = apiTrack && targetTrack && (
