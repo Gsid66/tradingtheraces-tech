@@ -81,7 +81,7 @@ export default async function RacePage({ params }: Props) {
       const dateStr = format(new Date(meeting.meetingDate), 'yyyy-MM-dd');
       
       console.log('\n🔍 === FETCHING TAB DATA FOR FORM GUIDE ===');
-      console.log('🔍 TAB data request:', {
+      console.log('📋 TAB data request:', {
         date: dateStr,
         trackName: meeting.track.name,
         raceNumber: raceNum
