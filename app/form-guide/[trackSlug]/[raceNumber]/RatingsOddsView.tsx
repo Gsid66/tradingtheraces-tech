@@ -2,6 +2,9 @@
 
 import type { PFRunner } from '@/lib/integrations/punting-form/client';
 
+// Value threshold: TAB odds must be 20% higher than TTR price to be considered value
+const VALUE_THRESHOLD = 1.2;
+
 // Extended runner interface with TAB and TTR data
 interface EnrichedRunner extends PFRunner {
   tabFixedWinPrice?: number | string | null;
@@ -55,14 +58,8 @@ export default function RatingsOddsView({ runners }: Props) {
   const valueRunners = activeRunners.filter(r => {
     const tabWin = typeof r.tabFixedWinPrice === 'string' ? parseFloat(r.tabFixedWinPrice) : r.tabFixedWinPrice;
     const ttrPrice = typeof r.ttrPrice === 'string' ? parseFloat(r.ttrPrice) : r.ttrPrice;
-    return tabWin && ttrPrice && tabWin > ttrPrice * 1.2; // 20% better value
+    return tabWin && ttrPrice && tabWin > ttrPrice * VALUE_THRESHOLD;
   });
-
-  // Diagnostics: Check data availability
-  const hasAnyTabData = sortedRunners.some(r => r.tabFixedWinPrice || r.tabFixedPlacePrice);
-  const hasAnyTtrData = sortedRunners.some(r => r.ttrRating || r.ttrPrice);
-  const tabDataCount = sortedRunners.filter(r => r.tabFixedWinPrice).length;
-  const ttrDataCount = sortedRunners.filter(r => r.ttrRating).length;
   
   const allTabPricesNull = sortedRunners.length > 0 && sortedRunners.every(r => !r.tabFixedWinPrice);
 
@@ -139,7 +136,7 @@ export default function RatingsOddsView({ runners }: Props) {
               sortedRunners.map((runner) => {
                 const tabWin = typeof runner.tabFixedWinPrice === 'string' ? parseFloat(runner.tabFixedWinPrice) : runner.tabFixedWinPrice;
                 const ttrPrice = typeof runner.ttrPrice === 'string' ? parseFloat(runner.ttrPrice) : runner.ttrPrice;
-                const isValue = tabWin && ttrPrice && tabWin > ttrPrice * 1.2;
+                const isValue = tabWin && ttrPrice && tabWin > ttrPrice * VALUE_THRESHOLD;
                 
                 return (
                   <tr 
