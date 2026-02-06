@@ -49,7 +49,10 @@ async function getDailyData(date: string): Promise<RaceData[]> {
     console.log('🔍 Fetching meetings for date:', date);
 
     // Get meetings for the specified date
-    // Note: getTodaysMeetings returns meetings for "today" - we need to filter by date
+    // Note: The Punting Form API's getTodaysMeetings() returns today's meetings.
+    // For dates other than today, this will return an empty array after filtering,
+    // which is expected behavior. The API doesn't currently support fetching meetings
+    // for arbitrary dates, so we filter client-side.
     const meetingsResponse = await pfClient.getTodaysMeetings();
     const allMeetings = meetingsResponse.payLoad || [];
     
@@ -67,18 +70,21 @@ async function getDailyData(date: string): Promise<RaceData[]> {
       return [];
     }
 
-    // Fetch ratings for all meetings
+    // Fetch ratings for all meetings concurrently
     const allRatingsData: RaceData[] = [];
 
-    for (const meeting of meetings) {
-      console.log(`🔍 Fetching ratings for ${meeting.track.name}...`);
-      
-      const ttrResponse = await ttrClient.getRatingsForMeeting(meeting.meetingId);
-      
+    const ratingsPromises = meetings.map(meeting => 
+      ttrClient.getRatingsForMeeting(meeting.meetingId)
+        .then(ttrResponse => ({ meeting, ttrResponse }))
+    );
+
+    const ratingsResults = await Promise.all(ratingsPromises);
+
+    for (const { meeting, ttrResponse } of ratingsResults) {
       if (ttrResponse.success && ttrResponse.data && ttrResponse.data.length > 0) {
         // Transform PFAI data to RaceData format
         const meetingRatings = ttrResponse.data.map(rating => ({
-          id: rating.tab_number || 0, // Use tab_number as ID since PFAI doesn't have a unique ID
+          id: parseInt(`${meeting.meetingId.replace(/\D/g, '')}${rating.race_number}${rating.tab_number}`), // Create unique composite ID
           race_date: date,
           track_name: meeting.track.name,
           state: meeting.track.state || null,
