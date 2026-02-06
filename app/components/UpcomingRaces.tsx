@@ -27,6 +27,7 @@ interface Race {
   race_name: string
   race_type?: string
   race_time?: string
+  track_state?: string  // Add track state for timezone reference
   distance?: number
   prize_money?: number
   runner_count: number
@@ -36,6 +37,7 @@ interface Race {
 
 interface Track {
   track_name: string
+  track_state?: string  // Add track state for timezone info
   race_count: number
   runner_count: number
 }
@@ -129,12 +131,14 @@ export default function UpcomingRaces() {
           
           const data = await response.json()
           const races: Race[] = data.races || []
+          const trackState = data.track_state || track.track_state  // Get state from API or fallback to tracks list
           
           // Race times from API are now correctly converted to AEDT format
           const racesWithTrack = races.map(race => ({
             ...race,
             race_time: race.race_time,  // Now in AEDT format after API conversion
-            track_name: track.track_name
+            track_name: track.track_name,
+            track_state: trackState
           }))
           
           allRaces.push(...racesWithTrack)

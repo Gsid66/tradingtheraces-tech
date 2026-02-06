@@ -26,6 +26,7 @@ interface Race {
   race_name: string
   race_type?:  string
   race_time?: string
+  track_state?: string  // Add track state for timezone reference
   distance?: number
   prize_money?: number
   runner_count:  number
@@ -35,6 +36,7 @@ interface Race {
 
 interface Track {
   track_name: string
+  track_state?: string  // Add track state for timezone info
   race_count: number
   runner_count: number
 }
@@ -103,11 +105,14 @@ export default function RaceCarousel() {
           
           const data = await response.json()
           const races: Race[] = data.races || []
+          const trackState = data.track_state || track.track_state  // Get state from API or fallback to tracks list
           
-          // Add track_name to each race
+          // Add track_name and track_state to each race
+          // Note: race_time from API is already converted to AEDT
           return races.map(race => ({
             ...race,
-            track_name: track.track_name
+            track_name: track.track_name,
+            track_state: trackState
           }))
         } catch (err) {
           console.error(`Error fetching ${track.track_name}:`, err)
@@ -120,6 +125,7 @@ export default function RaceCarousel() {
       const flattenedRaces = racesArrays.flat()
       
       // Step 4: Sort by race_time (chronological order) - using 24-hour format
+      // Note: race_time is already in AEDT format from the API
       const sortedRaces = flattenedRaces.sort((a, b) => {
         const timeA = convertTo24Hour(a.race_time || '99:99')
         const timeB = convertTo24Hour(b.race_time || '99:99')
@@ -132,7 +138,7 @@ export default function RaceCarousel() {
       const nextRaceIndex = findNextRace(sortedRaces)
       setCurrentRaceIndex(nextRaceIndex)
       
-      console.log(`✅ Loaded ${sortedRaces.length} total races across all tracks`)
+      console.log(`✅ Loaded ${sortedRaces.length} total races across all tracks (times in AEDT)`)
       setError(null)
       
     } catch (err) {
@@ -246,7 +252,7 @@ export default function RaceCarousel() {
         <div className="race-carousel-meta">
           {currentRace.race_time && (
             <span className="race-time">
-              <FaClock /> {currentRace.race_time}
+              <FaClock /> {currentRace.race_time} AEDT
             </span>
           )}
           {currentRace.distance && (
