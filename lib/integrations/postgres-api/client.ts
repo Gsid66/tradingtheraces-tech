@@ -137,7 +137,9 @@ export class PostgresAPIClient {
         if (allRacesResult.success && Array.isArray(allRacesResult.data)) {
           const nzRaces = allRacesResult.data.filter((race: TabRace) => {
             const meetingLoc = (race.meeting_location || '').toLowerCase();
-            return meetingLoc.includes('new zealand') || meetingLoc.includes('nz');
+            // Match "new zealand" or standalone "nz" (with word boundaries)
+            return meetingLoc.includes('new zealand') || 
+                   /\bnz\b/.test(meetingLoc);
           });
           
           if (nzRaces.length > 0) {

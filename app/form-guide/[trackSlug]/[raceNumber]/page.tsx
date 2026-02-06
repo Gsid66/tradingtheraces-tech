@@ -126,18 +126,6 @@ export default async function RacePage({ params }: Props) {
         console.warn('⚠️ WARNING: No NZ races returned!');
       }
       
-      // Log the combined response
-      console.log('📊 TAB API Combined Response:', {
-        totalRaces: allTabRaces.length,
-        auRaces: auCount,
-        nzRaces: nzCount,
-        races: allTabRaces.map((r: any) => ({
-          meeting: r.meeting_name,
-          raceNum: r.race_number,
-          runnerCount: r.runners?.length || 0
-        }))
-      });
-      
       // Find matching race from combined AU and NZ data
       if (allTabRaces.length > 0) {
         tabData = allTabRaces.find(
