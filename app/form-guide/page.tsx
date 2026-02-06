@@ -6,6 +6,7 @@ import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
 import FormGuideContent from './FormGuideContent';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 300; // Revalidate every 5 minutes for early morning odds
 
 export default async function FormGuidePage() {
   const pfClient = getPuntingFormClient();

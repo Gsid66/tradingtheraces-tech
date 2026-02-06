@@ -9,6 +9,7 @@ import StatsCard from './StatsCard';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 300; // Revalidate every 5 minutes for early morning odds
 
 interface PageProps {
   params: Promise<{ date: string }>;
@@ -134,17 +135,19 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
 
   const data = await getDailyData(date);
 
-  // Fetch scratchings to exclude from value calculations
+  // Fetch scratchings and conditions for both AU and NZ
   let scratchings: PFScratching[] = [];
   let conditions: PFCondition[] = [];
   try {
     const pfClient = getPuntingFormClient();
-    const [scratchingsRes, conditionsRes] = await Promise.all([
+    const [scratchingsAU, scratchingsNZ, conditionsAU, conditionsNZ] = await Promise.all([
       pfClient.getScratchings(0), // 0 = AU
-      pfClient.getConditions(0)
+      pfClient.getScratchings(1), // 1 = NZ
+      pfClient.getConditions(0),   // 0 = AU
+      pfClient.getConditions(1)    // 1 = NZ
     ]);
-    scratchings = scratchingsRes.payLoad || [];
-    conditions = conditionsRes.payLoad || [];
+    scratchings = [...(scratchingsAU.payLoad || []), ...(scratchingsNZ.payLoad || [])];
+    conditions = [...(conditionsAU.payLoad || []), ...(conditionsNZ.payLoad || [])];
   } catch (error: any) {
     console.warn('⚠️ Scratchings/conditions unavailable:', error.message);
   }
