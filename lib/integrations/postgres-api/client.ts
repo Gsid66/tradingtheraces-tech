@@ -73,13 +73,21 @@ export class PostgresAPIClient {
 
   /**
    * Get races by date
+   * @param date - Date in YYYY-MM-DD format
+   * @param location - Optional location filter: 'AU' for Australia, 'NZ' for New Zealand, or omit for all
    */
-  async getRacesByDate(date: string, venue?: string): Promise<PostgresAPIResponse<TabRace[]>> {
-  // Only add venue parameter if a specific venue is provided
-  // Omitting it returns all venues (API default behavior)
-  const venueParam = venue ? `&venue=${encodeURIComponent(venue)}` : '';
-  return this.get(`/api/race-data/races?date=${date}${venueParam}`);
-}
+  async getRacesByDate(date: string, location?: 'AU' | 'NZ'): Promise<PostgresAPIResponse<TabRace[]>> {
+    // Map location codes to Betwatch API location parameter format
+    // Based on Betwatch SDK: "Australia" for AU, "NZL" for NZ
+    let locationParam = '';
+    if (location === 'AU') {
+      locationParam = '&location=Australia';
+    } else if (location === 'NZ') {
+      locationParam = '&location=NZL';
+    }
+    // Omitting location parameter returns all locations (API default behavior)
+    return this.get(`/api/race-data/races?date=${date}${locationParam}`);
+  }
 
   /**
    * Get specific race with runners and TAB odds

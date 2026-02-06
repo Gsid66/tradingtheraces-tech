@@ -86,27 +86,39 @@ export default async function RacePage({ params }: Props) {
         raceNumber: raceNum
       });
       
-      const tabRacesResponse = await pgClient.getRacesByDate(dateStr);
+      // Fetch TAB data for both AU and NZ races
+      const [tabRacesResponseAU, tabRacesResponseNZ] = await Promise.all([
+        pgClient.getRacesByDate(dateStr, 'AU').catch(err => {
+          console.error(`❌ Error fetching AU TAB data:`, err);
+          return { success: false, data: [] };
+        }),
+        pgClient.getRacesByDate(dateStr, 'NZ').catch(err => {
+          console.error(`❌ Error fetching NZ TAB data:`, err);
+          return { success: false, data: [] };
+        })
+      ]);
       
-      // Log the RAW response first
-      console.log('📊 TAB API Raw Response:', tabRacesResponse);
+      // Combine both AU and NZ races
+      const allTabRaces = [
+        ...(tabRacesResponseAU.success && Array.isArray(tabRacesResponseAU.data) ? tabRacesResponseAU.data : []),
+        ...(tabRacesResponseNZ.success && Array.isArray(tabRacesResponseNZ.data) ? tabRacesResponseNZ.data : [])
+      ];
       
-      // Then log structured info
-      console.log('📊 TAB API Response:', {
-        success: tabRacesResponse.success,
-        hasData: !!tabRacesResponse.data,
-        isArray: Array.isArray(tabRacesResponse.data),
-        count: Array.isArray(tabRacesResponse.data) ? tabRacesResponse.data.length : 0,
-        races: Array.isArray(tabRacesResponse.data) ? tabRacesResponse.data.map((r: any) => ({
+      // Log the combined response
+      console.log('📊 TAB API Combined Response:', {
+        totalRaces: allTabRaces.length,
+        auRaces: tabRacesResponseAU.success && Array.isArray(tabRacesResponseAU.data) ? tabRacesResponseAU.data.length : 0,
+        nzRaces: tabRacesResponseNZ.success && Array.isArray(tabRacesResponseNZ.data) ? tabRacesResponseNZ.data.length : 0,
+        races: allTabRaces.map((r: any) => ({
           meeting: r.meeting_name,
           raceNum: r.race_number,
           runnerCount: r.runners?.length || 0
-        })) : 'NOT AN ARRAY'
+        }))
       });
       
-      // Find matching race
-      if (tabRacesResponse.success && Array.isArray(tabRacesResponse.data)) {
-        tabData = tabRacesResponse.data.find(
+      // Find matching race from combined AU and NZ data
+      if (allTabRaces.length > 0) {
+        tabData = allTabRaces.find(
           (r: any) => {
             // Improved track matching: normalize both names before comparison
             const normalizeForMatch = (s: string) => {
