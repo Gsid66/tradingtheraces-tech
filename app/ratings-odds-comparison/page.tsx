@@ -202,12 +202,19 @@ async function mergeTABOdds(raceCards: RatingsOddsData[]): Promise<RatingsOddsDa
 
     // Merge TAB odds into race cards
     const mergedRaceCards = raceCards.map(card => {
-      // Normalize both dates to YYYY-MM-DD format
-      const cardDate = card.race_date.split('T')[0];
+      // Normalize both dates to YYYY-MM-DD format (with safety checks)
+      const cardDate = card.race_date?.split('T')[0] || '';
+      
+      if (!cardDate) {
+        console.warn(`⚠️ Card missing race_date:`, card);
+        return card;
+      }
       
       // Find matching TAB race
       const matchingTabRace = allTabRaces.find((tabRace: TabRace) => {
-        const tabDate = tabRace.meeting_date.split('T')[0]; // Normalize TAB date
+        const tabDate = tabRace.meeting_date?.split('T')[0] || ''; // Normalize TAB date
+        if (!tabDate) return false;
+        
         const dateMatch = tabDate === cardDate;
         
         const cardTrack = card.track || card.meeting_name || '';
@@ -220,11 +227,11 @@ async function mergeTABOdds(raceCards: RatingsOddsData[]): Promise<RatingsOddsDa
         const trackMatch = tracksMatch(cardTrack, tabTrack);
         const raceMatch = tabRace.race_number === card.race_number;
         
-        // Debug logging for failed matches
-        if (!dateMatch) {
+        // Debug logging for failed matches (limited output)
+        if (!dateMatch && process.env.NODE_ENV === 'development') {
           console.log(`❌ Date mismatch: card=${cardDate}, tab=${tabDate}`);
         }
-        if (dateMatch && !trackMatch) {
+        if (dateMatch && !trackMatch && process.env.NODE_ENV === 'development') {
           console.log(`❌ Track mismatch: "${cardTrack}" (${normalizeTrackName(cardTrack)}) vs "${tabTrack}" (${normalizeTrackName(tabTrack)})`);
         }
         
@@ -256,7 +263,13 @@ async function mergeTABOdds(raceCards: RatingsOddsData[]): Promise<RatingsOddsDa
       } else if (!matchingTabRace) {
         const cardTrack = card.track || card.meeting_name || '';
         console.log(`🔍 No TAB race found for: ${cardTrack} R${card.race_number} (${cardDate})`);
-        console.log(`   Available TAB races: ${allTabRaces.map((r: TabRace) => `${r.meeting_name} R${r.race_number} (${r.meeting_date.split('T')[0]})`).join(', ')}`);
+        const availableRaces = allTabRaces
+          .map((r: TabRace) => {
+            const raceDate = r.meeting_date?.split('T')[0] || 'unknown';
+            return `${r.meeting_name} R${r.race_number} (${raceDate})`;
+          })
+          .join(', ');
+        console.log(`   Available TAB races: ${availableRaces}`);
       }
 
       return card;
