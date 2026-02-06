@@ -1,5 +1,5 @@
 import { Client } from 'pg';
-import { format, subDays } from 'date-fns';
+import { format, subDays, eachDayOfInterval } from 'date-fns';
 import ValueDistributionChart from '@/components/trading-desk/ValueDistributionChart';
 import WinRateTrendChart from '@/components/trading-desk/WinRateTrendChart';
 import ROIChart from '@/components/trading-desk/ROIChart';
@@ -7,8 +7,13 @@ import RatingPriceScatter from '@/components/trading-desk/RatingPriceScatter';
 import { calculateValueScore } from '@/lib/trading-desk/valueCalculator';
 import { calculateReturn } from '@/lib/trading-desk/plCalculator';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
+import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
+import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
 
 export const dynamic = 'force-dynamic';
+
+const LOOKBACK_DAYS = 30;
+const BATCH_SIZE = 5; // Process 5 dates at a time for historical data
 
 interface RaceData {
   race_date: string;
@@ -20,80 +25,137 @@ interface RaceData {
 }
 
 async function getStatisticsData(): Promise<RaceData[]> {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-  });
-
   try {
-    await client.connect();
+    const pfClient = getPuntingFormClient();
+    const ttrClient = getTTRRatingsClient();
 
-    // Get data from last 30 days
-    const thirtyDaysAgo = format(subDays(new Date(), 30), 'yyyy-MM-dd');
+    if (!pfClient || !ttrClient) {
+      console.error('❌ API clients not available');
+      return [];
+    }
 
-    // Query 1: Get ratings data
-    const ratingsQuery = `
-      SELECT 
-        rcr.race_date::date as race_date,
-        rcr.horse_name,
-        rcr.rating,
-        rcr.price,
-        ra.race_id
-      FROM race_cards_ratings rcr
-      LEFT JOIN pf_meetings m ON rcr.race_date = m.meeting_date
-        AND rcr.track = m.track_name
-      LEFT JOIN pf_races ra ON ra.meeting_id = m.meeting_id 
-        AND rcr.race_number = ra.race_number
-      WHERE rcr.race_date >= $1
-      ORDER BY rcr.race_date DESC
-    `;
+    // Get last LOOKBACK_DAYS of dates
+    const today = new Date();
+    const lookbackDate = subDays(today, LOOKBACK_DAYS);
+    const dateRange = eachDayOfInterval({ start: lookbackDate, end: today });
 
-    const ratingsResult = await client.query(ratingsQuery, [thirtyDaysAgo]);
-    const ratings = ratingsResult.rows;
+    console.log(`🔍 Fetching historical data for last ${LOOKBACK_DAYS} days (${format(lookbackDate, 'yyyy-MM-dd')} to ${format(today, 'yyyy-MM-dd')})`);
 
-    // Query 2: Get all results for the date range
-    const resultsQuery = `
-      SELECT 
-        r.race_id,
-        r.horse_name,
-        r.finishing_position,
-        r.starting_price
-      FROM pf_results r
-      INNER JOIN pf_races ra ON r.race_id = ra.race_id
-      INNER JOIN pf_meetings m ON ra.meeting_id = m.meeting_id
-      WHERE m.meeting_date >= $1
-    `;
+    // Fetch all ratings data for the date range (in parallel for better performance)
+    const allRatingsData: RaceData[] = [];
 
-    const resultsResult = await client.query(resultsQuery, [thirtyDaysAgo]);
-    const results = resultsResult.rows;
-
-    // Match ratings with results using fuzzy matching
-    const enrichedData = ratings.map((rating: any) => {
-      let matchedResult = null;
+    // Fetch data for all dates in parallel (in batches to avoid overwhelming the API)
+    for (let i = 0; i < dateRange.length; i += BATCH_SIZE) {
+      const batch = dateRange.slice(i, i + BATCH_SIZE);
       
-      if (rating.race_id) {
-        matchedResult = results.find((result: any) => 
-          result.race_id === rating.race_id &&
-          horseNamesMatch(rating.horse_name, result.horse_name)
-        );
-      }
+      const batchPromises = batch.map(async (date) => {
+        const dateStr = format(date, 'yyyy-MM-dd');
+        
+        try {
+          // Get meetings for this specific date
+          const meetingsResponse = await pfClient.getMeetingsByDate(date);
+          const meetings = meetingsResponse.payLoad || [];
 
-      return {
-        race_date: rating.race_date,
-        horse_name: rating.horse_name,
-        rating: rating.rating,
-        price: rating.price,
-        finishing_position: matchedResult?.finishing_position || null,
-        actual_sp: matchedResult?.starting_price || null
-      };
+          if (meetings.length === 0) {
+            return []; // No meetings for this date
+          }
+
+          // Fetch ratings for all meetings in parallel
+          const ratingsPromises = meetings.map(meeting => 
+            ttrClient.getRatingsForMeeting(meeting.meetingId)
+              .then(ttrResponse => ({ meeting, ttrResponse, dateStr }))
+              .catch(error => {
+                console.warn(`⚠️ Error fetching ratings for ${meeting.track.name}:`, error);
+                return null;
+              })
+          );
+
+          const ratingsResults = await Promise.all(ratingsPromises);
+          
+          const dateRatings: RaceData[] = [];
+          for (const result of ratingsResults) {
+            if (result && result.ttrResponse.success && result.ttrResponse.data && result.ttrResponse.data.length > 0) {
+              const meetingRatings = result.ttrResponse.data.map(rating => ({
+                race_date: dateStr,
+                horse_name: rating.horse_name,
+                rating: rating.rating,
+                price: rating.price,
+                finishing_position: null,
+                actual_sp: null
+              }));
+
+              dateRatings.push(...meetingRatings);
+            }
+          }
+          
+          return dateRatings;
+        } catch (error) {
+          console.warn(`⚠️ Error fetching data for ${dateStr}:`, error);
+          return [];
+        }
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+      batchResults.forEach(results => allRatingsData.push(...results));
+      
+      console.log(`📊 Processed batch ${i / BATCH_SIZE + 1}, total ratings so far: ${allRatingsData.length}`);
+    }
+
+    console.log(`✅ Fetched ${allRatingsData.length} ratings from last ${LOOKBACK_DAYS} days`);
+
+    // Now fetch results from database
+    const client = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
     });
 
-    return enrichedData;
+    try {
+      await client.connect();
+
+      const resultsQuery = `
+        SELECT 
+          r.race_id,
+          r.horse_name,
+          r.finishing_position,
+          r.starting_price,
+          ra.race_number,
+          m.track_name,
+          m.meeting_date
+        FROM pf_results r
+        INNER JOIN pf_races ra ON r.race_id = ra.race_id
+        INNER JOIN pf_meetings m ON ra.meeting_id = m.meeting_id
+        WHERE m.meeting_date >= $1
+      `;
+
+      const lookbackDateStr = format(lookbackDate, 'yyyy-MM-dd');
+      const resultsResult = await client.query(resultsQuery, [lookbackDateStr]);
+      const results = resultsResult.rows;
+
+      console.log(`📊 Found ${results.length} results from last ${LOOKBACK_DAYS} days`);
+
+      // Match ratings with results
+      const enrichedData = allRatingsData.map((rating) => {
+        const matchedResult = results.find((result: any) => 
+          result.meeting_date === rating.race_date &&
+          horseNamesMatch(result.horse_name, rating.horse_name)
+        );
+
+        return {
+          ...rating,
+          finishing_position: matchedResult?.finishing_position || null,
+          actual_sp: matchedResult?.starting_price || null
+        };
+      });
+
+      return enrichedData;
+
+    } finally {
+      await client.end();
+    }
+
   } catch (error) {
-    console.error('Error fetching statistics data:', error);
+    console.error('❌ Error fetching historical data:', error);
     return [];
-  } finally {
-    await client.end();
   }
 }
 
