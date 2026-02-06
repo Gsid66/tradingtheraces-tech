@@ -58,8 +58,32 @@ export default function RatingsOddsView({ runners }: Props) {
     return tabWin && ttrPrice && tabWin > ttrPrice * 1.2; // 20% better value
   });
 
+  // Diagnostics: Check data availability
+  const hasAnyTabData = sortedRunners.some(r => r.tabFixedWinPrice || r.tabFixedPlacePrice);
+  const hasAnyTtrData = sortedRunners.some(r => r.ttrRating || r.ttrPrice);
+  const tabDataCount = sortedRunners.filter(r => r.tabFixedWinPrice).length;
+  const ttrDataCount = sortedRunners.filter(r => r.ttrRating).length;
+  
+  const allTabPricesNull = sortedRunners.length > 0 && sortedRunners.every(r => !r.tabFixedWinPrice);
+
   return (
     <div className="bg-white rounded-b-lg shadow-sm">
+      {/* TAB Data Missing Alert */}
+      {allTabPricesNull && (
+        <div className="bg-amber-50 border-b border-amber-300 px-6 py-4">
+          <div className="flex items-start gap-3">
+            <div className="text-amber-600 text-xl mt-0.5">⚠️</div>
+            <div>
+              <h3 className="font-semibold text-amber-900 mb-1">TAB Odds Unavailable</h3>
+              <p className="text-sm text-amber-800">
+                TAB fixed odds data is not currently available for this race. This feature requires external API configuration. 
+                Contact your system administrator if TAB odds integration is needed.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Info Banner */}
       <div className="bg-purple-50 border-b border-purple-200 px-6 py-4">
         <h3 className="font-semibold text-purple-900 mb-1">Ratings vs Fixed Odds</h3>

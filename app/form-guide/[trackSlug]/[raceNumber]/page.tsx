@@ -108,7 +108,15 @@ export default async function RacePage({ params }: Props) {
       if (tabRacesResponse.success && Array.isArray(tabRacesResponse.data)) {
         tabData = tabRacesResponse.data.find(
           (r: any) => {
-            const meetingMatch = r.meeting_name?.toLowerCase().includes(meeting.track.name.toLowerCase());
+            // Improved track matching: normalize both names before comparison
+            const normalizeForMatch = (s: string) => s?.toLowerCase().replace(/\s*(hillside|lakeside|park|gardens|racecourse)\s*$/i, '').trim();
+            const apiTrack = normalizeForMatch(r.meeting_name);
+            const targetTrack = normalizeForMatch(meeting.track.name);
+            const meetingMatch = apiTrack && targetTrack && (
+              apiTrack === targetTrack || 
+              apiTrack.includes(targetTrack) || 
+              targetTrack.includes(apiTrack)
+            );
             const raceMatch = r.race_number === raceNum;
             
             console.log('🔍 Checking race match:', {
