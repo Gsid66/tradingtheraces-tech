@@ -4,7 +4,7 @@ import { calculateValueScore, getValueBackgroundColor } from '@/lib/trading-desk
 import { calculatePL } from '@/lib/trading-desk/plCalculator';
 import { getOrdinalSuffix } from '@/lib/utils/formatting';
 import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
-import { isHorseScratched } from '@/lib/utils/scratchings-matcher';
+import { tracksMatch } from '@/lib/utils/scratchings-matcher';
 import StatsCard from './StatsCard';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 
@@ -154,7 +154,7 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
     const isScratched = scratchings.some(s => 
       horseNamesMatch(s.horseName, d.horse_name) &&
       s.raceNumber === d.race_number &&
-      s.trackName.toLowerCase().includes(d.track_name.toLowerCase())
+      (!s.trackName || tracksMatch(s.trackName, d.track_name))
     );
     return !isScratched;
   });

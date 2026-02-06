@@ -2,6 +2,7 @@ import { Client } from 'pg';
 import { format, parseISO, isValid } from 'date-fns';
 import { calculateValueScore } from '@/lib/trading-desk/valueCalculator';
 import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
+import { tracksMatch } from '@/lib/utils/scratchings-matcher';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 import FilterableRaceTable from './FilterableRaceTable';
 
@@ -108,7 +109,7 @@ export default async function RaceViewerPage({ params }: PageProps) {
     const isScratched = scratchings.some(s => 
       horseNamesMatch(s.horseName, d.horse_name) &&
       s.raceNumber === d.race_number &&
-      s.trackName.toLowerCase().includes(d.track_name.toLowerCase())
+      (!s.trackName || tracksMatch(s.trackName, d.track_name))
     );
     return {
       ...d,

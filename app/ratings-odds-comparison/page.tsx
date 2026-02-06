@@ -5,7 +5,6 @@ import { getPostgresAPIClient, TabRace, TabRunner } from '@/lib/integrations/pos
 import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
 import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
-import { isHorseScratched } from '@/lib/utils/scratchings-matcher';
 
 export const dynamic = 'force-dynamic';
 
@@ -234,7 +233,8 @@ export default async function RatingsOddsComparisonPage() {
   const dataWithoutScratched = dataWithOdds.filter(card => {
     const isScratched = scratchings.some(s => 
       horseNamesMatch(s.horseName, card.horse_name) &&
-      s.raceNumber === card.race_number
+      s.raceNumber === card.race_number &&
+      (!s.trackName || !card.track || tracksMatch(s.trackName, card.track))
     );
     return !isScratched;
   });
