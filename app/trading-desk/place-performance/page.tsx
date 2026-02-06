@@ -1,7 +1,9 @@
 import { Client } from 'pg';
-import { format, subDays } from 'date-fns';
+import { format, subDays, eachDayOfInterval } from 'date-fns';
 import { calculateValueScore } from '@/lib/trading-desk/valueCalculator';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
+import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
+import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,84 +36,121 @@ const LOOKBACK_DAYS = 30;
 const PLACE_DIVIDEND_MULTIPLIER = 0.25; // Estimated place return (odds / 4)
 
 async function getPlaceData(): Promise<RaceData[]> {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-  });
-
   try {
-    await client.connect();
+    const pfClient = getPuntingFormClient();
+    const ttrClient = getTTRRatingsClient();
 
-    // Get last 30 days of data
-    const thirtyDaysAgo = format(subDays(new Date(), LOOKBACK_DAYS), 'yyyy-MM-dd');
+    if (!pfClient || !ttrClient) {
+      console.error('❌ API clients not available');
+      return [];
+    }
 
-    // Query 1: Get ratings data
-    const ratingsQuery = `
-      SELECT 
-        rcr.race_date::date as race_date,
-        rcr.horse_name,
-        rcr.track as track_name,
-        rcr.race_number,
-        rcr.rating,
-        rcr.price,
-        ra.race_id
-      FROM race_cards_ratings rcr
-      LEFT JOIN pf_meetings m ON rcr.race_date = m.meeting_date
-        AND rcr.track = m.track_name
-      LEFT JOIN pf_races ra ON ra.meeting_id = m.meeting_id 
-        AND rcr.race_number = ra.race_number
-      WHERE rcr.race_date >= $1
-      ORDER BY rcr.race_date DESC
-    `;
+    // Get last LOOKBACK_DAYS of data
+    const today = new Date();
+    const lookbackDate = subDays(today, LOOKBACK_DAYS);
+    const dateRange = eachDayOfInterval({ start: lookbackDate, end: today });
 
-    const ratingsResult = await client.query(ratingsQuery, [thirtyDaysAgo]);
-    const ratings = ratingsResult.rows;
+    console.log(`🔍 Fetching place performance data for last ${LOOKBACK_DAYS} days`);
 
-    // Query 2: Get all results for the date range
-    const resultsQuery = `
-      SELECT 
-        r.race_id,
-        r.horse_name,
-        r.finishing_position,
-        r.starting_price
-      FROM pf_results r
-      INNER JOIN pf_races ra ON r.race_id = ra.race_id
-      INNER JOIN pf_meetings m ON ra.meeting_id = m.meeting_id
-      WHERE m.meeting_date >= $1
-    `;
+    const allRatingsData: RaceData[] = [];
 
-    const resultsResult = await client.query(resultsQuery, [thirtyDaysAgo]);
-    const results = resultsResult.rows;
-
-    // Match ratings with results using fuzzy matching
-    const enrichedData = ratings.map((rating: any) => {
-      let matchedResult = null;
+    for (const date of dateRange) {
+      const dateStr = format(date, 'yyyy-MM-dd');
       
-      if (rating.race_id) {
-        matchedResult = results.find((result: any) => 
-          result.race_id === rating.race_id &&
-          horseNamesMatch(rating.horse_name, result.horse_name)
-        );
-      }
+      try {
+        const meetingsResponse = await pfClient.getTodaysMeetings();
+        const allMeetings = meetingsResponse.payLoad || [];
+        
+        const meetings = allMeetings.filter(m => {
+          const meetingDate = m.meetingDate.split('T')[0];
+          return meetingDate === dateStr;
+        });
 
-      return {
-        race_date: rating.race_date,
-        horse_name: rating.horse_name,
-        track_name: rating.track_name,
-        race_number: rating.race_number,
-        rating: rating.rating,
-        price: rating.price,
-        finishing_position: matchedResult?.finishing_position || null,
-        actual_sp: matchedResult?.starting_price || null
-      };
+        if (meetings.length === 0) {
+          continue; // Skip dates with no meetings
+        }
+
+        for (const meeting of meetings) {
+          const ttrResponse = await ttrClient.getRatingsForMeeting(meeting.meetingId);
+          
+          if (ttrResponse.success && ttrResponse.data && ttrResponse.data.length > 0) {
+            const meetingRatings = ttrResponse.data.map(rating => ({
+              race_date: dateStr,
+              horse_name: rating.horse_name,
+              track_name: meeting.track.name,
+              race_number: rating.race_number,
+              rating: rating.rating,
+              price: rating.price,
+              finishing_position: null,
+              actual_sp: null
+            }));
+
+            allRatingsData.push(...meetingRatings);
+          }
+        }
+      } catch (error) {
+        console.warn(`⚠️ Error fetching data for ${dateStr}:`, error);
+        continue;
+      }
+    }
+
+    console.log(`✅ Fetched ${allRatingsData.length} ratings for place analysis`);
+
+    // Fetch results from database
+    const client = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
     });
 
-    return enrichedData;
+    try {
+      await client.connect();
+
+      const resultsQuery = `
+        SELECT 
+          r.race_id,
+          r.horse_name,
+          r.finishing_position,
+          r.starting_price,
+          ra.race_number,
+          m.track_name,
+          m.meeting_date
+        FROM pf_results r
+        INNER JOIN pf_races ra ON r.race_id = ra.race_id
+        INNER JOIN pf_meetings m ON ra.meeting_id = m.meeting_id
+        WHERE m.meeting_date >= $1
+      `;
+
+      const lookbackDateStr = format(lookbackDate, 'yyyy-MM-dd');
+      const resultsResult = await client.query(resultsQuery, [lookbackDateStr]);
+      const results = resultsResult.rows;
+
+      console.log(`📊 Found ${results.length} results for place analysis`);
+
+      // Match ratings with results
+      const enrichedData = allRatingsData.map((rating) => {
+        const matchedResult = results.find((result: any) => 
+          result.meeting_date === rating.race_date &&
+          result.track_name === rating.track_name &&
+          result.race_number === rating.race_number &&
+          horseNamesMatch(result.horse_name, rating.horse_name)
+        );
+
+        return {
+          ...rating,
+          finishing_position: matchedResult?.finishing_position || null,
+          actual_sp: matchedResult?.starting_price || null
+        };
+      });
+
+      return enrichedData;
+
+    } finally {
+      await client.end();
+    }
+
   } catch (error) {
-    console.error('Error fetching place data:', error);
+    console.error('❌ Error fetching place data:', error);
     return [];
-  } finally {
-    await client.end();
   }
 }
 
