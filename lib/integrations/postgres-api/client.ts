@@ -43,19 +43,21 @@ export class PostgresAPIClient {
 
   private async get<T>(endpoint: string): Promise<PostgresAPIResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`;
-    console.log('🔗 Postgres API URL:', url);
+    console.log('🔗 Postgres API Request:', url);
 
     try {
       const response = await fetch(url, {
         cache: 'no-store',
       });
 
+      console.log('📡 Postgres API Response Status:', response.status, response.statusText);
+
       if (!response.ok) {
-        // Get actual error message from API
         let errorMsg = response.statusText;
         try {
           const errorData = await response.json();
           errorMsg = errorData.message || errorData.error || errorMsg;
+          console.error('❌ Postgres API Error Body:', errorData);
         } catch {
           errorMsg = await response.text().catch(() => errorMsg);
         }
@@ -64,9 +66,25 @@ export class PostgresAPIClient {
         throw new Error(`Postgres API (${response.status}): ${errorMsg}`);
       }
 
-      return response.json();
+      const data = await response.json();
+      
+      // Log summary of response
+      if (data.success && Array.isArray(data.data)) {
+        console.log('✅ Postgres API Success:', {
+          count: data.data.length,
+          sampleMeeting: data.data[0]?.meeting_name,
+          sampleLocation: data.data[0]?.meeting_location
+        });
+      } else {
+        console.log('⚠️ Postgres API Response:', data);
+      }
+      
+      return data;
     } catch (error: any) {
-      console.error('❌ Postgres API Fetch Failed:', error.message);
+      console.error('❌ Postgres API Fetch Failed:', {
+        url,
+        error: error.message
+      });
       throw error;
     }
   }
@@ -77,16 +95,71 @@ export class PostgresAPIClient {
    * @param location - Optional location filter: 'AU' for Australia, 'NZ' for New Zealand, or omit for all
    */
   async getRacesByDate(date: string, location?: 'AU' | 'NZ'): Promise<PostgresAPIResponse<TabRace[]>> {
-    // Map location codes to Betwatch API location parameter format
-    // Based on Betwatch SDK: "Australia" for AU, "NZL" for NZ
-    let locationParam = '';
+    // For AU, use the known working parameter
     if (location === 'AU') {
-      locationParam = '&location=Australia';
-    } else if (location === 'NZ') {
-      locationParam = '&location=NZL';
+      const locationParam = '&location=Australia';
+      return this.get(`/api/race-data/races?date=${date}${locationParam}`);
     }
-    // Omitting location parameter returns all locations (API default behavior)
-    return this.get(`/api/race-data/races?date=${date}${locationParam}`);
+    
+    // For NZ, try multiple variations until one works
+    if (location === 'NZ') {
+      // Try different NZ location parameter variations in order of likelihood
+      const nzVariations = [
+        'New Zealand',  // Most common
+        'NZ',           // Abbreviation
+        'NZL',          // ISO code (current)
+        'new-zealand'   // URL-friendly
+      ];
+      
+      for (const variant of nzVariations) {
+        console.log(`🔍 Trying NZ races with location="${variant}"`);
+        
+        try {
+          const result = await this.get<TabRace[]>(`/api/race-data/races?date=${date}&location=${encodeURIComponent(variant)}`);
+          
+          if (result.success && result.data && Array.isArray(result.data) && result.data.length > 0) {
+            console.log(`✅ Found ${result.data.length} NZ races using location="${variant}"`);
+            return result;
+          } else {
+            console.log(`❌ No races found with location="${variant}"`);
+          }
+        } catch (err: any) {
+          console.log(`❌ Error with location="${variant}":`, err.message);
+        }
+      }
+      
+      console.warn(`⚠️ No NZ races found with any location parameter. Trying to filter from all races...`);
+      
+      // Fallback: Fetch all races and filter by meeting_location
+      try {
+        const allRacesResult = await this.get<TabRace[]>(`/api/race-data/races?date=${date}`);
+        
+        if (allRacesResult.success && Array.isArray(allRacesResult.data)) {
+          const nzRaces = allRacesResult.data.filter((race: TabRace) => {
+            const meetingLoc = (race.meeting_location || '').toLowerCase();
+            // Match "new zealand" or standalone "nz" (with word boundaries)
+            return meetingLoc.includes('new zealand') || 
+                   /\bnz\b/.test(meetingLoc);
+          });
+          
+          if (nzRaces.length > 0) {
+            console.log(`✅ Filtered ${nzRaces.length} NZ races from ${allRacesResult.data.length} total races`);
+            return {
+              success: true,
+              data: nzRaces
+            };
+          }
+        }
+      } catch (err: any) {
+        console.error('❌ Fallback filtering failed:', err.message);
+      }
+      
+      console.warn(`⚠️ No NZ races found with any method (this may be normal if no NZ races are scheduled today)`);
+      return { success: true, data: [] };
+    }
+    
+    // No location filter - fetch all
+    return this.get(`/api/race-data/races?date=${date}`);
   }
 
   /**
