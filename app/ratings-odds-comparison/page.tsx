@@ -163,7 +163,9 @@ async function mergeTABOdds(raceCards: RatingsOddsData[]): Promise<RatingsOddsDa
       ...(tabResponseNZ.success && Array.isArray(tabResponseNZ.data) ? tabResponseNZ.data : [])
     ];
 
-    console.log(`📊 Fetched ${allTabRaces.length} TAB races for today (AU: ${tabResponseAU.success && Array.isArray(tabResponseAU.data) ? tabResponseAU.data.length : 0}, NZ: ${tabResponseNZ.success && Array.isArray(tabResponseNZ.data) ? tabResponseNZ.data.length : 0})`);
+    const auCount = tabResponseAU.success && Array.isArray(tabResponseAU.data) ? tabResponseAU.data.length : 0;
+    const nzCount = tabResponseNZ.success && Array.isArray(tabResponseNZ.data) ? tabResponseNZ.data.length : 0;
+    console.log(`📊 Fetched ${allTabRaces.length} TAB races for today (AU: ${auCount}, NZ: ${nzCount})`);
 
     // Check if we have any TAB data
     if (allTabRaces.length === 0) {

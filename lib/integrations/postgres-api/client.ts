@@ -86,7 +86,6 @@ export class PostgresAPIClient {
       locationParam = '&location=NZL';
     }
     // Omitting location parameter returns all locations (API default behavior)
-    
     return this.get(`/api/race-data/races?date=${date}${locationParam}`);
   }
 
