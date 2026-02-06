@@ -76,8 +76,8 @@ async function checkAllTables() {
       if (count === 0) {
         console.log(`❌ ${table}`);
         
-        // Show what this table is supposed to contain
-        const tableDescriptions = {
+              // Show what this table is supposed to contain
+        const tableDescriptions: Record<string, string> = {
           'pf_sectionals': 'Sectional times (400m, 600m, 800m splits)',
           'pf_speed_maps': 'Expected running positions and early speed ratings',
           'pf_gear_changes': 'Equipment changes (blinkers, tongue ties, etc)',
@@ -89,7 +89,7 @@ async function checkAllTables() {
         
         if (tableDescriptions[table]) {
           console.log(`   → ${tableDescriptions[table]}`);
-        }
+        } 
       }
     }
 
