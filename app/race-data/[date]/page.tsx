@@ -139,7 +139,7 @@ export default async function RaceViewerPage({ params }: PageProps) {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-4">
           <div className="text-sm text-gray-600 mb-1">Total Races</div>
           <div className="text-2xl font-bold text-gray-800">{totalRaces}</div>
@@ -152,6 +152,10 @@ export default async function RaceViewerPage({ params }: PageProps) {
           <div className="text-sm text-gray-600 mb-1">Scratched Horses</div>
           <div className="text-2xl font-bold text-red-600">{scratchedCount}</div>
         </div>
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="text-sm text-gray-600 mb-1">Value Opportunities</div>
+          <div className="text-2xl font-bold text-purple-600">{valueOpportunities}</div>
+        </div>
       </div>
 
       {/* Scratchings Alert */}
@@ -163,11 +167,6 @@ export default async function RaceViewerPage({ params }: PageProps) {
           </p>
         </div>
       )}
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600 mb-1">Value Opportunities</div>
-          <div className="text-2xl font-bold text-purple-600">{valueOpportunities}</div>
-        </div>
-      </div>
 
       {/* Race Table with Filters */}
       {dataWithValueScores.length === 0 ? (
