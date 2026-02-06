@@ -3,7 +3,7 @@ import { RatingsOddsData } from './types';
 import RatingsOddsTable from './RatingsOddsTable';
 import { getPostgresAPIClient, TabRace, TabRunner } from '@/lib/integrations/postgres-api';
 import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
-import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
+import { getPuntingFormClient, PFScratching, PFCondition } from '@/lib/integrations/punting-form/client';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 
 export const dynamic = 'force-dynamic';
@@ -214,6 +214,33 @@ export default async function RatingsOddsComparisonPage() {
   // Merge TAB odds
   const dataWithOdds = await mergeTABOdds(raceCards);
 
+  // Fetch scratchings and conditions
+  let scratchings: PFScratching[] = [];
+  let conditions: PFCondition[] = [];
+  try {
+    const pfClient = getPuntingFormClient();
+    const [scratchingsRes, conditionsRes] = await Promise.all([
+      pfClient.getScratchings(0), // 0 = AU
+      pfClient.getConditions(0)
+    ]);
+    scratchings = scratchingsRes.payLoad || [];
+    conditions = conditionsRes.payLoad || [];
+  } catch (error: any) {
+    console.warn('⚠️ Scratchings/conditions unavailable:', error.message);
+  }
+
+  // Filter out scratched horses from value calculations
+  const dataWithoutScratched = dataWithOdds.filter(card => {
+    const isScratched = scratchings.some(s => 
+      horseNamesMatch(s.horseName, card.horse_name) &&
+      s.raceNumber === card.race_number &&
+      (!s.trackName || !card.track || tracksMatch(s.trackName, card.track))
+    );
+    return !isScratched;
+  });
+
+  const scratchedCount = dataWithOdds.length - dataWithoutScratched.length;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white">
       {/* Header */}
@@ -245,8 +272,18 @@ export default async function RatingsOddsComparisonPage() {
           </p>
         </div>
 
+        {/* Scratchings Alert */}
+        {scratchedCount > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <h3 className="font-semibold text-red-900 mb-2">⚠️ Scratchings Alert</h3>
+            <p className="text-red-800 text-sm">
+              {scratchedCount} horse{scratchedCount !== 1 ? 's' : ''} scratched today. Scratched horses have been excluded from the table below.
+            </p>
+          </div>
+        )}
+
         {/* Data Table */}
-        <RatingsOddsTable data={dataWithOdds} />
+        <RatingsOddsTable data={dataWithoutScratched} />
       </div>
     </div>
   );
