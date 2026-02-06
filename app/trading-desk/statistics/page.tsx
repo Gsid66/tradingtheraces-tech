@@ -12,6 +12,9 @@ import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
 
 export const dynamic = 'force-dynamic';
 
+const LOOKBACK_DAYS = 30;
+const BATCH_SIZE = 5; // Process 5 dates at a time for historical data
+
 interface RaceData {
   race_date: string;
   horse_name: string;
@@ -31,18 +34,17 @@ async function getStatisticsData(): Promise<RaceData[]> {
       return [];
     }
 
-    // Get last 30 days of dates
+    // Get last LOOKBACK_DAYS of dates
     const today = new Date();
-    const thirtyDaysAgo = subDays(today, 30);
-    const dateRange = eachDayOfInterval({ start: thirtyDaysAgo, end: today });
+    const lookbackDate = subDays(today, LOOKBACK_DAYS);
+    const dateRange = eachDayOfInterval({ start: lookbackDate, end: today });
 
-    console.log(`🔍 Fetching historical data for last 30 days (${format(thirtyDaysAgo, 'yyyy-MM-dd')} to ${format(today, 'yyyy-MM-dd')})`);
+    console.log(`🔍 Fetching historical data for last ${LOOKBACK_DAYS} days (${format(lookbackDate, 'yyyy-MM-dd')} to ${format(today, 'yyyy-MM-dd')})`);
 
     // Fetch all ratings data for the date range (in parallel for better performance)
     const allRatingsData: RaceData[] = [];
 
     // Fetch data for all dates in parallel (in batches to avoid overwhelming the API)
-    const BATCH_SIZE = 5; // Process 5 dates at a time
     for (let i = 0; i < dateRange.length; i += BATCH_SIZE) {
       const batch = dateRange.slice(i, i + BATCH_SIZE);
       
@@ -99,7 +101,7 @@ async function getStatisticsData(): Promise<RaceData[]> {
       console.log(`📊 Processed batch ${i / BATCH_SIZE + 1}, total ratings so far: ${allRatingsData.length}`);
     }
 
-    console.log(`✅ Fetched ${allRatingsData.length} ratings from last 30 days`);
+    console.log(`✅ Fetched ${allRatingsData.length} ratings from last ${LOOKBACK_DAYS} days`);
 
     // Now fetch results from database
     const client = new Client({
@@ -125,11 +127,11 @@ async function getStatisticsData(): Promise<RaceData[]> {
         WHERE m.meeting_date >= $1
       `;
 
-      const thirtyDaysAgoStr = format(thirtyDaysAgo, 'yyyy-MM-dd');
-      const resultsResult = await client.query(resultsQuery, [thirtyDaysAgoStr]);
+      const lookbackDateStr = format(lookbackDate, 'yyyy-MM-dd');
+      const resultsResult = await client.query(resultsQuery, [lookbackDateStr]);
       const results = resultsResult.rows;
 
-      console.log(`📊 Found ${results.length} results from last 30 days`);
+      console.log(`📊 Found ${results.length} results from last ${LOOKBACK_DAYS} days`);
 
       // Match ratings with results
       const enrichedData = allRatingsData.map((rating) => {

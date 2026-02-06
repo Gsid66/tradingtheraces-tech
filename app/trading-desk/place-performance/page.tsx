@@ -34,6 +34,7 @@ interface PlaceStats {
 const STAKE_AMOUNT = 10;
 const LOOKBACK_DAYS = 30;
 const PLACE_DIVIDEND_MULTIPLIER = 0.25; // Estimated place return (odds / 4)
+const BATCH_SIZE = 5; // Process 5 dates at a time for historical data
 
 async function getPlaceData(): Promise<RaceData[]> {
   try {
@@ -55,7 +56,6 @@ async function getPlaceData(): Promise<RaceData[]> {
     const allRatingsData: RaceData[] = [];
 
     // Fetch data for all dates in parallel (in batches to avoid overwhelming the API)
-    const BATCH_SIZE = 5; // Process 5 dates at a time
     for (let i = 0; i < dateRange.length; i += BATCH_SIZE) {
       const batch = dateRange.slice(i, i + BATCH_SIZE);
       
