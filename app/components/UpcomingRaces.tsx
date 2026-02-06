@@ -130,10 +130,10 @@ export default function UpcomingRaces() {
           const data = await response.json()
           const races: Race[] = data.races || []
           
-          // Race times from API are already in AEDT format, no conversion needed
+          // Race times from API are now correctly converted to AEDT format
           const racesWithTrack = races.map(race => ({
             ...race,
-            race_time: race.race_time,  // Already in AEDT format from API
+            race_time: race.race_time,  // Now in AEDT format after API conversion
             track_name: track.track_name
           }))
           

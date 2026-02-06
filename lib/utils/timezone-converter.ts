@@ -127,6 +127,7 @@ const TRACK_TO_STATE: Record<string, string> = {
   'cromwell': 'NZ',
   'alexandra': 'NZ',
   'kurow': 'NZ',
+  'tauherenikau': 'NZ',
 };
 
 export function getStateFromTrackName(trackName: string): string {
