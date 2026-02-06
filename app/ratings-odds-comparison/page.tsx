@@ -28,10 +28,10 @@ function normalizeTrackName(trackName: string): string {
   
   let normalized = trackName.toLowerCase().trim();
   
-  // Remove common suffixes
-  const suffixes = ['racecourse', 'gardens', 'hillside', 'park', 'racing'];
+  // Remove common suffixes (expanded list)
+  const suffixes = ['racecourse', 'gardens', 'hillside', 'park', 'racing', 'acton', 'synthetic', 'poly', 'course', 'track'];
   for (const suffix of suffixes) {
-    normalized = normalized.replace(new RegExp(`\\s*${suffix}\\s*$`), '');
+    normalized = normalized.replace(new RegExp(`\\s*${suffix}\\s*$`, 'i'), '');
   }
   
   // Remove special characters and extra spaces
@@ -50,11 +50,17 @@ function tracksMatch(track1: string, track2: string): boolean {
   
   if (!normalized1 || !normalized2) return false;
   
-  // Check if tracks are equal or one contains the other
-  // Use minimum length threshold to avoid false positives
-  return normalized1 === normalized2 || 
-         (normalized1.length >= 5 && normalized2.includes(normalized1)) ||
-         (normalized2.length >= 5 && normalized1.includes(normalized2));
+  // Exact match
+  if (normalized1 === normalized2) return true;
+  
+  // Contains match (min 4 chars to avoid false positives)
+  if (normalized1.length >= 4 && normalized2.includes(normalized1)) return true;
+  if (normalized2.length >= 4 && normalized1.includes(normalized2)) return true;
+  
+  // Check if one starts with the other
+  if (normalized1.startsWith(normalized2) || normalized2.startsWith(normalized1)) return true;
+  
+  return false;
 }
 
 // Fetch today's race cards from PFAI
@@ -173,13 +179,35 @@ async function mergeTABOdds(raceCards: RatingsOddsData[]): Promise<RatingsOddsDa
       return raceCards;
     }
 
+    // Debug: Log sample data from both sources
+    if (raceCards.length > 0) {
+      console.log('🔍 DEBUG: Race card sample:', {
+        track: raceCards[0]?.track,
+        meeting_name: raceCards[0]?.meeting_name,
+        race_date: raceCards[0]?.race_date,
+        race_number: raceCards[0]?.race_number,
+        horse_name: raceCards[0]?.horse_name
+      });
+    }
+
+    if (allTabRaces.length > 0) {
+      console.log('🔍 DEBUG: TAB race sample:', {
+        meeting_name: allTabRaces[0]?.meeting_name,
+        meeting_date: allTabRaces[0]?.meeting_date,
+        race_number: allTabRaces[0]?.race_number,
+        runners: allTabRaces[0]?.runners?.length,
+        sample_runner: allTabRaces[0]?.runners?.[0]?.horse_name
+      });
+    }
+
     // Merge TAB odds into race cards
     const mergedRaceCards = raceCards.map(card => {
-      const cardDate = new Date(card.race_date).toISOString().split('T')[0];
+      // Normalize both dates to YYYY-MM-DD format
+      const cardDate = card.race_date.split('T')[0];
       
       // Find matching TAB race
       const matchingTabRace = allTabRaces.find((tabRace: TabRace) => {
-        const tabDate = new Date(tabRace.meeting_date).toISOString().split('T')[0];
+        const tabDate = tabRace.meeting_date.split('T')[0]; // Normalize TAB date
         const dateMatch = tabDate === cardDate;
         
         const cardTrack = card.track || card.meeting_name || '';
@@ -192,29 +220,81 @@ async function mergeTABOdds(raceCards: RatingsOddsData[]): Promise<RatingsOddsDa
         const trackMatch = tracksMatch(cardTrack, tabTrack);
         const raceMatch = tabRace.race_number === card.race_number;
         
+        // Debug logging for failed matches
+        if (!dateMatch) {
+          console.log(`❌ Date mismatch: card=${cardDate}, tab=${tabDate}`);
+        }
+        if (dateMatch && !trackMatch) {
+          console.log(`❌ Track mismatch: "${cardTrack}" (${normalizeTrackName(cardTrack)}) vs "${tabTrack}" (${normalizeTrackName(tabTrack)})`);
+        }
+        
         return dateMatch && trackMatch && raceMatch;
       });
 
       if (matchingTabRace && matchingTabRace.runners) {
+        console.log(`🔍 Looking for horse: "${card.horse_name}" at ${card.track || card.meeting_name} R${card.race_number} in ${matchingTabRace.runners.length} runners`);
+        console.log(`   Available horses: ${matchingTabRace.runners.map((r: TabRunner) => r.horse_name).join(', ')}`);
+        
         const matchingRunner = matchingTabRace.runners.find((runner: TabRunner) => {
-          return horseNamesMatch(runner.horse_name, card.horse_name);
+          const matches = horseNamesMatch(runner.horse_name, card.horse_name);
+          if (!matches) {
+            console.log(`   ❌ No match: "${runner.horse_name}" vs "${card.horse_name}"`);
+          }
+          return matches;
         });
 
         if (matchingRunner) {
+          console.log(`   ✅ Matched: ${card.horse_name} -> Win: $${matchingRunner.tab_fixed_win_price}, Place: $${matchingRunner.tab_fixed_place_price}`);
           return {
             ...card,
             tab_fixed_win: matchingRunner.tab_fixed_win_price,
             tab_fixed_place: matchingRunner.tab_fixed_place_price
           };
+        } else {
+          console.log(`   ❌ No runner match found for: ${card.horse_name}`);
         }
+      } else if (!matchingTabRace) {
+        const cardTrack = card.track || card.meeting_name || '';
+        console.log(`🔍 No TAB race found for: ${cardTrack} R${card.race_number} (${cardDate})`);
+        console.log(`   Available TAB races: ${allTabRaces.map((r: TabRace) => `${r.meeting_name} R${r.race_number} (${r.meeting_date.split('T')[0]})`).join(', ')}`);
       }
 
       return card;
     });
 
+    // Summary statistics
     const cardsWithTabWin = mergedRaceCards.filter(c => c.tab_fixed_win != null).length;
     const cardsWithTabPlace = mergedRaceCards.filter(c => c.tab_fixed_place != null).length;
-    console.log(`✅ Merged TAB odds: ${cardsWithTabWin} with Win odds, ${cardsWithTabPlace} with Place odds out of ${raceCards.length} total cards`);
+    const cardsWithoutTab = mergedRaceCards.filter(c => c.tab_fixed_win == null).length;
+
+    console.log(`\n📊 TAB MERGE SUMMARY:`);
+    console.log(`   Total race cards: ${raceCards.length}`);
+    console.log(`   Total TAB races: ${allTabRaces.length}`);
+    console.log(`   ✅ Matched with Win odds: ${cardsWithTabWin}`);
+    console.log(`   ✅ Matched with Place odds: ${cardsWithTabPlace}`);
+    console.log(`   ❌ No TAB data: ${cardsWithoutTab}`);
+
+    // Show sample of unmatched cards
+    if (cardsWithoutTab > 0) {
+      const unmatchedSamples = mergedRaceCards
+        .filter(c => c.tab_fixed_win == null)
+        .slice(0, 3);
+      console.log(`\n❌ Sample unmatched cards:`);
+      unmatchedSamples.forEach(c => {
+        console.log(`   - ${c.track || c.meeting_name} R${c.race_number} ${c.horse_name} (${c.race_date})`);
+      });
+    }
+
+    // Show sample of matched cards
+    if (cardsWithTabWin > 0) {
+      const matchedSamples = mergedRaceCards
+        .filter(c => c.tab_fixed_win != null)
+        .slice(0, 3);
+      console.log(`\n✅ Sample matched cards:`);
+      matchedSamples.forEach(c => {
+        console.log(`   - ${c.track || c.meeting_name} R${c.race_number} ${c.horse_name}: Win=$${c.tab_fixed_win}, Place=$${c.tab_fixed_place}`);
+      });
+    }
 
     return mergedRaceCards;
   } catch (error) {
