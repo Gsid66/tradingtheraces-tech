@@ -3,7 +3,7 @@ import { format, parseISO, isValid } from 'date-fns';
 import { calculateValueScore, getValueBackgroundColor } from '@/lib/trading-desk/valueCalculator';
 import { calculatePL } from '@/lib/trading-desk/plCalculator';
 import { getOrdinalSuffix } from '@/lib/utils/formatting';
-import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
+import { getPuntingFormClient, PFScratching, PFCondition } from '@/lib/integrations/punting-form/client';
 import { tracksMatch } from '@/lib/utils/scratchings-matcher';
 import StatsCard from './StatsCard';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
@@ -135,8 +135,8 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
   const data = await getDailyData(date);
 
   // Fetch scratchings to exclude from value calculations
-  let scratchings: any[] = [];
-  let conditions: any[] = [];
+  let scratchings: PFScratching[] = [];
+  let conditions: PFCondition[] = [];
   try {
     const pfClient = getPuntingFormClient();
     const [scratchingsRes, conditionsRes] = await Promise.all([

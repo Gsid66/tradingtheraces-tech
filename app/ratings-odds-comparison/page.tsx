@@ -3,7 +3,7 @@ import { RatingsOddsData } from './types';
 import RatingsOddsTable from './RatingsOddsTable';
 import { getPostgresAPIClient, TabRace, TabRunner } from '@/lib/integrations/postgres-api';
 import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
-import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
+import { getPuntingFormClient, PFScratching, PFCondition } from '@/lib/integrations/punting-form/client';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 
 export const dynamic = 'force-dynamic';
@@ -215,8 +215,8 @@ export default async function RatingsOddsComparisonPage() {
   const dataWithOdds = await mergeTABOdds(raceCards);
 
   // Fetch scratchings and conditions
-  let scratchings: any[] = [];
-  let conditions: any[] = [];
+  let scratchings: PFScratching[] = [];
+  let conditions: PFCondition[] = [];
   try {
     const pfClient = getPuntingFormClient();
     const [scratchingsRes, conditionsRes] = await Promise.all([

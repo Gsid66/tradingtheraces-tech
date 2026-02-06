@@ -1,7 +1,7 @@
 import { Client } from 'pg';
 import { format, parseISO, isValid } from 'date-fns';
 import { calculateValueScore } from '@/lib/trading-desk/valueCalculator';
-import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
+import { getPuntingFormClient, PFScratching, PFCondition } from '@/lib/integrations/punting-form/client';
 import { tracksMatch } from '@/lib/utils/scratchings-matcher';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 import FilterableRaceTable from './FilterableRaceTable';
@@ -90,8 +90,8 @@ export default async function RaceViewerPage({ params }: PageProps) {
   const data = await getDailyData(date);
 
   // Fetch scratchings and conditions
-  let scratchings: any[] = [];
-  let conditions: any[] = [];
+  let scratchings: PFScratching[] = [];
+  let conditions: PFCondition[] = [];
   try {
     const pfClient = getPuntingFormClient();
     const [scratchingsRes, conditionsRes] = await Promise.all([

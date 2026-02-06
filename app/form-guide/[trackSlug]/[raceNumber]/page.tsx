@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { FiArrowLeft } from 'react-icons/fi';
 import { format } from 'date-fns';
-import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
+import { getPuntingFormClient, PFScratching, PFCondition } from '@/lib/integrations/punting-form/client';
 import { getPostgresAPIClient } from '@/lib/integrations/postgres-api';
 import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
@@ -39,8 +39,8 @@ export default async function RacePage({ params }: Props) {
   }
 
   // Fetch scratchings and conditions
-  let scratchings: any[] = [];
-  let conditions: any[] = [];
+  let scratchings: PFScratching[] = [];
+  let conditions: PFCondition[] = [];
   try {
     const [scratchingsRes, conditionsRes] = await Promise.all([
       pfClient.getScratchings(0), // 0 = AU
