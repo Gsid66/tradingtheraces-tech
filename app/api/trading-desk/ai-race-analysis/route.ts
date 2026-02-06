@@ -126,8 +126,7 @@ async function getMeetingData(date: string): Promise<RaceData[]> {
               // Additional Punting Form data
               barrier: runner?.barrierNumber,
               weight: runner?.weight,
-              age: undefined, // Not available in current PFRunner type
-              sex: undefined, // Not available in current PFRunner type
+              // Note: age and sex not currently available in PFRunner type
               last_starts: runner?.lastFiveStarts ?? undefined
             });
           } else {

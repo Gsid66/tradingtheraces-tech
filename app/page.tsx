@@ -53,7 +53,7 @@ export default function Home() {
               alt="Sherlock Hooves"
               width={64}
               height={64}
-              className="rounded-full border-3 border-purple-400 shadow-lg"
+              className="rounded-full border-4 border-purple-400 shadow-lg"
             />
             <h4>Available Now</h4>
           </div>
