@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { Client } from 'pg';
 import { calculateValueScore } from '@/lib/trading-desk/valueCalculator';
+import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
+import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings/pfai-client';
+import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 
 // Rate limiting map
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -43,53 +45,132 @@ interface RaceData {
   horse_name: string;
   rating: number;
   price: number;
-  jockey: string;
-  trainer: string;
+  jockey: string | null;
+  trainer: string | null;
   valueScore: number;
+  // New fields from Punting Form
+  barrier?: number;
+  weight?: number;
+  age?: number;
+  sex?: string;
+  last_starts?: string;
 }
 
 async function getMeetingData(date: string): Promise<RaceData[]> {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-  });
-
   try {
-    await client.connect();
+    const pfClient = getPuntingFormClient();
+    const ttrClient = getTTRRatingsClient();
 
-    const query = `
-      SELECT 
-        rcr.track as track_name,
-        m.state,
-        rcr.race_number,
-        rcr.horse_name,
-        rcr.rating,
-        rcr.price,
-        rcr.jockey,
-        rcr.trainer
-      FROM race_cards_ratings rcr
-      LEFT JOIN pf_meetings m ON rcr.race_date = m.meeting_date
-        AND rcr.track = m.track_name
-      WHERE rcr.race_date = $1
-        AND rcr.rating IS NOT NULL
-        AND rcr.price IS NOT NULL
-      ORDER BY rcr.track, rcr.race_number, rcr.rating DESC
-    `;
+    if (!pfClient || !ttrClient) {
+      console.error('❌ API clients not available');
+      throw new Error('API clients not configured');
+    }
 
-    const result = await client.query(query, [date]);
+    console.log(`🔍 Fetching meeting data for ${date}`);
+
+    // Get meetings for this date
+    const meetingsResponse = await pfClient.getTodaysMeetings();
+    const allMeetings = meetingsResponse.payLoad || [];
     
-    // Calculate value scores
-    return result.rows.map(row => ({
-      ...row,
-      rating: Number(row.rating),
-      price: Number(row.price),
-      valueScore: calculateValueScore(Number(row.rating), Number(row.price))
-    }));
+    // Filter meetings for the specific date (avoid timezone issues)
+    const meetings = allMeetings.filter(m => {
+      const meetingDate = m.meetingDate.split('T')[0];
+      return meetingDate === date;
+    });
+
+    if (meetings.length === 0) {
+      console.warn(`⚠️ No meetings found for ${date}`);
+      return [];
+    }
+
+    console.log(`📊 Found ${meetings.length} meetings for ${date}`);
+
+    // Fetch ratings and runner details for all meetings
+    const allRatingsData: RaceData[] = [];
+
+    for (const meeting of meetings) {
+      console.log(`🔍 Fetching data for ${meeting.track.name}...`);
+      
+      // Get TTR ratings
+      const ttrResponse = await ttrClient.getRatingsForMeeting(meeting.meetingId);
+      
+      if (!ttrResponse.success || !ttrResponse.data || ttrResponse.data.length === 0) {
+        console.warn(`⚠️ No ratings found for ${meeting.track.name}`);
+        continue;
+      }
+
+      // Get race details with runners from Punting Form
+      try {
+        const raceDetailsResponse = await pfClient.getAllRacesForMeeting(meeting.meetingId);
+        const races = raceDetailsResponse.payLoad?.races || [];
+
+        // Merge TTR ratings with Punting Form runner details
+        for (const rating of ttrResponse.data) {
+          const race = races.find(r => r.number === rating.race_number);
+          
+          if (race && race.runners) {
+            const runner = race.runners.find(r => 
+              horseNamesMatch(r.horseName, rating.horse_name)
+            );
+
+            allRatingsData.push({
+              track_name: meeting.track.name,
+              state: meeting.track.state || null,
+              race_number: rating.race_number,
+              horse_name: rating.horse_name,
+              rating: rating.rating,
+              price: rating.price,
+              jockey: runner?.jockey?.fullName || null,
+              trainer: runner?.trainer?.fullName || null,
+              valueScore: calculateValueScore(rating.rating, rating.price),
+              // Additional Punting Form data
+              barrier: runner?.barrierNumber,
+              weight: runner?.weight,
+              age: undefined, // Not available in current PFRunner type
+              sex: undefined, // Not available in current PFRunner type
+              last_starts: runner?.lastFiveStarts ?? undefined
+            });
+          } else {
+            // Fallback if runner details not found
+            allRatingsData.push({
+              track_name: meeting.track.name,
+              state: meeting.track.state || null,
+              race_number: rating.race_number,
+              horse_name: rating.horse_name,
+              rating: rating.rating,
+              price: rating.price,
+              jockey: null,
+              trainer: null,
+              valueScore: calculateValueScore(rating.rating, rating.price)
+            });
+          }
+        }
+      } catch (error) {
+        console.warn(`⚠️ Error fetching race details for ${meeting.track.name}:`, error);
+        
+        // Fallback to ratings only
+        for (const rating of ttrResponse.data) {
+          allRatingsData.push({
+            track_name: meeting.track.name,
+            state: meeting.track.state || null,
+            race_number: rating.race_number,
+            horse_name: rating.horse_name,
+            rating: rating.rating,
+            price: rating.price,
+            jockey: null,
+            trainer: null,
+            valueScore: calculateValueScore(rating.rating, rating.price)
+          });
+        }
+      }
+    }
+
+    console.log(`✅ Total ratings fetched: ${allRatingsData.length}`);
+    return allRatingsData;
+
   } catch (error) {
-    console.error('Error fetching meeting data:', error);
+    console.error('❌ Error fetching meeting data:', error);
     throw error;
-  } finally {
-    await client.end();
   }
 }
 
@@ -165,79 +246,95 @@ export async function POST(request: NextRequest) {
       .sort((a, b) => b.valueCount - a.valueCount)
       .slice(0, 5);
 
-    // Build comprehensive prompt
-    const prompt = `You are Sherlock Hooves, a professional horse racing analyst providing comprehensive race analysis.
+    // Build comprehensive race-by-race prompt
+    const prompt = `You are Sherlock Hooves, a professional horse racing analyst.
 
-Analyze the ${date} race meeting and provide detailed, data-driven insights.
+Analyze the ${date} race meeting and provide RACE-BY-RACE detailed analysis.
 
 MEETING OVERVIEW:
 - Total Tracks: ${tracks.size}
-- Total Races: ${races.size}  
+- Total Races: ${raceGroups.size}
 - Total Horses: ${meetingData.length}
 - Value Opportunities (Score > 25): ${valueHorses.length}
 
+RACE-BY-RACE DATA:
+${Array.from(raceGroups.entries()).map(([raceKey, horses]) => {
+  const topHorse = horses[0];
+  return `
+${raceKey} (${topHorse.track_name}${topHorse.state ? `, ${topHorse.state}` : ''})
+- Runners: ${horses.length}
+- Top Selection: ${topHorse.horse_name} (Rating: ${topHorse.rating.toFixed(1)}, Price: $${topHorse.price.toFixed(2)}, Value: ${topHorse.valueScore.toFixed(1)})
+- Value Plays: ${horses.filter(h => h.valueScore > 25).length}
+${horses.slice(0, 5).map(h => {
+  let details = `  • ${h.horse_name}: Rating ${h.rating.toFixed(1)}, $${h.price.toFixed(2)}`;
+  if (h.barrier) details += `, Barrier ${h.barrier}`;
+  if (h.jockey) details += `, ${h.jockey}`;
+  if (h.weight) details += `, ${h.weight}kg`;
+  if (h.last_starts) details += `, Form: ${h.last_starts}`;
+  return details;
+}).join('\n')}
+`;
+}).join('\n')}
+
 TOP 10 VALUE PLAYS:
-${topValuePlays.map((h, i) => `${i + 1}. ${h.horse_name} (${h.track_name} R${h.race_number}): Rating ${h.rating.toFixed(1)} @ $${h.price.toFixed(2)} - Value Score: ${h.valueScore.toFixed(1)}`).join('\n')}
+${topValuePlays.map((h, i) => {
+  let line = `${i + 1}. ${h.track_name} R${h.race_number} - ${h.horse_name}
+   - Rating: ${h.rating.toFixed(1)} | Price: $${h.price.toFixed(2)} | Value Score: ${h.valueScore.toFixed(1)}`;
+  if (h.jockey) line += `\n   - Jockey: ${h.jockey}`;
+  if (h.trainer) line += `\n   - Trainer: ${h.trainer}`;
+  if (h.barrier) line += `\n   - Barrier: ${h.barrier}`;
+  if (h.weight) line += `\n   - Weight: ${h.weight}kg`;
+  if (h.last_starts) line += `\n   - Form: ${h.last_starts}`;
+  return line;
+}).join('\n\n')}
 
-TOP 5 RACES WITH MOST VALUE:
-${topRaces.map((r, i) => `${i + 1}. ${r.key}: ${r.valueCount} value plays, featuring ${r.topHorse.horse_name}`).join('\n')}
+REQUIRED ANALYSIS STRUCTURE:
 
-STRUCTURE YOUR ANALYSIS:
+For EACH race (or at least the top 10-15 races with most value/significance), provide:
 
-1. MEETING OVERVIEW (4-5 sentences)
-   - Overall competitive landscape and track conditions
-   - Key themes across the meeting
-   - Weather or track bias considerations
-   
-2. DETAILED RACE-BY-RACE SELECTIONS (Analyze top 5-8 races with value opportunities)
-   
-   For each selected race, provide:
-   
-   **Race [NUMBER] at [TRACK] - [DISTANCE]**
-   
-   PRIMARY SELECTION: [Horse Name] (#[Number])
-   - Rating: [X] | Price: $[X] | Value Score: [X]
-   - Form Analysis: Discuss recent runs, class level, track/distance record
-   - Competition Assessment: Key rivals and why this selection should prevail
-   - Jockey/Trainer: Comment on combination and recent form
-   - Betting Recommendation: Win/Place/Each-Way with confidence level (e.g., "Strong Win bet" or "Each-way value")
-   
-   ALTERNATIVE/VALUE PLAY (if applicable): [Horse Name]
-   - Brief rationale for inclusion as backup selection
-   
-3. TOP VALUE OPPORTUNITIES SUMMARY (5-8 horses not covered above)
-   - List horses with excellent value scores
-   - Explain rating vs price discrepancy
-   - Risk factors to consider
-   - Multi-race betting opportunities (e.g., quinellas, trifectas)
+**[TRACK NAME] - RACE [NUMBER]**
 
-4. STRATEGIC BETTING APPROACH (4-5 sentences)
-   - Bankroll allocation recommendations
-   - Which races offer best value vs which to avoid
-   - Multi-bet strategies if applicable (doubles, trebles)
-   - Risk management considerations
+1. RACE ANALYSIS (2-3 sentences)
+   - Race dynamics and key factors
+   - Track conditions considerations if relevant
+   
+2. TOP SELECTIONS
+   - **WIN:** Horse name, barrier, rating, price, brief reason (1-2 sentences)
+   - **PLACE:** 1-2 horses with brief reasoning
+   - **VALUE PLAY:** If value score > 25, highlight with reasoning
 
-TONE: Professional, analytical, authoritative. Minimize humor. Focus on actionable insights with specific data points. Be detailed and comprehensive.`;
+3. BETTING STRATEGY
+   - Recommended bet types (win/place/exotic)
+   - Confidence level (High/Medium/Low)
+
+After covering all races:
+
+**MEETING SUMMARY**
+- Best bets of the day (top 3-5 races)
+- Multi-bet opportunities if applicable
+- Overall bankroll allocation strategy
+
+TONE: Professional, analytical, specific. Use data points from the race information provided. Be detailed and actionable.`;
 
     // Initialize OpenAI
     const openai = new OpenAI({
       apiKey: openaiApiKey,
     });
 
-    // Call OpenAI API
+    // Call OpenAI API - increased max_tokens for race-by-race analysis
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
-          content: 'You are Sherlock Hooves, a professional horse racing analyst providing comprehensive, data-driven meeting-level analysis with detailed race-by-race selections.',
+          content: 'You are Sherlock Hooves, a professional horse racing analyst providing comprehensive, data-driven race-by-race analysis with detailed selections for each race.',
         },
         {
           role: 'user',
           content: prompt,
         },
       ],
-      max_tokens: 3000,
+      max_tokens: 4000,
       temperature: 0.7,
     });
 
