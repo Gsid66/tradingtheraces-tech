@@ -49,11 +49,11 @@ export default function Home() {
         <div className="coming-soon-card">
           <div className="flex items-center gap-3 mb-2">
             <Image 
-              src="/images/sherlock-hooves.png"
+              src="/images/new-sherlock-hooves.png"
               alt="Sherlock Hooves"
-              width={48}
-              height={48}
-              className="rounded-full border-2 border-purple-300"
+              width={64}
+              height={64}
+              className="rounded-full border-4 border-purple-400 shadow-lg"
             />
             <h4>Available Now</h4>
           </div>
