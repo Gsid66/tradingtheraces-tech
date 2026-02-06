@@ -57,13 +57,15 @@ async function getDailyData(date: string): Promise<RaceData[]> {
     const allMeetings = meetingsResponse.payLoad || [];
     
     // Filter meetings to match the requested date
-    const targetDate = new Date(date).toISOString().split('T')[0];
+    // Use string comparison to avoid timezone conversion issues
+    const targetDate = date; // Already in YYYY-MM-DD format from URL
     const meetings = allMeetings.filter(m => {
-      const meetingDate = new Date(m.meetingDate).toISOString().split('T')[0];
+      // Normalize meeting date to YYYY-MM-DD format
+      const meetingDate = m.meetingDate.split('T')[0]; // Remove time component if present
       return meetingDate === targetDate;
     });
     
-    console.log(`📊 Found ${meetings.length} meetings for ${date}`);
+    console.log(`📊 Found ${meetings.length} meetings for ${targetDate}`);
 
     if (meetings.length === 0) {
       console.warn('⚠️ No meetings found for date:', date);
