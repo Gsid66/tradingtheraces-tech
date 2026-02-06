@@ -12,9 +12,9 @@ function extractTimeAndConvertToAEDT(datetime: string, trackName: string): strin
       return datetime
     }
     
-    const hours = timeMatch[1]
-    const minutes = timeMatch[2]
-    const period = timeMatch[4]
+    // Extract time components (ignoring full match and seconds)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_fullMatch, hours, minutes, _seconds, period] = timeMatch
     const localTime = `${hours}:${minutes} ${period.toUpperCase()}`
     
     // Get the track's state/timezone
