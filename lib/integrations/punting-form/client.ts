@@ -126,6 +126,28 @@ export interface PFRaceFields {
   ratingsUpdated: string;
 }
 
+// Scratching information
+export interface PFScratching {
+  meetingId: string;
+  raceId: string;
+  raceNumber: number;
+  trackName: string;
+  horseName: string;
+  tabNumber: number;
+  scratchingTime: string;
+  reason?: string;
+}
+
+// Track condition information
+export interface PFCondition {
+  meetingId: string;
+  trackName: string;
+  trackCondition: string; // e.g., "Good 4", "Heavy 8", "Synthetic"
+  railPosition?: string;
+  weather?: string;
+  updatedAt: string;
+}
+
 export class PuntingFormClient {
   private apiKey: string;
   private baseUrl: string;
@@ -205,6 +227,22 @@ export class PuntingFormClient {
   async getResultsByDate(date: Date): Promise<PuntingFormResponse<any>> {
     const formattedDate = format(date, 'dd-MMM-yyyy');
     return this.get(`/form/results?meetingDate=${formattedDate}`);
+  }
+
+  /**
+   * Get scratchings for a jurisdiction
+   * @param jurisdiction - 0 (AU), 1 (NZ), 2 (International)
+   */
+  async getScratchings(jurisdiction: number = 0): Promise<PuntingFormResponse<PFScratching[]>> {
+    return this.get(`/Updates/Scratchings?jurisdiction=${jurisdiction}`);
+  }
+
+  /**
+   * Get track conditions for a jurisdiction
+   * @param jurisdiction - 0 (AU), 1 (NZ), 2 (International)
+   */
+  async getConditions(jurisdiction: number = 0): Promise<PuntingFormResponse<PFCondition[]>> {
+    return this.get(`/Updates/Conditions?jurisdiction=${jurisdiction}`);
   }
 }
 
