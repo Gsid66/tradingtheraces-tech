@@ -81,6 +81,7 @@ const TRACK_TO_STATE: Record<string, string> = {
   'darwin': 'NT',
   'fannie bay': 'NT',
   'alice springs': 'NT',
+  'pioneer park': 'NT',
   // NZ
   'te rapa': 'NZ',
   'ellerslie': 'NZ',
