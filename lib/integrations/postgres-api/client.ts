@@ -154,7 +154,7 @@ export class PostgresAPIClient {
         console.error('❌ Fallback filtering failed:', err.message);
       }
       
-      console.warn(`⚠️ No NZ races found with any method`);
+      console.warn(`⚠️ No NZ races found with any method (this may be normal if no NZ races are scheduled today)`);
       return { success: true, data: [] };
     }
     
