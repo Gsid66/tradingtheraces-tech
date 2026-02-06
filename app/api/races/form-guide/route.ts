@@ -143,6 +143,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       track: raceFields.track.name,
+      track_state: raceFields.track.state,  // Include state for timezone info
       races: races
     })
     
