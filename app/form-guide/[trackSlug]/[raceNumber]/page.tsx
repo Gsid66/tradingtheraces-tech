@@ -80,7 +80,8 @@ export default async function RacePage({ params }: Props) {
     if (pgClient) {
       const dateStr = format(new Date(meeting.meetingDate), 'yyyy-MM-dd');
       
-      console.log('🔍 Fetching TAB data:', {
+      console.log('\n🔍 === FETCHING TAB DATA FOR FORM GUIDE ===');
+      console.log('🔍 TAB data request:', {
         date: dateStr,
         trackName: meeting.track.name,
         raceNumber: raceNum
@@ -89,11 +90,17 @@ export default async function RacePage({ params }: Props) {
       // Fetch TAB data for both AU and NZ races
       const [tabRacesResponseAU, tabRacesResponseNZ] = await Promise.all([
         pgClient.getRacesByDate(dateStr, 'AU').catch(err => {
-          console.error(`❌ Error fetching AU TAB data:`, err);
+          console.error(`\n❌ AU TAB FETCH ERROR:`, {
+            message: err.message,
+            url: err.url
+          });
           return { success: false, data: [] };
         }),
         pgClient.getRacesByDate(dateStr, 'NZ').catch(err => {
-          console.error(`❌ Error fetching NZ TAB data:`, err);
+          console.error(`\n❌ NZ TAB FETCH ERROR:`, {
+            message: err.message,
+            url: err.url
+          });
           return { success: false, data: [] };
         })
       ]);
@@ -104,11 +111,26 @@ export default async function RacePage({ params }: Props) {
         ...(tabRacesResponseNZ.success && Array.isArray(tabRacesResponseNZ.data) ? tabRacesResponseNZ.data : [])
       ];
       
+      const auCount = tabRacesResponseAU.success && Array.isArray(tabRacesResponseAU.data) ? tabRacesResponseAU.data.length : 0;
+      const nzCount = tabRacesResponseNZ.success && Array.isArray(tabRacesResponseNZ.data) ? tabRacesResponseNZ.data.length : 0;
+      
+      console.log('\n📊 TAB ODDS FETCH SUMMARY:');
+      console.log(`   AU: ${auCount} races`);
+      console.log(`   NZ: ${nzCount} races`);
+      console.log(`   Total: ${auCount + nzCount} races`);
+      
+      if (auCount === 0) {
+        console.warn('⚠️ WARNING: No AU races returned!');
+      }
+      if (nzCount === 0) {
+        console.warn('⚠️ WARNING: No NZ races returned!');
+      }
+      
       // Log the combined response
       console.log('📊 TAB API Combined Response:', {
         totalRaces: allTabRaces.length,
-        auRaces: tabRacesResponseAU.success && Array.isArray(tabRacesResponseAU.data) ? tabRacesResponseAU.data.length : 0,
-        nzRaces: tabRacesResponseNZ.success && Array.isArray(tabRacesResponseNZ.data) ? tabRacesResponseNZ.data.length : 0,
+        auRaces: auCount,
+        nzRaces: nzCount,
         races: allTabRaces.map((r: any) => ({
           meeting: r.meeting_name,
           raceNum: r.race_number,

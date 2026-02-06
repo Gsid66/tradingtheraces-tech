@@ -149,16 +149,23 @@ async function mergeTABOdds(raceCards: RatingsOddsData[]): Promise<RatingsOddsDa
 
   try {
     const today = getToday();
-    console.log('🔍 Fetching TAB odds for today:', today);
+    console.log('\n🔍 === FETCHING TAB ODDS ===');
+    console.log(`Date: ${today}`);
 
     // Fetch TAB odds for both AU and NZ races separately
     const [tabResponseAU, tabResponseNZ] = await Promise.all([
       pgClient.getRacesByDate(today, 'AU').catch(err => {
-        console.error(`Error fetching AU TAB data:`, err);
+        console.error(`\n❌ AU TAB FETCH ERROR:`, {
+          message: err.message,
+          url: err.url
+        });
         return { success: false, data: [] };
       }),
       pgClient.getRacesByDate(today, 'NZ').catch(err => {
-        console.error(`Error fetching NZ TAB data:`, err);
+        console.error(`\n❌ NZ TAB FETCH ERROR:`, {
+          message: err.message,
+          url: err.url
+        });
         return { success: false, data: [] };
       })
     ]);
@@ -171,7 +178,18 @@ async function mergeTABOdds(raceCards: RatingsOddsData[]): Promise<RatingsOddsDa
 
     const auCount = tabResponseAU.success && Array.isArray(tabResponseAU.data) ? tabResponseAU.data.length : 0;
     const nzCount = tabResponseNZ.success && Array.isArray(tabResponseNZ.data) ? tabResponseNZ.data.length : 0;
-    console.log(`📊 Fetched ${allTabRaces.length} TAB races for today (AU: ${auCount}, NZ: ${nzCount})`);
+
+    console.log(`\n📊 TAB ODDS FETCH SUMMARY:`);
+    console.log(`   AU: ${auCount} races`);
+    console.log(`   NZ: ${nzCount} races`);
+    console.log(`   Total: ${auCount + nzCount} races`);
+
+    if (auCount === 0) {
+      console.warn('⚠️ WARNING: No AU races returned!');
+    }
+    if (nzCount === 0) {
+      console.warn('⚠️ WARNING: No NZ races returned!');
+    };
 
     // Check if we have any TAB data
     if (allTabRaces.length === 0) {
