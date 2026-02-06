@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { FaClock, FaMapMarkerAlt, FaRoad } from 'react-icons/fa'
-import { convertTo24Hour } from '@/lib/utils/timezone-converter'
+import { convertTo24Hour, getStateFromTrackName } from '@/lib/utils/timezone-converter'
 
 interface Runner {
   tab_number: number
@@ -131,7 +131,8 @@ export default function UpcomingRaces() {
           
           const data = await response.json()
           const races: Race[] = data.races || []
-          const trackState = data.track_state || track.track_state  // Get state from API or fallback to tracks list
+          // Get state from API, fallback to tracks list, ultimate fallback to track name lookup
+          const trackState = data.track_state || track.track_state || getStateFromTrackName(track.track_name)
           
           // Race times from API are now correctly converted to AEDT format
           const racesWithTrack = races.map(race => ({
