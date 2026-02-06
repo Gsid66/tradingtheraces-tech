@@ -38,48 +38,65 @@ async function getStatisticsData(): Promise<RaceData[]> {
 
     console.log(`🔍 Fetching historical data for last 30 days (${format(thirtyDaysAgo, 'yyyy-MM-dd')} to ${format(today, 'yyyy-MM-dd')})`);
 
-    // Fetch all ratings data for the date range
+    // Fetch all ratings data for the date range (in parallel for better performance)
     const allRatingsData: RaceData[] = [];
 
-    for (const date of dateRange) {
-      const dateStr = format(date, 'yyyy-MM-dd');
+    // Fetch data for all dates in parallel (in batches to avoid overwhelming the API)
+    const BATCH_SIZE = 5; // Process 5 dates at a time
+    for (let i = 0; i < dateRange.length; i += BATCH_SIZE) {
+      const batch = dateRange.slice(i, i + BATCH_SIZE);
       
-      try {
-        // Get meetings for this date
-        const meetingsResponse = await pfClient.getTodaysMeetings();
-        const allMeetings = meetingsResponse.payLoad || [];
+      const batchPromises = batch.map(async (date) => {
+        const dateStr = format(date, 'yyyy-MM-dd');
         
-        // Filter meetings for this specific date (avoid timezone issues)
-        const meetings = allMeetings.filter(m => {
-          const meetingDate = m.meetingDate.split('T')[0];
-          return meetingDate === dateStr;
-        });
+        try {
+          // Get meetings for this specific date
+          const meetingsResponse = await pfClient.getMeetingsByDate(date);
+          const meetings = meetingsResponse.payLoad || [];
 
-        if (meetings.length === 0) {
-          continue; // Skip dates with no meetings
-        }
-
-        // Fetch ratings for each meeting
-        for (const meeting of meetings) {
-          const ttrResponse = await ttrClient.getRatingsForMeeting(meeting.meetingId);
-          
-          if (ttrResponse.success && ttrResponse.data && ttrResponse.data.length > 0) {
-            const meetingRatings = ttrResponse.data.map(rating => ({
-              race_date: dateStr,
-              horse_name: rating.horse_name,
-              rating: rating.rating,
-              price: rating.price,
-              finishing_position: null,
-              actual_sp: null
-            }));
-
-            allRatingsData.push(...meetingRatings);
+          if (meetings.length === 0) {
+            return []; // No meetings for this date
           }
+
+          // Fetch ratings for all meetings in parallel
+          const ratingsPromises = meetings.map(meeting => 
+            ttrClient.getRatingsForMeeting(meeting.meetingId)
+              .then(ttrResponse => ({ meeting, ttrResponse, dateStr }))
+              .catch(error => {
+                console.warn(`⚠️ Error fetching ratings for ${meeting.track.name}:`, error);
+                return null;
+              })
+          );
+
+          const ratingsResults = await Promise.all(ratingsPromises);
+          
+          const dateRatings: RaceData[] = [];
+          for (const result of ratingsResults) {
+            if (result && result.ttrResponse.success && result.ttrResponse.data && result.ttrResponse.data.length > 0) {
+              const meetingRatings = result.ttrResponse.data.map(rating => ({
+                race_date: dateStr,
+                horse_name: rating.horse_name,
+                rating: rating.rating,
+                price: rating.price,
+                finishing_position: null,
+                actual_sp: null
+              }));
+
+              dateRatings.push(...meetingRatings);
+            }
+          }
+          
+          return dateRatings;
+        } catch (error) {
+          console.warn(`⚠️ Error fetching data for ${dateStr}:`, error);
+          return [];
         }
-      } catch (error) {
-        console.warn(`⚠️ Error fetching data for ${dateStr}:`, error);
-        continue; // Skip this date and continue
-      }
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+      batchResults.forEach(results => allRatingsData.push(...results));
+      
+      console.log(`📊 Processed batch ${i / BATCH_SIZE + 1}, total ratings so far: ${allRatingsData.length}`);
     }
 
     console.log(`✅ Fetched ${allRatingsData.length} ratings from last 30 days`);
