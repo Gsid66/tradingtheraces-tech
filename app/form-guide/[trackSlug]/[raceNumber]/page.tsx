@@ -8,9 +8,8 @@ import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 import { getScratchingInfo } from '@/lib/utils/scratchings-matcher';
 import TrackConditionBadge from '@/components/racing/TrackConditionBadge';
-import RaceTabs from './RaceTabs';
 import RaceDetails from './RaceDetails';
-import RunnerList from './RunnerList';
+import RaceContent from './RaceContent';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 300; // Revalidate every 5 minutes for early morning odds
@@ -290,31 +289,8 @@ export default async function RacePage({ params }: Props) {
         {/* Race Details Component */}
         <RaceDetails race={race} meeting={meeting} />
 
-        {/* Tabs */}
-        <RaceTabs />
-
-        {/* Sort & Filter */}
-        <div className="bg-white px-6 py-4 flex gap-4 border-b">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">Sort:  </span>
-            <select className="px-3 py-2 border rounded text-sm">
-              <option>Runner Number</option>
-              <option>Barrier</option>
-              <option>Weight</option>
-            </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">Odds: </span>
-            <select className="px-3 py-2 border rounded text-sm">
-              <option>Best Odds</option>
-              <option>Fixed Odds</option>
-              <option>TAB Odds</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Runner List */}
-        <RunnerList runners={enrichedRunners} />
+        {/* Race Content with Tabs */}
+        <RaceContent runners={enrichedRunners} />
       </div>
     </div>
   );
