@@ -6,6 +6,8 @@ import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
 import { getPostgresAPIClient } from '@/lib/integrations/postgres-api';
 import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
+import { getScratchingInfo } from '@/lib/utils/scratchings-matcher';
+import TrackConditionBadge from '@/components/racing/TrackConditionBadge';
 import RaceTabs from './RaceTabs';
 import RaceDetails from './RaceDetails';
 import RunnerList from './RunnerList';
@@ -35,6 +37,23 @@ export default async function RacePage({ params }: Props) {
   if (!meeting) {
     notFound();
   }
+
+  // Fetch scratchings and conditions
+  let scratchings: any[] = [];
+  let conditions: any[] = [];
+  try {
+    const [scratchingsRes, conditionsRes] = await Promise.all([
+      pfClient.getScratchings(0), // 0 = AU
+      pfClient.getConditions(0)
+    ]);
+    scratchings = scratchingsRes.payLoad || [];
+    conditions = conditionsRes.payLoad || [];
+  } catch (error: any) {
+    console.warn('⚠️ Scratchings/conditions unavailable:', error.message);
+  }
+
+  // Get track condition for this meeting
+  const trackCondition = conditions.find(c => c.meetingId === meeting.meetingId);
 
   // Get all races for this meeting
   const racesResponse = await pfClient.getAllRacesForMeeting(meeting.meetingId);
@@ -167,6 +186,14 @@ export default async function RacePage({ params }: Props) {
       (tr: any) => horseNamesMatch(tr.horse_name, runner.horseName || runner.name)
     );
 
+    // Check if horse is scratched
+    const scratchingInfo = getScratchingInfo(
+      scratchings,
+      meeting.meetingId,
+      raceNum,
+      runner.horseName || runner.name
+    );
+
     const enriched = {
       ...runner,
       tabFixedWinPrice: tabRunner?.tab_fixed_win_price || null,
@@ -175,6 +202,8 @@ export default async function RacePage({ params }: Props) {
       tabFixedPlaceTimestamp: tabRunner?.tab_fixed_place_timestamp || null,
       ttrRating: ttrRunner?.rating || null,
       ttrPrice: ttrRunner?.price || null,
+      isScratched: !!scratchingInfo,
+      scratchingReason: scratchingInfo?.reason,
     };
     
     console.log('✅ Enriched Runner:', {
@@ -226,6 +255,17 @@ export default async function RacePage({ params }: Props) {
             {meeting.track.state}
           </span>
         </div>
+
+        {/* Track Condition */}
+        {trackCondition && (
+          <div className="mb-6">
+            <TrackConditionBadge 
+              condition={trackCondition.trackCondition}
+              railPosition={trackCondition.railPosition}
+              weather={trackCondition.weather}
+            />
+          </div>
+        )}
 
         {/* Race Navigation Pills */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">

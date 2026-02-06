@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { PFRunner } from '@/lib/integrations/punting-form/client';
+import ScratchingsBadge from '@/components/racing/ScratchingsBadge';
 import HorseOddsRatings from './HorseOddsRatings';
 
 const TBA_TEXT = 'TBA';
@@ -14,6 +15,8 @@ interface EnrichedRunner extends PFRunner {
   tabFixedPlaceTimestamp?: string | null;
   ttrRating?: number | string | null;
   ttrPrice?: number | string | null;
+  isScratched?: boolean;
+  scratchingReason?: string;
 }
 
 interface Props {
@@ -100,6 +103,11 @@ function RunnerRow({ runner, position }: { runner: EnrichedRunner; position: num
               <h3 className="font-bold text-gray-900 text-lg">
                 {runner.name || runner.horseName}
               </h3>
+              
+              <ScratchingsBadge 
+                isScratched={runner.isScratched || false}
+                scratchingReason={runner.scratchingReason}
+              />
               
               {runner.emergencyIndicator && (
                 <span className="px-2 py-0.5 text-xs bg-orange-100 text-orange-800 rounded font-medium">
