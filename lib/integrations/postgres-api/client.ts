@@ -155,7 +155,7 @@ export class PostgresAPIClient {
       }
       
       console.warn(`⚠️ No NZ races found with any method`);
-      return { success: false, data: [] };
+      return { success: true, data: [] };
     }
     
     // No location filter - fetch all
