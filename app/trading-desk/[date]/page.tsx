@@ -10,6 +10,7 @@ import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 import DownloadableValuePlaysTable from './DownloadableValuePlaysTable';
 import TopRatedHorses from './TopRatedHorses';
 import Top4HorsesTable from './Top4HorsesTable';
+import ValuePlaysNavigationBanner from './ValuePlaysNavigationBanner';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 300; // Revalidate every 5 minutes for early morning odds
@@ -270,6 +271,9 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
         <p className="text-sm sm:text-base text-gray-600">Race day analysis and ratings</p>
       </div>
 
+      {/* Value Plays Navigation Banner */}
+      <ValuePlaysNavigationBanner count={valuePlays.length} />
+
       {/* Scratchings Alert */}
       {scratchedCount > 0 && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -318,7 +322,7 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
 
       {/* Top Value Plays */}
       {valuePlays.length > 0 && (
-        <div className="mb-8">
+        <div className="mb-8" id="top-value-plays">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Top Value Plays</h2>
           <DownloadableValuePlaysTable valuePlays={valuePlays} date={date} />
         </div>
