@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { FaCrown, FaDatabase, FaGlobeAsia, FaGlobeEurope, FaChartLine } from 'react-icons/fa'
+import { FaCrown, FaGlobeAsia, FaGlobeEurope, FaChartLine } from 'react-icons/fa'
 import NavigationCards from '@/components/NavigationCards'
 
 export default function Home() {
