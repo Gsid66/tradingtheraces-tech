@@ -2,23 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { format, subDays } from 'date-fns';
-import { formatInTimeZone } from 'date-fns-tz';
+import { format } from 'date-fns';
 
 export default function DateNavigation() {
   const pathname = usePathname();
   
-  // Get today's date in Sydney timezone
-  const today = new Date();
-  const sydneyToday = formatInTimeZone(today, 'Australia/Sydney', 'yyyy-MM-dd');
-  
-  // Generate last 14 days
-  const dates: string[] = [];
-  for (let i = 0; i < 14; i++) {
-    const date = subDays(new Date(sydneyToday), i);
-    const dateStr = format(date, 'yyyy-MM-dd');
-    dates.push(dateStr);
-  }
+  // Hardcoded dates with actual data
+  const dates = ['2026-02-06', '2026-02-07'];
 
   return (
     <nav className="space-y-1">
