@@ -18,9 +18,14 @@ export default function DateNavigation() {
 
   // Generate last 14 days dynamically
   const dates = Array.from({ length: 14 }, (_, i) => {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    return date.toLocaleDateString('en-CA');
+    // Create date from UTC to avoid timezone issues
+    const [year, month, day] = today.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    date.setUTCDate(date.getUTCDate() - i);
+    const resultYear = date.getUTCFullYear();
+    const resultMonth = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const resultDay = String(date.getUTCDate()).padStart(2, '0');
+    return `${resultYear}-${resultMonth}-${resultDay}`;
   });
 
   const handleCustomDateSubmit = (e: React.FormEvent) => {
