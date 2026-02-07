@@ -1,13 +1,14 @@
 import { Client } from 'pg';
 import { format, parseISO, isValid } from 'date-fns';
-import { calculateValueScore, getValueBackgroundColor } from '@/lib/trading-desk/valueCalculator';
+import { calculateValueScore } from '@/lib/trading-desk/valueCalculator';
 import { calculatePL } from '@/lib/trading-desk/plCalculator';
-import { getOrdinalSuffix } from '@/lib/utils/formatting';
 import { getPuntingFormClient, PFScratching, PFCondition } from '@/lib/integrations/punting-form/client';
 import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
 import { tracksMatch } from '@/lib/utils/scratchings-matcher';
 import StatsCard from './StatsCard';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
+import DownloadableValuePlaysTable from './DownloadableValuePlaysTable';
+import TopRatedHorses from './TopRatedHorses';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 300; // Revalidate every 5 minutes for early morning odds
@@ -218,6 +219,12 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
     .sort((a, b) => b.valueScore - a.valueScore)
     .slice(0, 10);
 
+  // Get top 4 rated horses (sorted by rating, descending)
+  const topRatedHorses = dataWithValueScores
+    .filter(d => d.rating > 0)
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 4);
+
   // Calculate P&L stats from only the top 10 value plays displayed in the table
   const plData = calculatePL(valuePlays.map(d => ({
     rating: Number(d.rating),
@@ -269,59 +276,16 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
         </div>
       </div>
 
+      {/* Top 4 Rated Horses */}
+      {topRatedHorses.length > 0 && (
+        <TopRatedHorses horses={topRatedHorses} />
+      )}
+
       {/* Top Value Plays */}
       {valuePlays.length > 0 && (
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Top Value Plays</h2>
-          <div className="bg-white rounded-lg shadow overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Track</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Race</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horse</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value Score</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actual SP</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {valuePlays.map((play) => {
-                  const bgColor = getValueBackgroundColor(play.valueScore);
-                  return (
-                    <tr key={play.id} className={`hover:bg-gray-100 ${bgColor}`}>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{play.track_name}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">R{play.race_number}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{play.horse_name}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{play.rating ? Number(play.rating).toFixed(1) : '-'}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{play.price ? `$${Number(play.price).toFixed(2)}` : '-'}</td>
-                      <td className="px-4 py-2 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          play.valueScore > 25 ? 'bg-green-100 text-green-800' :
-                          play.valueScore >= 15 ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {play.valueScore.toFixed(1)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{play.actual_sp ? `$${Number(play.actual_sp).toFixed(2)}` : '-'}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm">
-                        {play.finishing_position ? (
-                          <span className={`font-medium ${play.finishing_position === 1 ? 'text-green-600' : 'text-gray-600'}`}>
-                            {play.finishing_position === 1 ? '🏆 1st' : `${play.finishing_position}${getOrdinalSuffix(play.finishing_position)}`}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <DownloadableValuePlaysTable valuePlays={valuePlays} date={date} />
         </div>
       )}
 
