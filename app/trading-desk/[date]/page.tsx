@@ -49,23 +49,10 @@ async function getDailyData(date: string): Promise<RaceData[]> {
     console.log('🔍 Fetching meetings for date:', date);
 
     // Get meetings for the specified date
-    // Note: The Punting Form API's getTodaysMeetings() returns today's meetings.
-    // For dates other than today, this will return an empty array after filtering,
-    // which is expected behavior. The API doesn't currently support fetching meetings
-    // for arbitrary dates, so we filter client-side.
-    const meetingsResponse = await pfClient.getTodaysMeetings();
-    const allMeetings = meetingsResponse.payLoad || [];
+    const meetingsResponse = await pfClient.getMeetingsByDate(parseISO(date));
+    const meetings = meetingsResponse.payLoad || [];
     
-    // Filter meetings to match the requested date
-    // Use string comparison to avoid timezone conversion issues
-    const targetDate = date; // Already in YYYY-MM-DD format from URL
-    const meetings = allMeetings.filter(m => {
-      // Normalize meeting date to YYYY-MM-DD format
-      const meetingDate = m.meetingDate.split('T')[0]; // Remove time component if present
-      return meetingDate === targetDate;
-    });
-    
-    console.log(`📊 Found ${meetings.length} meetings for ${targetDate}`);
+    console.log(`📊 Found ${meetings.length} meetings for ${date}`);
 
     if (meetings.length === 0) {
       console.warn('⚠️ No meetings found for date:', date);
