@@ -72,7 +72,7 @@ export default function DateNavigation() {
       {showCustomDate && (
         <form onSubmit={handleCustomDateSubmit} className="bg-gray-800 p-3 rounded-lg space-y-2">
           <label htmlFor="custom-date-input" className="sr-only">
-            Enter date (year-month-day format)
+            Choose date (YYYY-MM-DD)
           </label>
           <input
             id="custom-date-input"
@@ -83,7 +83,8 @@ export default function DateNavigation() {
           />
           <button
             type="submit"
-            className="w-full px-3 py-2 rounded-lg text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white"
+            disabled={!customDate}
+            className="w-full px-3 py-2 rounded-lg text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white disabled:bg-gray-600 disabled:cursor-not-allowed"
           >
             Go to Date
           </button>
