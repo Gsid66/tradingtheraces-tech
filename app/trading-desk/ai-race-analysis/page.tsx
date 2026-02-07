@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { format, subDays } from 'date-fns';
-import { formatInTimeZone } from 'date-fns-tz';
+import { format } from 'date-fns';
 import Image from 'next/image';
 
 interface AIAnalysisResponse {
@@ -20,17 +19,8 @@ export default function AIRaceAnalysisPage() {
   const [analysis, setAnalysis] = useState<AIAnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Get today's date in Sydney timezone
-  const today = new Date();
-  const sydneyToday = formatInTimeZone(today, 'Australia/Sydney', 'yyyy-MM-dd');
-  
-  // Generate last 14 days for date selector
-  const availableDates: string[] = [];
-  for (let i = 0; i < 14; i++) {
-    const date = subDays(new Date(sydneyToday), i);
-    const dateStr = format(date, 'yyyy-MM-dd');
-    availableDates.push(dateStr);
-  }
+  // Hardcoded dates with actual data
+  const availableDates = ['2026-02-06', '2026-02-07'];
 
   const handleDateSelect = (date: string) => {
     setSelectedDate(date);
