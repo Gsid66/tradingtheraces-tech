@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { format } from 'date-fns';
@@ -17,22 +17,26 @@ export default function DateNavigation() {
     return new Date(Date.UTC(year, month - 1, day));
   };
   
-  // Generate today's date in AEDT timezone
-  const today = new Date().toLocaleDateString('en-CA', { 
-    timeZone: 'Australia/Sydney' 
-  });
+  // Generate today's date in AEDT timezone (memoized)
+  const today = useMemo(() => {
+    return new Date().toLocaleDateString('en-CA', { 
+      timeZone: 'Australia/Sydney' 
+    });
+  }, []);
 
-  // Generate last 14 days dynamically
-  const dates = Array.from({ length: 14 }, (_, i) => {
-    // Create date from UTC to avoid timezone issues
-    const [year, month, day] = today.split('-').map(Number);
-    const date = new Date(Date.UTC(year, month - 1, day));
-    date.setUTCDate(date.getUTCDate() - i);
-    const resultYear = date.getUTCFullYear();
-    const resultMonth = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const resultDay = String(date.getUTCDate()).padStart(2, '0');
-    return `${resultYear}-${resultMonth}-${resultDay}`;
-  });
+  // Generate last 14 days dynamically (memoized)
+  const dates = useMemo(() => {
+    return Array.from({ length: 14 }, (_, i) => {
+      // Create date from UTC to avoid timezone issues
+      const [year, month, day] = today.split('-').map(Number);
+      const date = new Date(Date.UTC(year, month - 1, day));
+      date.setUTCDate(date.getUTCDate() - i);
+      const resultYear = date.getUTCFullYear();
+      const resultMonth = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const resultDay = String(date.getUTCDate()).padStart(2, '0');
+      return `${resultYear}-${resultMonth}-${resultDay}`;
+    });
+  }, [today]);
 
   const handleCustomDateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +81,6 @@ export default function DateNavigation() {
             onChange={(e) => setCustomDate(e.target.value)}
             className="w-full px-3 py-2 rounded bg-gray-700 text-white text-sm border border-gray-600 focus:outline-none focus:border-purple-500"
             placeholder="YYYY-MM-DD"
-            aria-label="Select custom date"
           />
           <button
             type="submit"
