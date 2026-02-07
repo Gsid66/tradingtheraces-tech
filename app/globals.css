@@ -39,6 +39,7 @@ body {
   gap: 2rem;
   max-width: 1400px;
   margin: 0 auto;
+  padding: 0 2rem;
 }
 
 .quick-link-card {
@@ -131,6 +132,9 @@ body {
   text-align: center;
   box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
   margin-bottom: 2rem;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .page-header h1 {
@@ -172,6 +176,9 @@ body {
   align-items: center;
   gap: 1rem;
   box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .info-banner-icon {
@@ -404,6 +411,7 @@ footer p {
 
   .quick-links-grid {
     grid-template-columns: 1fr;
+    padding: 0 1rem;
   }
 }
 
@@ -665,8 +673,12 @@ footer p {
 .coming-soon-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  gap: 2rem;
   margin: 2rem 0;
+  width: 100%;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 @media (max-width: 1024px) {
