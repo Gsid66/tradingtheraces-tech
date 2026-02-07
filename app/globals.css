@@ -791,3 +791,18 @@ footer p {
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-in-out;
 }
+
+/* ==================== MARQUEE ANIMATION ==================== */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: inline-block;
+  animation: marquee 20s linear infinite;
+}

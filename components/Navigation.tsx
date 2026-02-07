@@ -14,7 +14,7 @@ export default function Navigation() {
     { href: '/', label: 'Home' },
     { href: '/form-guide', label: 'Form Guide' },
     { href: '/results', label: 'Results' },
-    { href: '/race-viewer', label: 'Ratings' },
+    { href: '/trading-desk', label: 'Trading Desk' },
     { href: '/ratings-odds-comparison', label: 'Ratings vs Odds' },
     { href: '/calculator', label: 'Calculator' },
   ];
