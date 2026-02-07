@@ -72,11 +72,22 @@ export default function DownloadableValuePlaysTable({ valuePlays, date }: Downlo
       }
     };
 
-    window.addEventListener('resize', updateScrollbarWidth);
-    // Trigger once after mount to ensure proper width
-    setTimeout(updateScrollbarWidth, 100);
+    // Use ResizeObserver for more reliable width updates
+    const bottomScroll = bottomScrollRef.current;
+    if (!bottomScroll) return;
 
-    return () => window.removeEventListener('resize', updateScrollbarWidth);
+    const resizeObserver = new ResizeObserver(() => {
+      updateScrollbarWidth();
+    });
+
+    resizeObserver.observe(bottomScroll);
+    
+    // Initial update
+    updateScrollbarWidth();
+
+    return () => {
+      resizeObserver.disconnect();
+    };
   }, [valuePlays]);
 
   const downloadCSV = () => {
