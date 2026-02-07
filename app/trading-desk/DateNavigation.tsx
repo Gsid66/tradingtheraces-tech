@@ -11,6 +11,12 @@ export default function DateNavigation() {
   const [showCustomDate, setShowCustomDate] = useState(false);
   const [customDate, setCustomDate] = useState('');
   
+  // Helper function to safely parse YYYY-MM-DD date strings as UTC
+  const parseDateString = (dateStr: string): Date => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(Date.UTC(year, month - 1, day));
+  };
+  
   // Generate today's date in AEDT timezone
   const today = new Date().toLocaleDateString('en-CA', { 
     timeZone: 'Australia/Sydney' 
@@ -46,7 +52,7 @@ export default function DateNavigation() {
       >
         Today
         <div className="text-xs font-normal mt-1">
-          {format(new Date(today), 'EEE, MMM d, yyyy')}
+          {format(parseDateString(today), 'EEE, MMM d, yyyy')}
         </div>
       </Link>
 
@@ -87,7 +93,7 @@ export default function DateNavigation() {
       {/* Scrollable Recent Dates List */}
       <div className="max-h-96 overflow-y-auto space-y-1 pr-2">
         {dates.map((date) => {
-          const formattedDate = format(new Date(date), 'EEE, MMM d');
+          const formattedDate = format(parseDateString(date), 'EEE, MMM d');
           const isActive = pathname === `/trading-desk/${date}`;
           const isToday = date === today;
           
