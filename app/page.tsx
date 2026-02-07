@@ -1,6 +1,5 @@
 import Image from 'next/image'
 import { FaCrown } from 'react-icons/fa'
-import UpcomingRaces from './components/UpcomingRaces'
 import NavigationCards from '@/components/NavigationCards'
 
 export default function Home() {
@@ -27,11 +26,6 @@ export default function Home() {
         <p className="page-subtitle">
           Professional racing data, ratings, and analysis for horse and greyhound racing
         </p>
-      </div>
-
-      {/* UPCOMING RACES - THE MAIN FEATURE */}
-      <div className="mt-8">
-        <UpcomingRaces />
       </div>
 
       {/* Coming Soon Cards */}
