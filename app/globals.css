@@ -806,3 +806,10 @@ footer p {
   display: inline-block;
   animation: marquee 20s linear infinite;
 }
+
+/* Respect user's motion preferences for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}
