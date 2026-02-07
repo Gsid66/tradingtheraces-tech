@@ -46,21 +46,7 @@ export default function Home() {
           <h4>Coming Soon</h4>
           <p>Trading Desk</p>
         </div>
-        <div className="coming-soon-card">
-          <div className="flex items-center gap-3 mb-2">
-            <Image 
-              src="/images/new-sherlock-hooves.png"
-              alt="Sherlock Hooves"
-              width={64}
-              height={64}
-              className="rounded-full border-4 border-purple-400 shadow-lg"
-            />
-            <h4>Available Now</h4>
-          </div>
-          <p>Sherlock-Hooves AI Agent</p>
-          <p className="text-sm text-purple-600 mt-2">Professional race analysis</p>
-        </div>
-      </div>
+        
 
       {/* Premium Banner */}
       <div 
@@ -103,6 +89,7 @@ export default function Home() {
         >
           Access Discord Members Chat →
         </a>
+      </div>
       </div>
     </>
   )
