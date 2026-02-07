@@ -9,6 +9,7 @@ import StatsCard from './StatsCard';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 import DownloadableValuePlaysTable from './DownloadableValuePlaysTable';
 import TopRatedHorses from './TopRatedHorses';
+import Top4HorsesTable from './Top4HorsesTable';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 300; // Revalidate every 5 minutes for early morning odds
@@ -225,6 +226,32 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
     .sort((a, b) => b.rating - a.rating)
     .slice(0, 4);
 
+  // Get top 4 rated horses per race
+  // Group by track and race number
+  const raceGroups: { [key: string]: typeof dataWithValueScores } = {};
+  dataWithValueScores.forEach(horse => {
+    const raceKey = `${horse.track_name}-${horse.race_number}`;
+    if (!raceGroups[raceKey]) {
+      raceGroups[raceKey] = [];
+    }
+    raceGroups[raceKey].push(horse);
+  });
+
+  // For each race, get top 4 by rating
+  const top4PerRace = Object.values(raceGroups)
+    .flatMap(raceHorses => 
+      raceHorses
+        .sort((a, b) => b.rating - a.rating)
+        .slice(0, 4)
+    )
+    .sort((a, b) => {
+      // Sort by track name, then race number
+      if (a.track_name !== b.track_name) {
+        return a.track_name.localeCompare(b.track_name);
+      }
+      return a.race_number - b.race_number;
+    });
+
   // Calculate P&L stats from only the top 10 value plays displayed in the table
   const plData = calculatePL(valuePlays.map(d => ({
     rating: Number(d.rating),
@@ -279,6 +306,14 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
       {/* Top 4 Rated Horses */}
       {topRatedHorses.length > 0 && (
         <TopRatedHorses horses={topRatedHorses} />
+      )}
+
+      {/* Top 4 Rated Horses Per Race */}
+      {top4PerRace.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Top 4 Rated Horses Per Race</h2>
+          <Top4HorsesTable horses={top4PerRace} date={date} />
+        </div>
       )}
 
       {/* Top Value Plays */}
