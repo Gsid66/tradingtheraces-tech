@@ -9,6 +9,10 @@ export default function ValuePlaysNavigationBanner({ count }: ValuePlaysNavigati
     const element = document.getElementById('top-value-plays');
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Set focus to the section for screen reader users
+      setTimeout(() => {
+        element.focus();
+      }, 500);
     }
   };
 
@@ -39,6 +43,7 @@ export default function ValuePlaysNavigationBanner({ count }: ValuePlaysNavigati
             <div className="w-full sm:w-auto">
               <button
                 onClick={handleScrollToValuePlays}
+                aria-label="Scroll to Top 10 Value Plays section"
                 className="w-full sm:w-auto bg-white text-purple-600 hover:bg-purple-50 font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
               >
                 <span>View Top 10</span>

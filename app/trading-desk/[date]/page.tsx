@@ -322,7 +322,7 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
 
       {/* Top Value Plays */}
       {valuePlays.length > 0 && (
-        <div className="mb-8" id="top-value-plays">
+        <div className="mb-8" id="top-value-plays" tabIndex={-1}>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Top Value Plays</h2>
           <DownloadableValuePlaysTable valuePlays={valuePlays} date={date} />
         </div>
