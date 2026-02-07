@@ -135,7 +135,6 @@ If issues occur in production:
 ## Related Files
 - `app/api/races/today/route.ts` - The changed API route
 - `app/components/UpcomingRaces.tsx` - Homepage component using this API
-- `app/components/RaceCarousel.tsx` - Carousel component using this API
 - `lib/integrations/punting-form/client.ts` - Punting Form API client library
 
 ## Migration Date
