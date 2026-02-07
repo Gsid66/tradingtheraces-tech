@@ -29,7 +29,7 @@ export default function Home() {
       </div>
 
       {/* Trading Desk Login Banner */}
-      <div className="max-w-4xl mx-auto mt-8 mb-8">
+      <div className="max-w-8xl mx-auto mt-8 mb-8">
         <div className="bg-gradient-to-r from-purple-700 to-purple-600 rounded-lg shadow-lg border-2 border-purple-400 overflow-hidden">
           <div className="py-4 px-6">
             <div className="animate-marquee whitespace-nowrap">
