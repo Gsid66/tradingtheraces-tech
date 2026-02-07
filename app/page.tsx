@@ -51,7 +51,7 @@ export default function Home() {
           <h4>Coming Soon</h4>
           <p>Trading Desk</p>
         </div>
-        
+      </div>
 
       {/* Premium Banner */}
       <div 
@@ -94,11 +94,6 @@ export default function Home() {
           Access Discord Members Chat →
         </a>
       </div>
-<<<<<<< HEAD
-      </div>
-    </>
-=======
     </div>
->>>>>>> 1e6c84f329c7e3cefdfb4233402490ab9757a9c1
   )
 }
