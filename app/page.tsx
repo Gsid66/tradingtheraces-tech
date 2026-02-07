@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { FaGift, FaCrown } from 'react-icons/fa'
+import { FaCrown } from 'react-icons/fa'
 import UpcomingRaces from './components/UpcomingRaces'
 import NavigationCards from '@/components/NavigationCards'
 
