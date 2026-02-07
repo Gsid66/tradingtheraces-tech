@@ -5,12 +5,12 @@ import NavigationCards from '@/components/NavigationCards'
 
 export default function Home() {
   return (
-    <>
+    <div className="max-w-7xl mx-auto px-4">
       {/* Navigation Cards */}
       <NavigationCards />
 
       {/* Page Header */}
-      <div className="page-header">
+      <div className="page-header mx-auto max-w-4xl mt-8">
         {/* Logo */}
         <div className="flex justify-center mb-6">
           <Image
@@ -30,10 +30,12 @@ export default function Home() {
       </div>
 
       {/* UPCOMING RACES - THE MAIN FEATURE */}
-      <UpcomingRaces />
+      <div className="mt-8">
+        <UpcomingRaces />
+      </div>
 
       {/* Coming Soon Cards */}
-      <div className="coming-soon-grid">
+      <div className="coming-soon-grid max-w-6xl mx-auto mt-12">
         <div className="coming-soon-card">
           <h4>Coming Soon</h4>
           <p>AU Data Base</p>
@@ -64,11 +66,10 @@ export default function Home() {
 
       {/* Premium Banner */}
       <div 
-        className="info-banner" 
+        className="info-banner max-w-4xl mx-auto mt-12" 
         style={{ 
           background: 'linear-gradient(135deg, #9333ea 0%, #7c3aed 100%)',
           border: '2px solid #fbbf24',
-          marginTop: '2rem' 
         }}
       >
         <div className="info-banner-icon" style={{ color: '#fbbf24' }}>
@@ -83,7 +84,7 @@ export default function Home() {
       </div>
 
       {/* CTA Button */}
-      <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+      <div className="text-center mt-8 mb-12">
         <a 
           href="https://discord.gg/TawzRkQZgB" 
           className="gold-button"
@@ -104,6 +105,6 @@ export default function Home() {
           Access Discord Members Chat →
         </a>
       </div>
-    </>
+    </div>
   )
 }
