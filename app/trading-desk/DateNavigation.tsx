@@ -67,12 +67,17 @@ export default function DateNavigation() {
       {/* Custom Date Input Form */}
       {showCustomDate && (
         <form onSubmit={handleCustomDateSubmit} className="bg-gray-800 p-3 rounded-lg space-y-2">
+          <label htmlFor="custom-date-input" className="sr-only">
+            Select custom date
+          </label>
           <input
+            id="custom-date-input"
             type="date"
             value={customDate}
             onChange={(e) => setCustomDate(e.target.value)}
             className="w-full px-3 py-2 rounded bg-gray-700 text-white text-sm border border-gray-600 focus:outline-none focus:border-purple-500"
             placeholder="YYYY-MM-DD"
+            aria-label="Select custom date"
           />
           <button
             type="submit"
