@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { FaCrown } from 'react-icons/fa'
+import { FaCrown, FaDatabase, FaGlobeAsia, FaGlobeEurope, FaChartLine } from 'react-icons/fa'
 import NavigationCards from '@/components/NavigationCards'
 
 export default function Home() {
@@ -31,14 +31,23 @@ export default function Home() {
       {/* Coming Soon Cards */}
       <div className="coming-soon-grid max-w-6xl mx-auto mt-12">
         <div className="coming-soon-card">
+          <div className="coming-soon-icon">
+            <FaGlobeAsia />
+          </div>
           <h4>Coming Soon</h4>
           <p>AU Data Base</p>
         </div>
         <div className="coming-soon-card">
+          <div className="coming-soon-icon">
+            <FaGlobeEurope />
+          </div>
           <h4>Coming Soon</h4>
           <p>UK Data Base</p>
         </div>
         <div className="coming-soon-card">
+          <div className="coming-soon-icon">
+            <FaChartLine />
+          </div>
           <h4>Coming Soon</h4>
           <p>Trading Desk</p>
         </div>
