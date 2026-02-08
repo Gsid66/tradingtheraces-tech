@@ -8,7 +8,8 @@ interface ScratchingsBadgeProps {
 export function ScratchingsBadge({ scratching, compact = false }: ScratchingsBadgeProps) {
   const timeStr = new Date(scratching.scratchingTime).toLocaleTimeString('en-AU', {
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    hour12: false
   });
 
   if (compact) {
@@ -20,12 +21,12 @@ export function ScratchingsBadge({ scratching, compact = false }: ScratchingsBad
   }
 
   return (
-    <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
+    <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-red-100 border border-red-200 text-red-800 rounded text-xs font-medium">
       <span>❌ SCRATCHED</span>
       {scratching.reason && (
-        <span className="text-red-600">• {scratching.reason}</span>
+        <span className="text-red-700 font-semibold">• {scratching.reason}</span>
       )}
-      <span className="text-red-500 text-[10px]">
+      <span className="text-red-600 text-[10px]">
         @ {timeStr}
       </span>
     </div>
