@@ -214,7 +214,7 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
   // Filter out scratched horses only for value calculations
   const dataWithoutScratched = dataWithScratchingInfo.filter(d => !d.isScratched);
 
-  const scratchedCount = dataWithScratchingInfo.length - dataWithoutScratched.length;
+  const scratchedCount = dataWithScratchingInfo.filter(d => d.isScratched).length;
 
   // Calculate value scores for all horses (excluding scratched)
   const dataWithValueScores = dataWithoutScratched.map(d => ({

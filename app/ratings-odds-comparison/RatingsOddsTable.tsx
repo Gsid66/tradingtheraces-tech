@@ -298,11 +298,13 @@ export default function RatingsOddsTable({ data }: RatingsOddsTableProps) {
           <tbody>
             {sortedData.map((row, index) => {
               const rowKey = `${row.race_date}-${row.track || row.meeting_name}-${row.race_number}-${row.saddle_cloth}`;
+              const isScratched = row.isScratched;
+              const baseRowClass = !isScratched && index % 2 === 0 ? 'white' : !isScratched ? '#fafafa' : '';
               return (
                 <tr 
                   key={rowKey}
-                  className={`border-b border-gray-200 hover:bg-purple-50 transition-colors ${row.isScratched ? 'bg-red-50' : ''}`}
-                  style={{ backgroundColor: row.isScratched ? '#fef2f2' : (index % 2 === 0 ? 'white' : '#fafafa') }}
+                  className={`border-b border-gray-200 hover:bg-purple-50 transition-colors ${isScratched ? 'bg-red-50' : ''}`}
+                  style={!isScratched ? { backgroundColor: baseRowClass } : undefined}
                 >
                   <td className="px-4 py-3 text-sm text-gray-700">
                     {formatDate(row.race_date)}

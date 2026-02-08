@@ -145,10 +145,17 @@ export default function RatingsOddsView({ runners }: Props) {
                 const ttrPrice = typeof runner.ttrPrice === 'string' ? parseFloat(runner.ttrPrice) : runner.ttrPrice;
                 const isValue = tabWin && ttrPrice && tabWin > ttrPrice * VALUE_THRESHOLD;
                 
+                // Determine row background class
+                const getRowClass = () => {
+                  if (runner.isScratched) return 'bg-red-50';
+                  if (isValue) return 'bg-green-50';
+                  return '';
+                };
+                
                 return (
                   <tr 
                     key={runner.formId} 
-                    className={`hover:bg-gray-50 ${runner.isScratched ? 'bg-red-50' : isValue ? 'bg-green-50' : ''}`}
+                    className={`hover:bg-gray-50 ${getRowClass()}`}
                   >
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="flex items-center">
