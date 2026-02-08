@@ -6,11 +6,19 @@ interface ScratchingsBadgeProps {
 }
 
 export function ScratchingsBadge({ scratching, compact = false }: ScratchingsBadgeProps) {
-  const timeStr = new Date(scratching.scratchingTime).toLocaleTimeString('en-AU', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
+  let timeStr: string | null = null;
+  try {
+    const date = new Date(scratching.scratchingTime);
+    if (!isNaN(date.getTime())) {
+      timeStr = date.toLocaleTimeString('en-AU', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+    }
+  } catch (error) {
+    console.warn('Invalid scratchingTime:', scratching.scratchingTime);
+  }
 
   if (compact) {
     return (
@@ -26,9 +34,11 @@ export function ScratchingsBadge({ scratching, compact = false }: ScratchingsBad
       {scratching.reason && (
         <span className="text-red-700 font-semibold">• {scratching.reason}</span>
       )}
-      <span className="text-red-600 text-[10px]">
-        @ {timeStr}
-      </span>
+      {timeStr && (
+        <span className="text-red-600 text-[10px]">
+          @ {timeStr}
+        </span>
+      )}
     </div>
   );
 }

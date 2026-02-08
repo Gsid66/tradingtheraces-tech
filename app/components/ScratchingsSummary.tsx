@@ -1,6 +1,7 @@
 'use client'
 
 import { useScratchingsContext } from '@/app/providers/ScratchingsProvider';
+import { Scratching } from '@/lib/hooks/useScratchings';
 
 export function ScratchingsSummary() {
   const { scratchings, loading, error } = useScratchingsContext();
@@ -19,7 +20,7 @@ export function ScratchingsSummary() {
     }
     acc[s.trackName].push(s);
     return acc;
-  }, {} as Record<string, typeof scratchings>);
+  }, {} as Record<string, Scratching[]>);
 
   return (
     <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
