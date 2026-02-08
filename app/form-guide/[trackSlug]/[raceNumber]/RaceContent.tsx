@@ -16,6 +16,7 @@ interface EnrichedRunner extends PFRunner {
   ttrPrice?: number | string | null;
   isScratched?: boolean;
   scratchingReason?: string;
+  scratchingTime?: string;
 }
 
 interface Props {
