@@ -239,6 +239,7 @@ export default async function RacePage({ params }: Props) {
       ttrPrice: ttrRunner?.price || null,
       isScratched: !!scratchingInfo,
       scratchingReason: scratchingInfo?.reason,
+      scratchingTime: scratchingInfo?.scratchingTime,
     };
     
     console.log('✅ Enriched Runner:', {
