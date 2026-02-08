@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
+import { getPuntingFormClient, PFScratching } from '@/lib/integrations/punting-form/client';
 
 export async function GET(request: Request) {
   try {
@@ -22,16 +22,19 @@ export async function GET(request: Request) {
     
     // Transform to ensure consistent property names
     // Handle both camelCase and PascalCase from the API
-    const normalizedData = scratchingsData.map((item: any) => ({
-      meetingId: item.meetingId || item.MeetingId || '',
-      raceId: item.raceId || item.RaceId || '',
-      raceNumber: item.raceNumber || item.RaceNumber || 0,
-      trackName: item.trackName || item.TrackName || item.track || item.Track || '',
-      horseName: item.horseName || item.HorseName || item.name || item.Name || '',
-      tabNumber: item.tabNumber || item.TabNumber || item.number || item.Number || 0,
-      scratchingTime: item.scratchingTime || item.ScratchingTime || '',
-      reason: item.reason || item.Reason || undefined,
-    }));
+    const normalizedData = scratchingsData.map((item: PFScratching | Record<string, unknown>) => {
+      const itemRecord = item as Record<string, unknown>;
+      return {
+        meetingId: String(itemRecord.meetingId || itemRecord.MeetingId || ''),
+        raceId: String(itemRecord.raceId || itemRecord.RaceId || ''),
+        raceNumber: Number(itemRecord.raceNumber || itemRecord.RaceNumber || 0),
+        trackName: String(itemRecord.trackName || itemRecord.TrackName || itemRecord.track || itemRecord.Track || ''),
+        horseName: String(itemRecord.horseName || itemRecord.HorseName || itemRecord.name || itemRecord.Name || ''),
+        tabNumber: Number(itemRecord.tabNumber || itemRecord.TabNumber || itemRecord.number || itemRecord.Number || 0),
+        scratchingTime: String(itemRecord.scratchingTime || itemRecord.ScratchingTime || ''),
+        reason: itemRecord.reason ? String(itemRecord.reason) : (itemRecord.Reason ? String(itemRecord.Reason) : undefined),
+      };
+    });
     
     console.log('📋 Normalized first scratching:', normalizedData[0]);
     
