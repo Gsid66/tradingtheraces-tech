@@ -358,17 +358,29 @@ export default async function RatingsOddsComparisonPage() {
     console.warn('⚠️ Scratchings/conditions unavailable:', error.message);
   }
 
-  // Filter out scratched horses from value calculations
-  const dataWithoutScratched = dataWithOdds.filter(card => {
+  // Mark horses as scratched instead of filtering them out
+  const dataWithScratchingInfo = dataWithOdds.map(card => {
     const isScratched = scratchings.some(s => 
       horseNamesMatch(s.horseName, card.horse_name) &&
       s.raceNumber === card.race_number &&
       (!s.trackName || !card.track || tracksMatch(s.trackName, card.track))
     );
-    return !isScratched;
+    
+    const scratchingDetails = scratchings.find(s => 
+      horseNamesMatch(s.horseName, card.horse_name) &&
+      s.raceNumber === card.race_number &&
+      (!s.trackName || !card.track || tracksMatch(s.trackName, card.track))
+    );
+    
+    return {
+      ...card,
+      isScratched,
+      scratchingReason: scratchingDetails?.reason,
+      scratchingTime: scratchingDetails?.scratchingTime
+    };
   });
 
-  const scratchedCount = dataWithOdds.length - dataWithoutScratched.length;
+  const scratchedCount = dataWithScratchingInfo.filter(d => d.isScratched).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white">
@@ -406,13 +418,13 @@ export default async function RatingsOddsComparisonPage() {
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <h3 className="font-semibold text-red-900 mb-2">⚠️ Scratchings Alert</h3>
             <p className="text-red-800 text-sm">
-              {scratchedCount} horse{scratchedCount !== 1 ? 's' : ''} scratched today. Scratched horses have been excluded from the table below.
+              {scratchedCount} horse{scratchedCount !== 1 ? 's' : ''} scratched today. Scratched horses are shown in the table below with visual indicators.
             </p>
           </div>
         )}
 
         {/* Data Table */}
-        <RatingsOddsTable data={dataWithoutScratched} />
+        <RatingsOddsTable data={dataWithScratchingInfo} />
       </div>
     </div>
   );

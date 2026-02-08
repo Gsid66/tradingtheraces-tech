@@ -189,17 +189,32 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
     console.warn('⚠️ Scratchings/conditions unavailable:', error.message);
   }
 
-  // Filter out scratched horses from data
-  const dataWithoutScratched = data.filter(d => {
+  // Mark horses with scratching info instead of filtering them out
+  const dataWithScratchingInfo = data.map(d => {
     const isScratched = scratchings.some(s => 
       horseNamesMatch(s.horseName, d.horse_name) &&
       s.raceNumber === d.race_number &&
       (!s.trackName || tracksMatch(s.trackName, d.track_name))
     );
-    return !isScratched;
+    
+    const scratchingDetails = scratchings.find(s => 
+      horseNamesMatch(s.horseName, d.horse_name) &&
+      s.raceNumber === d.race_number &&
+      (!s.trackName || tracksMatch(s.trackName, d.track_name))
+    );
+    
+    return {
+      ...d,
+      isScratched,
+      scratchingReason: scratchingDetails?.reason,
+      scratchingTime: scratchingDetails?.scratchingTime
+    };
   });
 
-  const scratchedCount = data.length - dataWithoutScratched.length;
+  // Filter out scratched horses only for value calculations
+  const dataWithoutScratched = dataWithScratchingInfo.filter(d => !d.isScratched);
+
+  const scratchedCount = dataWithScratchingInfo.filter(d => d.isScratched).length;
 
   // Calculate value scores for all horses (excluding scratched)
   const dataWithValueScores = dataWithoutScratched.map(d => ({
@@ -238,13 +253,27 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
     raceGroups[raceKey].push(horse);
   });
 
-  // For each race, get top 4 by rating
+  // For each race, get top 4 by rating and add scratching info
   const top4PerRace = Object.values(raceGroups)
     .flatMap(raceHorses => 
       raceHorses
         .sort((a, b) => b.rating - a.rating)
         .slice(0, 4)
     )
+    .map(horse => {
+      // Add scratching info from dataWithScratchingInfo
+      const scratchingInfo = dataWithScratchingInfo.find(d => 
+        d.horse_name === horse.horse_name && 
+        d.track_name === horse.track_name && 
+        d.race_number === horse.race_number
+      );
+      return {
+        ...horse,
+        isScratched: scratchingInfo?.isScratched || false,
+        scratchingReason: scratchingInfo?.scratchingReason,
+        scratchingTime: scratchingInfo?.scratchingTime
+      };
+    })
     .sort((a, b) => {
       // Sort by track name, then race number
       if (a.track_name !== b.track_name) {
@@ -279,7 +308,7 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
           <h3 className="font-semibold text-red-900 mb-2">⚠️ Scratchings Alert</h3>
           <p className="text-red-800 text-sm">
-            {scratchedCount} horse{scratchedCount !== 1 ? 's' : ''} scratched. Scratched horses have been excluded from value calculations.
+            {scratchedCount} horse{scratchedCount !== 1 ? 's' : ''} scratched. Scratched horses are shown in tables below with visual indicators but excluded from value calculations.
           </p>
         </div>
       )}

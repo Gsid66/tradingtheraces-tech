@@ -1,6 +1,7 @@
 'use client';
 
 import type { PFRunner } from '@/lib/integrations/punting-form/client';
+import ScratchingsBadge from '@/components/racing/ScratchingsBadge';
 
 // Value threshold: TAB odds must be 20% higher than TTR price to be considered value
 const VALUE_THRESHOLD = 1.2;
@@ -15,6 +16,7 @@ interface EnrichedRunner extends PFRunner {
   ttrPrice?: number | string | null;
   isScratched?: boolean;
   scratchingReason?: string;
+  scratchingTime?: string;
 }
 
 interface Props {
@@ -46,10 +48,15 @@ export default function RatingsOddsView({ runners }: Props) {
     });
   };
 
-  // Sort runners by tabNumber
-  const sortedRunners = runners
-    .slice()
-    .sort((a, b) => (a.tabNumber ?? a.tabNo ?? 999) - (b.tabNumber ?? b.tabNo ?? 999));
+  // Sort runners: non-scratched first, then scratched at the bottom
+  const sortedRunners = [...runners].sort((a, b) => {
+    // First by scratched status (non-scratched first)
+    if (a.isScratched !== b.isScratched) {
+      return a.isScratched ? 1 : -1;
+    }
+    // Then by tabNumber
+    return (a.tabNumber ?? a.tabNo ?? 999) - (b.tabNumber ?? b.tabNo ?? 999);
+  });
 
   // Filter out scratched horses for value calculations
   const activeRunners = sortedRunners.filter(r => !r.isScratched);
@@ -138,61 +145,74 @@ export default function RatingsOddsView({ runners }: Props) {
                 const ttrPrice = typeof runner.ttrPrice === 'string' ? parseFloat(runner.ttrPrice) : runner.ttrPrice;
                 const isValue = tabWin && ttrPrice && tabWin > ttrPrice * VALUE_THRESHOLD;
                 
+                // Determine row background class
+                const getRowClass = () => {
+                  if (runner.isScratched) return 'bg-red-50';
+                  if (isValue) return 'bg-green-50';
+                  return '';
+                };
+                
                 return (
                   <tr 
                     key={runner.formId} 
-                    className={`hover:bg-gray-50 ${runner.isScratched ? 'opacity-50 bg-red-50' : ''} ${isValue ? 'bg-green-50' : ''}`}
+                    className={`hover:bg-gray-50 ${getRowClass()}`}
                   >
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${runner.isScratched ? 'bg-gray-400' : 'bg-purple-600'}`}>
                           {runner.tabNumber ?? runner.tabNo}
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <div className="font-semibold text-gray-900">
+                      <div className={`font-semibold ${runner.isScratched ? 'line-through text-gray-500' : 'text-gray-900'}`}>
                         {runner.name || runner.horseName}
                       </div>
                       {runner.isScratched && (
-                        <span className="text-xs text-red-600 font-medium">SCRATCHED</span>
+                        <div className="mt-1">
+                          <ScratchingsBadge 
+                            isScratched={true}
+                            scratchingReason={runner.scratchingReason}
+                            scratchingTime={runner.scratchingTime}
+                          />
+                        </div>
                       )}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-700">
+                    <td className={`px-4 py-4 text-sm ${runner.isScratched ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
                       {runner.jockey?.fullName || 'TBA'}
                     </td>
                     <td className="px-4 py-4 text-center">
-                      <div className="font-bold text-purple-600">
+                      <div className={`font-bold ${runner.isScratched ? 'text-gray-400 line-through' : 'text-purple-600'}`}>
                         {formatPrice(runner.tabFixedWinPrice)}
                       </div>
-                      {runner.tabFixedWinTimestamp && (
+                      {runner.tabFixedWinTimestamp && !runner.isScratched && (
                         <div className="text-xs text-gray-400">
                           {formatTime(runner.tabFixedWinTimestamp)}
                         </div>
                       )}
                     </td>
                     <td className="px-4 py-4 text-center">
-                      <div className="font-bold text-purple-600">
+                      <div className={`font-bold ${runner.isScratched ? 'text-gray-400 line-through' : 'text-purple-600'}`}>
                         {formatPrice(runner.tabFixedPlacePrice)}
                       </div>
-                      {runner.tabFixedPlaceTimestamp && (
+                      {runner.tabFixedPlaceTimestamp && !runner.isScratched && (
                         <div className="text-xs text-gray-400">
                           {formatTime(runner.tabFixedPlaceTimestamp)}
                         </div>
                       )}
                     </td>
                     <td className="px-4 py-4 text-center">
-                      <div className="font-bold text-green-600 text-lg">
+                      <div className={`font-bold text-lg ${runner.isScratched ? 'text-gray-400 line-through' : 'text-green-600'}`}>
                         {formatRating(runner.ttrRating)}
                       </div>
                     </td>
                     <td className="px-4 py-4 text-center">
-                      <div className="font-bold text-green-600">
+                      <div className={`font-bold ${runner.isScratched ? 'text-gray-400 line-through' : 'text-green-600'}`}>
                         {formatPrice(runner.ttrPrice)}
                       </div>
                     </td>
                     <td className="px-4 py-4 text-center">
-                      {isValue ? (
+                      {isValue && !runner.isScratched ? (
                         <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded">
                           VALUE
                         </span>

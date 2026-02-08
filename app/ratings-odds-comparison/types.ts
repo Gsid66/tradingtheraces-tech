@@ -14,6 +14,9 @@ export interface RatingsOddsData {
   price: string | number | null;
   tab_fixed_win?: number | null;
   tab_fixed_place?: number | null;
+  isScratched?: boolean;
+  scratchingReason?: string;
+  scratchingTime?: string;
 }
 
 export interface ApiResponse {
