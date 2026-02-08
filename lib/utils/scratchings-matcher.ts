@@ -81,13 +81,44 @@ export function getScratchingInfo(
   horseName: string,
   trackName?: string
 ): Scratching | undefined {
-  return scratchings.find(
-    s =>
-      s.meetingId === meetingId &&
-      s.raceNumber === raceNumber &&
-      horseNamesMatch(s.horseName, horseName) &&
-      (!trackName || !s.trackName || tracksMatch(s.trackName, trackName))
+  console.log(`🔍 [Matcher] Looking for scratching:`, {
+    meetingId,
+    raceNumber,
+    horseName,
+    trackName,
+    availableScratchings: scratchings.length
+  });
+  
+  const result = scratchings.find(
+    s => {
+      const meetingMatch = s.meetingId === meetingId;
+      const raceMatch = s.raceNumber === raceNumber;
+      const nameMatch = horseNamesMatch(s.horseName, horseName);
+      const trackMatch = !trackName || !s.trackName || tracksMatch(s.trackName, trackName);
+      
+      if (nameMatch && raceMatch) {
+        console.log(`🎯 [Matcher] Potential match found:`, {
+          scratchedHorse: s.horseName,
+          searchHorse: horseName,
+          meetingMatch,
+          raceMatch,
+          nameMatch,
+          trackMatch,
+          overallMatch: meetingMatch && raceMatch && nameMatch && trackMatch
+        });
+      }
+      
+      return meetingMatch && raceMatch && nameMatch && trackMatch;
+    }
   );
+  
+  if (result) {
+    console.log(`✅ [Matcher] Match found:`, result);
+  } else {
+    console.log(`❌ [Matcher] No match found for ${horseName} in R${raceNumber}`);
+  }
+  
+  return result;
 }
 
 export function getScratchingsForRace(

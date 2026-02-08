@@ -229,6 +229,15 @@ export default async function RacePage({ params }: Props) {
       runner.horseName || runner.name
     );
 
+    console.log(`🔍 [Form Guide] Scratching check:`, {
+      horse: runner.horseName || runner.name,
+      meetingId: meeting.meetingId,
+      raceNumber: raceNum,
+      totalScratchings: scratchings.length,
+      matchFound: !!scratchingInfo,
+      scratchingData: scratchingInfo || 'No match'
+    });
+
     const enriched = {
       ...runner,
       tabFixedWinPrice: tabRunner?.tab_fixed_win_price || null,
