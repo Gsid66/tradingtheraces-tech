@@ -17,6 +17,7 @@ interface EnrichedRunner extends PFRunner {
   ttrPrice?: number | string | null;
   isScratched?: boolean;
   scratchingReason?: string;
+  scratchingTime?: string;
 }
 
 interface Props {
@@ -88,25 +89,26 @@ function RunnerRow({ runner, position }: { runner: EnrichedRunner; position: num
   };
 
   return (
-    <div className="border-b hover:bg-gray-50 transition-colors">
+    <div className={`border-b transition-colors ${runner.isScratched ? 'bg-red-50 opacity-75' : 'hover:bg-gray-50'}`}>
       {/* Main Runner Card */}
       <div className="px-6 py-4">
         <div className="flex items-start gap-4">
           {/* Silks Icon */}
-          <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-lg`}>
+          <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-lg ${runner.isScratched ? 'opacity-50' : ''}`}>
             {runner.tabNumber ?? runner.tabNo ?? position}
           </div>
 
           <div className="flex-1 min-w-0">
             {/* Horse Name with Badges */}
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <h3 className="font-bold text-gray-900 text-lg">
+              <h3 className={`font-bold text-lg ${runner.isScratched ? 'line-through text-gray-500' : 'text-gray-900'}`}>
                 {runner.name || runner.horseName}
               </h3>
               
               <ScratchingsBadge 
                 isScratched={runner.isScratched || false}
                 scratchingReason={runner.scratchingReason}
+                scratchingTime={runner.scratchingTime}
               />
               
               {runner.emergencyIndicator && (
