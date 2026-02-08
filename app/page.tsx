@@ -1,20 +1,12 @@
 import Image from 'next/image'
 import { FaCrown, FaGlobeAsia, FaGlobeEurope, FaChartLine } from 'react-icons/fa'
 import NavigationCards from '@/components/NavigationCards'
-import { ScratchingsSummary } from '@/app/components/ScratchingsSummary'
-import UpcomingRaces from '@/app/components/UpcomingRaces'
 
 export default function Home() {
   return (
     <div className="max-w-7xl mx-auto px-4">
       {/* Navigation Cards */}
       <NavigationCards />
-      
-      {/* Scratchings Summary */}
-      <ScratchingsSummary />
-      
-      {/* Upcoming Races */}
-      <UpcomingRaces />
 
       {/* Page Header */}
       <div className="page-header mx-auto max-w-4xl mt-8">
