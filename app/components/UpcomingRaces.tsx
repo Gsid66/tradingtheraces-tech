@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { FaClock, FaMapMarkerAlt, FaRoad } from 'react-icons/fa'
 import { convertTo24Hour, getStateFromTrackName } from '@/lib/utils/timezone-converter'
+import { useScratchingsContext } from '@/app/providers/ScratchingsProvider'
+import { countScratchingsForRace } from '@/lib/utils/scratchings'
 
 interface Runner {
   tab_number: number
@@ -67,6 +69,7 @@ export default function UpcomingRaces() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isFetching, setIsFetching] = useState(false)
+  const { scratchings } = useScratchingsContext()
 
   // Fetch all races and filter for upcoming
   const fetchUpcomingRaces = async (abortSignal?: AbortSignal) => {
@@ -298,6 +301,7 @@ export default function UpcomingRaces() {
           const raceTime24 = convertTo24Hour(race.race_time || '')
           const raceTimeFormatted = formatTimeAEDT(raceTime24)
           const ariaLabel = `View Race ${race.race_number} at ${race.track_name} - ${raceTimeFormatted} AEDT`
+          const scratchedCount = countScratchingsForRace(race.track_name, race.race_number, scratchings)
           
           return (
             <Link 
@@ -311,7 +315,14 @@ export default function UpcomingRaces() {
                   <FaMapMarkerAlt className="upcoming-race-icon" />
                   <span className="upcoming-race-track-name">{race.track_name}</span>
                 </div>
-                <span className="upcoming-race-number">R{race.race_number}</span>
+                <div className="flex items-center gap-2">
+                  {scratchedCount > 0 && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 bg-red-100 text-red-800 rounded text-xs font-medium">
+                      {scratchedCount} SCR
+                    </span>
+                  )}
+                  <span className="upcoming-race-number">R{race.race_number}</span>
+                </div>
               </div>
               
               <h3 className="upcoming-race-name">{race.race_name}</h3>
