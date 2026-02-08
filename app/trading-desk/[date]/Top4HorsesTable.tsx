@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { getValueBackgroundColor } from '@/lib/trading-desk/valueCalculator';
 import { getOrdinalSuffix } from '@/lib/utils/formatting';
+import ScratchingsBadge from '@/components/racing/ScratchingsBadge';
 
 interface Horse {
   id: number;
@@ -14,6 +15,9 @@ interface Horse {
   valueScore: number;
   actual_sp: number | null;
   finishing_position: number | null;
+  isScratched?: boolean;
+  scratchingReason?: string;
+  scratchingTime?: string;
 }
 
 interface Top4HorsesTableProps {
@@ -217,15 +221,33 @@ export default function Top4HorsesTable({ horses, date }: Top4HorsesTableProps) 
                 return (
                   <tr 
                     key={horse.id} 
-                    className={`hover:bg-gray-100 ${groupBgClass} ${borderClass}`}
+                    className={`hover:bg-gray-100 ${horse.isScratched ? 'bg-red-50' : groupBgClass} ${borderClass}`}
                   >
                     <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{horse.track_name}</td>
                     <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">R{horse.race_number}</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{horse.horse_name}</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{horse.rating ? Number(horse.rating).toFixed(1) : '-'}</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{horse.price ? `$${Number(horse.price).toFixed(2)}` : '-'}</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm">
+                      <div className={horse.isScratched ? 'line-through text-gray-500 font-medium' : 'font-medium text-gray-900'}>
+                        {horse.horse_name}
+                      </div>
+                      {horse.isScratched && (
+                        <div className="mt-1">
+                          <ScratchingsBadge 
+                            isScratched={true}
+                            scratchingReason={horse.scratchingReason}
+                            scratchingTime={horse.scratchingTime}
+                          />
+                        </div>
+                      )}
+                    </td>
+                    <td className={`px-4 py-2 whitespace-nowrap text-sm ${horse.isScratched ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                      {horse.rating ? Number(horse.rating).toFixed(1) : '-'}
+                    </td>
+                    <td className={`px-4 py-2 whitespace-nowrap text-sm ${horse.isScratched ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                      {horse.price ? `$${Number(horse.price).toFixed(2)}` : '-'}
+                    </td>
                     <td className="px-4 py-2 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        horse.isScratched ? 'bg-gray-300 text-gray-600' :
                         horse.valueScore > 25 ? 'bg-green-100 text-green-800' :
                         horse.valueScore >= 15 ? 'bg-yellow-100 text-yellow-800' :
                         'bg-gray-100 text-gray-800'
@@ -233,7 +255,9 @@ export default function Top4HorsesTable({ horses, date }: Top4HorsesTableProps) 
                         {horse.valueScore.toFixed(1)}
                       </span>
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{horse.actual_sp ? `$${Number(horse.actual_sp).toFixed(2)}` : '-'}</td>
+                    <td className={`px-4 py-2 whitespace-nowrap text-sm ${horse.isScratched ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                      {horse.actual_sp ? `$${Number(horse.actual_sp).toFixed(2)}` : '-'}
+                    </td>
                     <td className="px-4 py-2 whitespace-nowrap text-sm">
                       {horse.finishing_position ? (
                         <span className={`font-medium ${horse.finishing_position === 1 ? 'text-green-600' : 'text-gray-600'}`}>
