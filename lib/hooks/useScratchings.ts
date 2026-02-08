@@ -27,8 +27,8 @@ export function useScratchings(jurisdiction: 0 | 1 | 2 = 0) {
         } else {
           setError(data.error);
         }
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
         setLoading(false);
       }
