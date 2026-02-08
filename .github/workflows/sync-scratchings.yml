@@ -1,0 +1,28 @@
+name: Sync Scratchings
+
+on:
+  schedule:
+    # Run every 15 minutes during race days (6am - 8pm AEDT)
+    - cron: '*/15 20-10 * * *'  # UTC times
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run scratchings sync
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PUNTING_FORM_API_KEY: ${{ secrets.PUNTING_FORM_API_KEY }}
+        run: npx tsx scripts/sync-scratchings.ts
