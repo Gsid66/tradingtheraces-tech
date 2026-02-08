@@ -20,9 +20,24 @@ export async function GET(request: Request) {
       console.log('📋 Property names:', Object.keys(scratchingsData[0]));
     }
     
+    // Transform to ensure consistent property names
+    // Handle both camelCase and PascalCase from the API
+    const normalizedData = scratchingsData.map((item: any) => ({
+      meetingId: item.meetingId || item.MeetingId || '',
+      raceId: item.raceId || item.RaceId || '',
+      raceNumber: item.raceNumber || item.RaceNumber || 0,
+      trackName: item.trackName || item.TrackName || item.track || item.Track || '',
+      horseName: item.horseName || item.HorseName || item.name || item.Name || '',
+      tabNumber: item.tabNumber || item.TabNumber || item.number || item.Number || 0,
+      scratchingTime: item.scratchingTime || item.ScratchingTime || '',
+      reason: item.reason || item.Reason || undefined,
+    }));
+    
+    console.log('📋 Normalized first scratching:', normalizedData[0]);
+    
     return NextResponse.json({
       success: true,
-      data: scratchingsData
+      data: normalizedData
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
