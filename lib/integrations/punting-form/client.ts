@@ -126,16 +126,21 @@ export interface PFRaceFields {
   ratingsUpdated: string;
 }
 
-// Scratching information
+// Scratching information (raw API response)
 export interface PFScratching {
   meetingId: string;
   raceId: string;
-  raceNumber: number;
-  trackName: string;
-  horseName: string;
-  tabNumber: number;
-  scratchingTime: string;
-  reason?: string;
+  runnerId: string;  // API provides runnerId, not horseName
+  meetingDate: string;
+  meetingDateUTC: string | null;
+  track: string;  // API uses 'track', not 'trackName'
+  raceNo: number;  // API uses 'raceNo', not 'raceNumber'
+  tabNo: number;  // API uses 'tabNo', not 'tabNumber'
+  timeStamp: string;  // API uses 'timeStamp', not 'scratchingTime'
+  deduction: number;
+  country: string;
+  code: string;
+  // Note: horseName and reason are NOT provided by the API
 }
 
 // Track condition information
