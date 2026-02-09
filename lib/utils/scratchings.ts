@@ -112,8 +112,7 @@ export function countScratchingsForRaceByMeetingId(
   }
   
   const count = scratchings.filter((s) => {
-    const match = s.meetingId === meetingId && s.raceNumber === raceNumber;
-    return match;
+    return s.meetingId === meetingId && s.raceNumber === raceNumber;
   }).length;
   
   if (process.env.NODE_ENV === 'development' && count > 0) {
