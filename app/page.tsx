@@ -1,6 +1,23 @@
+'use client'
+
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import { FaCrown, FaGlobeAsia, FaGlobeEurope, FaChartLine } from 'react-icons/fa'
 import NavigationCards from '@/components/NavigationCards'
+
+// Dynamic import for UpcomingRaces to avoid hydration mismatch
+// The component uses Date/time calculations that differ between server and client
+const UpcomingRaces = dynamic(() => import('@/app/components/UpcomingRaces'), {
+  ssr: false,
+  loading: () => (
+    <div className="upcoming-races-container" style={{ textAlign: 'center', padding: '2rem' }}>
+      <div className="animate-pulse">
+        <div className="text-purple-300 text-xl font-bold mb-4">Loading Today&apos;s Races...</div>
+        <div className="text-purple-400">Fetching race data</div>
+      </div>
+    </div>
+  )
+})
 
 export default function Home() {
   return (
@@ -39,6 +56,11 @@ export default function Home() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Upcoming Races */}
+      <div className="max-w-6xl mx-auto mt-12">
+        <UpcomingRaces />
       </div>
 
       {/* Coming Soon Cards */}
