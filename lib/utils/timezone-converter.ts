@@ -57,6 +57,12 @@ const TRACK_TO_STATE: Record<string, string> = {
   'rockhampton': 'QLD',
   'mackay': 'QLD',
   'bundaberg': 'QLD',
+  'gatton': 'QLD',
+  'beaudesert': 'QLD',
+  'dalby': 'QLD',
+  'chinchilla': 'QLD',
+  'roma': 'QLD',
+  'warwick': 'QLD',
   // SA
   'morphettville': 'SA',
   'murray bridge': 'SA',
