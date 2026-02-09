@@ -100,7 +100,7 @@ async function syncScratchings() {
                 horseName,
                 scratching.tabNo,
                 scratching.timeStamp,
-                null, // reason is not provided by the API
+                scratching.reason || null, // Use reason if provided by API, otherwise null
                 jurisdiction
               ]);
 

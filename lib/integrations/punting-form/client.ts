@@ -127,7 +127,8 @@ export interface PFRaceFields {
 }
 
 // Scratching information (raw API response)
-// Note: The API does not provide horseName (only runnerId) or reason fields
+// Note: The API does not provide horseName (only runnerId)
+// The reason field is optional and may not be provided by the API
 export interface PFScratchingRaw {
   meetingId: string;
   raceId: string;
@@ -141,6 +142,7 @@ export interface PFScratchingRaw {
   deduction: number;
   country: string;
   code: string;
+  reason?: string;  // Optional: may not be provided by API
 }
 
 // Scratching information (normalized format used by frontend)
