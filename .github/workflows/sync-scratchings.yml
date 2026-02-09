@@ -3,7 +3,9 @@ name: Sync Scratchings
 on:
   schedule:
     # Run every 15 minutes during race days (6am - 8pm AEDT)
-    - cron: '*/15 20-10 * * *'  # UTC times
+    # Split into two cron entries to handle midnight wrap-around
+    - cron: '*/15 20-23 * * *'  # 6am-11:45pm AEDT (20:00-23:45 UTC prev day)
+    - cron: '*/15 0-10 * * *'   # 12am-8:45pm AEDT (00:00-10:45 UTC)
   workflow_dispatch:  # Allow manual trigger
 
 jobs:

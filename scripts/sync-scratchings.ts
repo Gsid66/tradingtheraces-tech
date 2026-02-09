@@ -54,7 +54,7 @@ async function syncScratchings() {
             String(itemRecord.horseName || itemRecord.HorseName || itemRecord.name || ''),
             Number(itemRecord.tabNumber || itemRecord.TabNumber || 0),
             String(itemRecord.scratchingTime || itemRecord.ScratchingTime || new Date().toISOString()),
-            String(itemRecord.reason || itemRecord.Reason || '') || null,
+            (itemRecord.reason || itemRecord.Reason) ? String(itemRecord.reason || itemRecord.Reason) : null,
             jurisdiction
           ]);
 

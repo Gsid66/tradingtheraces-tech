@@ -29,9 +29,9 @@ export async function GET(request: Request) {
         jurisdiction
       FROM pf_scratchings
       WHERE jurisdiction = $1
-        AND scratching_time >= NOW() - INTERVAL '${hoursAgo} hours'
+        AND scratching_time >= NOW() - INTERVAL '1 hour' * $2
       ORDER BY scratching_time DESC
-    `, [jurisdiction]);
+    `, [jurisdiction, hoursAgo]);
 
     const scratchingsData = result.rows.map(row => ({
       meetingId: row.meeting_id,
