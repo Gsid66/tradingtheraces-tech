@@ -38,20 +38,44 @@ export default async function RacePage({ params }: Props) {
     notFound();
   }
 
-  // Fetch scratchings and conditions for both AU and NZ
-  // NOTE: Punting Form API returns raw format without horse names.
-  // These should be fetched from /api/scratchings (database) instead for complete data.
+  // Fetch scratchings from database (has complete horse names) and conditions from API
   let scratchings: PFScratching[] = [];
   let conditions: PFCondition[] = [];
   try {
-    const [scratchingsAU, scratchingsNZ, conditionsAU, conditionsNZ] = await Promise.all([
-      pfClient.getScratchings(0), // 0 = AU
-      pfClient.getScratchings(1), // 1 = NZ
+    // Fetch scratchings from database endpoint (has horse names resolved)
+    const [scratchingsResponseAU, scratchingsResponseNZ, conditionsAU, conditionsNZ] = await Promise.all([
+      fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/scratchings?jurisdiction=0&hoursAgo=48`).then(async r => {
+        if (!r.ok) {
+          console.error(`Error fetching AU scratchings: HTTP ${r.status}`);
+          return { success: false, data: [] };
+        }
+        return r.json();
+      }).catch(err => {
+        console.error('Error fetching AU scratchings:', err);
+        return { success: false, data: [] };
+      }),
+      fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/scratchings?jurisdiction=1&hoursAgo=48`).then(async r => {
+        if (!r.ok) {
+          console.error(`Error fetching NZ scratchings: HTTP ${r.status}`);
+          return { success: false, data: [] };
+        }
+        return r.json();
+      }).catch(err => {
+        console.error('Error fetching NZ scratchings:', err);
+        return { success: false, data: [] };
+      }),
       pfClient.getConditions(0),   // 0 = AU
       pfClient.getConditions(1)    // 1 = NZ
     ]);
-    scratchings = [...(scratchingsAU.payLoad || []), ...(scratchingsNZ.payLoad || [])] as unknown as PFScratching[];
+    
+    // Combine scratchings from both jurisdictions
+    const scratchingsAU = scratchingsResponseAU.success ? scratchingsResponseAU.data : [];
+    const scratchingsNZ = scratchingsResponseNZ.success ? scratchingsResponseNZ.data : [];
+    scratchings = [...scratchingsAU, ...scratchingsNZ];
+    
     conditions = [...(conditionsAU.payLoad || []), ...(conditionsNZ.payLoad || [])];
+    
+    console.log(`✅ Loaded ${scratchingsAU.length} AU scratchings + ${scratchingsNZ.length} NZ scratchings from database`);
   } catch (error: any) {
     console.warn('⚠️ Scratchings/conditions unavailable:', error.message);
   }
