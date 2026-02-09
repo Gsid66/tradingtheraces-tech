@@ -24,6 +24,12 @@ if (isProduction || isRender) {
     shell: true
   });
   
+  // Handle spawn errors (e.g., command not found)
+  if (result.error) {
+    console.error('❌ Failed to spawn migration process:', result.error.message);
+    process.exit(1);
+  }
+  
   // Exit with the same code as the migration script
   // If result.status is null (e.g., process was killed), treat as failure
   if (result.status === null) {
