@@ -26,15 +26,38 @@ function getToday(): string {
 function normalizeTrackName(trackName: string): string {
   if (!trackName) return '';
   
+  // Convert to lowercase and trim
   let normalized = trackName.toLowerCase().trim();
   
-  // Remove common suffixes (expanded list)
-  const suffixes = ['racecourse', 'gardens', 'hillside', 'park', 'racing', 'acton', 'synthetic', 'poly', 'course', 'track'];
-  for (const suffix of suffixes) {
-    normalized = normalized.replace(new RegExp(`\\s*${suffix}\\s*$`, 'i'), '');
+  // Direct mapping for known track variations
+  const trackMappings: Record<string, string> = {
+    'orange': 'orange',
+    'orange racecourse': 'orange',
+    'caulfield': 'caulfield',
+    'caulfield heath': 'caulfield',
+    'flemington': 'flemington',
+    'randwick': 'randwick',
+    'rosehill': 'rosehill',
+    'rosehill gardens': 'rosehill',
+    'moonee valley': 'moonee valley',
+    'sandown': 'sandown',
+    'sandown hillside': 'sandown',
+    'sandown lakeside': 'sandown'
+  };
+  
+  // Check for direct mapping first
+  if (trackMappings[normalized]) {
+    return trackMappings[normalized];
   }
   
-  // Remove special characters and extra spaces
+  // Remove common suffixes
+  const suffixes = ['racecourse', 'gardens', 'hillside', 'lakeside', 'park', 'racing', 'acton', 'synthetic', 'poly', 'course', 'track'];
+  for (const suffix of suffixes) {
+    const suffixPattern = new RegExp(`\\s+${suffix}$`, 'i');
+    normalized = normalized.replace(suffixPattern, '');
+  }
+  
+  // Clean up remaining characters
   normalized = normalized.replace(/[^a-z0-9\s]/g, ' ');
   normalized = normalized.replace(/\s+/g, ' ').trim();
   
