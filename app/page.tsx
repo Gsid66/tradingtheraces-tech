@@ -43,7 +43,7 @@ export default function Home() {
       </div>
 
       {/* Upcoming Races */}
-      <div className="max-w-6xl mx-auto mt-12">
+      <div className="max-w-8xl mx-auto mt-12">
         <UpcomingRacesWrapper />
       </div>
 
