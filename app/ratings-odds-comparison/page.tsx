@@ -29,18 +29,11 @@ function normalizeTrackName(trackName: string): string {
   // Convert to lowercase and trim
   let normalized = trackName.toLowerCase().trim();
   
-  // Direct mapping for known track variations
+  // Direct mapping for known track variations (maps variations to canonical names)
   const trackMappings: Record<string, string> = {
-    'orange': 'orange',
     'orange racecourse': 'orange',
-    'caulfield': 'caulfield',
     'caulfield heath': 'caulfield',
-    'flemington': 'flemington',
-    'randwick': 'randwick',
-    'rosehill': 'rosehill',
     'rosehill gardens': 'rosehill',
-    'moonee valley': 'moonee valley',
-    'sandown': 'sandown',
     'sandown hillside': 'sandown',
     'sandown lakeside': 'sandown'
   };
