@@ -39,6 +39,8 @@ export default async function RacePage({ params }: Props) {
   }
 
   // Fetch scratchings and conditions for both AU and NZ
+  // NOTE: Punting Form API returns raw format without horse names.
+  // These should be fetched from /api/scratchings (database) instead for complete data.
   let scratchings: PFScratching[] = [];
   let conditions: PFCondition[] = [];
   try {
@@ -48,7 +50,7 @@ export default async function RacePage({ params }: Props) {
       pfClient.getConditions(0),   // 0 = AU
       pfClient.getConditions(1)    // 1 = NZ
     ]);
-    scratchings = [...(scratchingsAU.payLoad || []), ...(scratchingsNZ.payLoad || [])];
+    scratchings = [...(scratchingsAU.payLoad || []), ...(scratchingsNZ.payLoad || [])] as unknown as PFScratching[];
     conditions = [...(conditionsAU.payLoad || []), ...(conditionsNZ.payLoad || [])];
   } catch (error: any) {
     console.warn('⚠️ Scratchings/conditions unavailable:', error.message);

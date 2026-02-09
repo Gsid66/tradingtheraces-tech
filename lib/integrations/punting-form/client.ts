@@ -128,7 +128,7 @@ export interface PFRaceFields {
 
 // Scratching information (raw API response)
 // Note: The API does not provide horseName (only runnerId) or reason fields
-export interface PFScratching {
+export interface PFScratchingRaw {
   meetingId: string;
   raceId: string;
   runnerId: string;  // API provides runnerId, not horseName
@@ -141,6 +141,18 @@ export interface PFScratching {
   deduction: number;
   country: string;
   code: string;
+}
+
+// Scratching information (normalized format used by frontend)
+export interface PFScratching {
+  meetingId: string;
+  raceId: string;
+  raceNumber: number;
+  trackName: string;
+  horseName: string;
+  tabNumber: number;
+  scratchingTime: string;
+  reason?: string;
 }
 
 // Track condition information
@@ -238,7 +250,7 @@ export class PuntingFormClient {
    * Get scratchings for a jurisdiction
    * @param jurisdiction - 0 (AU), 1 (NZ), 2 (International)
    */
-  async getScratchings(jurisdiction: number = 0): Promise<PuntingFormResponse<PFScratching[]>> {
+  async getScratchings(jurisdiction: number = 0): Promise<PuntingFormResponse<PFScratchingRaw[]>> {
     return this.get(`/Updates/Scratchings?jurisdiction=${jurisdiction}`);
   }
 
