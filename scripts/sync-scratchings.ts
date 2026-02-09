@@ -1,6 +1,6 @@
 import { config } from 'dotenv';
 import { Client } from 'pg';
-import { getPuntingFormClient } from '../lib/integrations/punting-form/client';
+import { getPuntingFormClient, PFScratching } from '../lib/integrations/punting-form/client';
 
 config({ path: '.env.local' });
 
@@ -34,7 +34,7 @@ async function syncScratchings() {
       totalScratchings += scratchings.length;
 
       // Group scratchings by meetingId to minimize API calls
-      const scratchingsByMeeting = new Map<string, typeof scratchings>();
+      const scratchingsByMeeting = new Map<string, PFScratching[]>();
       for (const scratching of scratchings) {
         const meetingId = scratching.meetingId;
         if (!scratchingsByMeeting.has(meetingId)) {

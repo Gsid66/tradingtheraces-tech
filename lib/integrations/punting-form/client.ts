@@ -127,6 +127,7 @@ export interface PFRaceFields {
 }
 
 // Scratching information (raw API response)
+// Note: The API does not provide horseName (only runnerId) or reason fields
 export interface PFScratching {
   meetingId: string;
   raceId: string;
@@ -140,7 +141,6 @@ export interface PFScratching {
   deduction: number;
   country: string;
   code: string;
-  // Note: horseName and reason are NOT provided by the API
 }
 
 // Track condition information
