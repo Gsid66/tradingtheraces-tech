@@ -47,6 +47,8 @@ Fill in the following settings:
 | **Build Command** | `npm install && npm run build` |
 | **Start Command** | `npm start` |
 
+**Note:** The `npm install` command automatically runs database migrations via the `postinstall` hook.
+
 ### Instance Type
 
 - **Free** - Good for testing ($0/month)
@@ -82,9 +84,10 @@ Click **"Advanced"** then add these environment variables:
 ```
 1. Render clones your GitHub repo
 2. Runs: npm install (downloads dependencies)
-3. Runs: npm run build (builds Next.js app)
-4. Runs: npm start (starts the server)
-5. Your app is live! 🎉
+3. Runs: npm run migrate (automatically via postinstall - applies database migrations)
+4. Runs: npm run build (builds Next.js app)
+5. Runs: npm start (starts the server)
+6. Your app is live! 🎉
 ```
 
 ## Step 6: Get Your App URL
@@ -152,6 +155,70 @@ Render automatically:
 ### Set Up Alerts (Optional)
 1. Click **"Settings"** → **"Alerts"**
 2. Add email notifications for errors
+
+## Troubleshooting
+
+### Database Migrations
+
+This project uses an automated migration system that runs during deployment.
+
+#### How It Works
+
+1. **Automatic Execution**: When `npm install` runs, the `postinstall` script automatically executes `npm run migrate`
+2. **Migration Files**: The system scans two directories for `.sql` files:
+   - `migrations/` - Legacy migration files (e.g., `007_create_scratchings_table.sql`)
+   - `drizzle/migrations/` - Drizzle ORM migrations (e.g., `0004_add_scratchings_table.sql`)
+3. **Execution Order**: Migrations are executed in numerical order based on the prefix (001, 002, 007, etc.)
+4. **Idempotent**: All migrations use `CREATE TABLE IF NOT EXISTS` and similar patterns, making them safe to run multiple times
+5. **Logging**: The migration runner logs which migrations were executed and any errors encountered
+
+#### Manual Migration
+
+If you need to run migrations manually:
+
+```bash
+# Run all pending migrations
+npm run migrate
+
+# Or run a specific migration file
+psql $DATABASE_URL -f migrations/007_create_scratchings_table.sql
+```
+
+#### Migration Troubleshooting
+
+**Problem:** Migration fails with "relation already exists"
+**Solution:** This is normal and safe - the migration script skips already-created tables
+
+**Problem:** Migration fails with "DATABASE_URL not set"
+**Solution:** 
+- Verify `DATABASE_URL` environment variable is set in Render
+- For local testing, ensure `.env.local` contains `DATABASE_URL`
+
+**Problem:** Migration fails with SSL/connection errors
+**Solution:**
+- The migration script uses SSL by default (required for Render)
+- Verify your database is accessible and the URL is correct
+- Check database service is running in Render dashboard
+
+**Problem:** Build fails during postinstall
+**Solution:**
+- Check Render logs for specific migration errors
+- Temporarily disable automatic migrations by removing `postinstall` from `package.json`
+- Run migrations manually after deployment using `npm run migrate`
+
+#### Adding New Migrations
+
+When adding a new migration file:
+
+1. **Name Format**: Use numeric prefix followed by description (e.g., `008_add_new_table.sql`)
+2. **Location**: Place in either `migrations/` or `drizzle/migrations/`
+3. **Idempotent SQL**: Always use `IF NOT EXISTS` patterns:
+   ```sql
+   CREATE TABLE IF NOT EXISTS my_table (...);
+   CREATE INDEX IF NOT EXISTS idx_name ON my_table(column);
+   ```
+4. **Test Locally**: Run `npm run migrate` locally before pushing
+5. **Auto-Deploy**: Push to GitHub - Render will automatically run the new migration
 
 ## Troubleshooting
 
