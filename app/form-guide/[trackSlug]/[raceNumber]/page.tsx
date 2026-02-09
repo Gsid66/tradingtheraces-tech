@@ -44,7 +44,7 @@ export default async function RacePage({ params }: Props) {
   try {
     // Fetch scratchings from database endpoint (has horse names resolved)
     const [scratchingsResponseAU, scratchingsResponseNZ, conditionsAU, conditionsNZ] = await Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/scratchings?jurisdiction=0&hoursAgo=48`).then(async r => {
+      fetch('/api/scratchings?jurisdiction=0&hoursAgo=48').then(async r => {
         if (!r.ok) {
           console.error(`Error fetching AU scratchings: HTTP ${r.status}`);
           return { success: false, data: [] };
@@ -54,7 +54,7 @@ export default async function RacePage({ params }: Props) {
         console.error('Error fetching AU scratchings:', err);
         return { success: false, data: [] };
       }),
-      fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/scratchings?jurisdiction=1&hoursAgo=48`).then(async r => {
+      fetch('/api/scratchings?jurisdiction=1&hoursAgo=48').then(async r => {
         if (!r.ok) {
           console.error(`Error fetching NZ scratchings: HTTP ${r.status}`);
           return { success: false, data: [] };
