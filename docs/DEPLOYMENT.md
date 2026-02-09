@@ -156,9 +156,7 @@ Render automatically:
 1. Click **"Settings"** → **"Alerts"**
 2. Add email notifications for errors
 
-## Troubleshooting
-
-### Database Migrations
+## Database Migrations
 
 This project uses an automated migration system that runs during deployment.
 
@@ -184,7 +182,7 @@ npm run migrate
 psql $DATABASE_URL -f migrations/007_create_scratchings_table.sql
 ```
 
-#### Migration Troubleshooting
+### Troubleshooting Migrations
 
 **Problem:** Migration fails with "relation already exists"
 **Solution:** This is normal and safe - the migration script skips already-created tables
@@ -220,7 +218,9 @@ When adding a new migration file:
 4. **Test Locally**: Run `npm run migrate` locally before pushing
 5. **Auto-Deploy**: Push to GitHub - Render will automatically run the new migration
 
-## Troubleshooting
+---
+
+## Troubleshooting Deployment Issues
 
 ### Build Fails
 **Problem:** `npm run build` fails

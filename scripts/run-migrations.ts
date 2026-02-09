@@ -69,7 +69,7 @@ function findMigrationFiles(): MigrationFile[] {
 async function executeMigration(
   client: Client,
   migration: MigrationFile
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: any; errorMessage?: string }> {
   try {
     console.log(`📄 Executing: ${migration.filename}`);
     
@@ -83,7 +83,7 @@ async function executeMigration(
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`❌ Failed: ${migration.filename}`);
     console.error(`   Error: ${errorMessage}\n`);
-    return { success: false, error: errorMessage };
+    return { success: false, error, errorMessage };
   }
 }
 
@@ -113,9 +113,9 @@ async function runMigrations() {
 
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false, // Required for Render PostgreSQL
-    },
+    ssl: process.env.NODE_ENV === 'production' 
+      ? { rejectUnauthorized: false } // Render PostgreSQL requires this
+      : undefined, // No SSL for local development
     connectionTimeoutMillis: 10000,
   });
 
@@ -160,7 +160,14 @@ async function runMigrations() {
         successCount++;
       } else {
         // Check if error is about object already existing (safe to skip)
-        if (result.error?.includes('already exists')) {
+        // PostgreSQL error codes: 42P07 (duplicate_table), 42710 (duplicate_object)
+        const pgError = result.error as any;
+        const isDuplicateError = 
+          pgError?.code === '42P07' || 
+          pgError?.code === '42710' ||
+          result.errorMessage?.includes('already exists');
+        
+        if (isDuplicateError) {
           console.log(`   ℹ️  Already exists, skipping...\n`);
           skipCount++;
         } else {
