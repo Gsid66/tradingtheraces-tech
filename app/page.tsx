@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { FaCrown, FaGlobeAsia, FaGlobeEurope, FaChartLine } from 'react-icons/fa'
 import NavigationCards from '@/components/NavigationCards'
+import UpcomingRacesWrapper from '@/components/UpcomingRacesWrapper'
 
 export default function Home() {
   return (
@@ -39,6 +40,11 @@ export default function Home() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Upcoming Races */}
+      <div className="max-w-6xl mx-auto mt-12">
+        <UpcomingRacesWrapper />
       </div>
 
       {/* Coming Soon Cards */}
