@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { FaClock, FaMapMarkerAlt, FaRoad } from 'react-icons/fa'
 import { convertTo24Hour, getStateFromTrackName } from '@/lib/utils/timezone-converter'
 import { useScratchingsContext } from '@/app/providers/ScratchingsProvider'
-import { countScratchingsForRace } from '@/lib/utils/scratchings'
+import { countScratchingsForRace, countScratchingsForRaceByMeetingId } from '@/lib/utils/scratchings'
 
 interface Runner {
   tab_number: number
@@ -35,6 +35,7 @@ interface Race {
   runner_count: number
   runners: Runner[]
   track_name: string
+  meeting_id?: string  // ADD THIS for accurate scratching matching
 }
 
 interface Track {
@@ -301,7 +302,24 @@ export default function UpcomingRaces() {
           const raceTime24 = convertTo24Hour(race.race_time || '')
           const raceTimeFormatted = formatTimeAEDT(raceTime24)
           const ariaLabel = `View Race ${race.race_number} at ${race.track_name} - ${raceTimeFormatted} AEDT`
-          const scratchedCount = countScratchingsForRace(race.track_name, race.race_number, scratchings)
+          // Try meetingId-based matching first (more accurate), fallback to track name matching
+          const scratchedCount = race.meeting_id 
+            ? countScratchingsForRaceByMeetingId(race.meeting_id, race.race_number, scratchings)
+            : countScratchingsForRace(race.track_name, race.race_number, scratchings)
+          
+          // Debug logging to diagnose scratching display issues
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`🐛 [UpcomingRaces] Scratching check for ${race.track_name} R${race.race_number}:`, {
+              meetingId: race.meeting_id,
+              trackName: race.track_name,
+              raceNumber: race.race_number,
+              scratchedCount,
+              totalScratchingsAvailable: scratchings.length,
+              scratchingsForThisTrack: scratchings.filter(s => 
+                s.trackName?.toLowerCase().includes(race.track_name.toLowerCase())
+              ).length
+            })
+          }
           
           return (
             <Link 

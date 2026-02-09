@@ -24,11 +24,26 @@ export function useScratchings(jurisdiction: 0 | 1 | 2 = 0) {
         
         if (data.success) {
           setScratchings(data.data);
+          
+          // ADD THIS DEBUG LOGGING
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`✅ [useScratchings] Fetched ${data.data.length} scratchings from API`, {
+              jurisdiction,
+              sample: data.data[0] || 'No data'
+            });
+          }
         } else {
           setError(data.error);
+          if (process.env.NODE_ENV === 'development') {
+            console.error('❌ [useScratchings] API returned error:', data.error);
+          }
         }
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+        setError(errorMessage);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('❌ [useScratchings] Fetch failed:', errorMessage);
+        }
       } finally {
         setLoading(false);
       }

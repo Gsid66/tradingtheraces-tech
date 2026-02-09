@@ -69,7 +69,7 @@ export function countScratchingsForRace(
 ): number {
   if (!trackName || !raceNumber) return 0;
   
-  return scratchings.filter((s) => {
+  const count = scratchings.filter((s) => {
     const scratchingRecord = s as unknown as Record<string, unknown>;
     const sTrackName = s.trackName || scratchingRecord.track || scratchingRecord.venueName;
     const sRaceNumber = s.raceNumber || scratchingRecord.raceNo || scratchingRecord.race;
@@ -79,6 +79,47 @@ export function countScratchingsForRace(
       sRaceNumber === raceNumber
     );
   }).length;
+  
+  // ADD THIS DEBUG LOGGING
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`🔍 [Scratchings] Track-based count for "${trackName}" R${raceNumber}: ${count}`, {
+      totalScratchings: scratchings.length,
+      scratchingsForTrack: scratchings.filter(s => {
+        const scratchingRecord = s as unknown as Record<string, unknown>;
+        const sTrackName = s.trackName || scratchingRecord.track || scratchingRecord.venueName;
+        return safeStringMatch(String(sTrackName), trackName);
+      }).length
+    });
+  }
+  
+  return count;
+}
+
+/**
+ * Count scratchings for a specific race by meetingId (more accurate than track name matching)
+ * This is the preferred method when meetingId is available
+ */
+export function countScratchingsForRaceByMeetingId(
+  meetingId: string,
+  raceNumber: number,
+  scratchings: Scratching[]
+): number {
+  if (!meetingId || !raceNumber) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('⚠️ [Scratchings] Missing meetingId or raceNumber:', { meetingId, raceNumber });
+    }
+    return 0;
+  }
+  
+  const count = scratchings.filter((s) => {
+    return s.meetingId === meetingId && s.raceNumber === raceNumber;
+  }).length;
+  
+  if (process.env.NODE_ENV === 'development' && count > 0) {
+    console.log(`✅ [Scratchings] Found ${count} scratching(s) for meeting ${meetingId} R${raceNumber}`);
+  }
+  
+  return count;
 }
 
 /**

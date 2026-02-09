@@ -13,6 +13,16 @@ const ScratchingsContext = createContext<ScratchingsContextType | undefined>(und
 
 export function ScratchingsProvider({ children }: { children: ReactNode }) {
   const data = useScratchings(0); // Australia only
+  
+  // ADD THIS DEBUG LOGGING
+  if (process.env.NODE_ENV === 'development') {
+    console.log('📊 [ScratchingsProvider] Data status:', {
+      loading: data.loading,
+      error: data.error,
+      scratchingsCount: data.scratchings.length,
+      sampleScratching: data.scratchings[0] || 'No scratchings available'
+    });
+  }
 
   return (
     <ScratchingsContext.Provider value={data}>
