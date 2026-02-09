@@ -1,41 +1,71 @@
 import { NextResponse } from 'next/server';
-import { getPuntingFormClient, PFScratching } from '@/lib/integrations/punting-form/client';
+import { query } from '@/lib/database/client';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const jurisdiction = parseInt(searchParams.get('jurisdiction') || '0');
+    const hoursAgo = parseInt(searchParams.get('hoursAgo') || '48'); // Default to last 48 hours
     
-    const pfClient = getPuntingFormClient();
-    const scratchingsResponse = await pfClient.getScratchings(jurisdiction);
-    
-    const scratchingsData = scratchingsResponse.payLoad || [];
-    
-    // Transform to ensure consistent property names
-    // Handle both camelCase and PascalCase from the API
-    const normalizedData = scratchingsData.map((item) => {
-      const itemRecord = item as unknown as Record<string, unknown>;
-      return {
-        meetingId: String(itemRecord.meetingId || itemRecord.MeetingId || ''),
-        raceId: String(itemRecord.raceId || itemRecord.RaceId || ''),
-        raceNumber: Number(itemRecord.raceNumber || itemRecord.RaceNumber || 0),
-        trackName: String(itemRecord.trackName || itemRecord.TrackName || itemRecord.track || itemRecord.Track || ''),
-        horseName: String(itemRecord.horseName || itemRecord.HorseName || itemRecord.name || itemRecord.Name || ''),
-        tabNumber: Number(itemRecord.tabNumber || itemRecord.TabNumber || itemRecord.number || itemRecord.Number || 0),
-        scratchingTime: String(itemRecord.scratchingTime || itemRecord.ScratchingTime || ''),
-        reason: (itemRecord.reason || itemRecord.Reason) ? String(itemRecord.reason || itemRecord.Reason) : undefined,
-      };
+    console.log(`🔍 [Scratchings API DB] Fetching from database:`, {
+      jurisdiction,
+      hoursAgo
     });
+    
+    // Query scratchings from database
+    const result = await query(`
+      SELECT 
+        meeting_id,
+        race_id,
+        race_number,
+        track_name,
+        horse_name,
+        tab_number,
+        scratching_time,
+        reason,
+        jurisdiction
+      FROM pf_scratchings
+      WHERE jurisdiction = $1
+        AND scratching_time >= NOW() - INTERVAL '1 hour' * $2
+      ORDER BY scratching_time DESC
+    `, [jurisdiction, hoursAgo]);
+
+    const scratchingsData = result.rows.map(row => ({
+      meetingId: row.meeting_id,
+      raceId: row.race_id,
+      raceNumber: row.race_number,
+      trackName: row.track_name,
+      horseName: row.horse_name,
+      tabNumber: row.tab_number,
+      scratchingTime: row.scratching_time,
+      reason: row.reason
+    }));
+
+    console.log(`✅ [Scratchings API DB] Returning ${scratchingsData.length} scratchings from database`);
     
     return NextResponse.json({
       success: true,
-      data: normalizedData
+      data: scratchingsData,
+      meta: {
+        count: scratchingsData.length,
+        jurisdiction,
+        source: 'database',
+        timestamp: new Date().toISOString()
+      }
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('❌ Error fetching scratchings:', error);
+    console.error('❌ [Scratchings API DB] Error fetching scratchings:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch scratchings', message: errorMessage },
+      { 
+        success: false,
+        error: 'Failed to fetch scratchings from database', 
+        message: errorMessage,
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }
