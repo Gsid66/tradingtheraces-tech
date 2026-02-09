@@ -25,7 +25,12 @@ if (isProduction || isRender) {
   });
   
   // Exit with the same code as the migration script
-  process.exit(result.status ?? 0);
+  // If result.status is null (e.g., process was killed), treat as failure
+  if (result.status === null) {
+    console.error('❌ Migration process terminated abnormally');
+    process.exit(1);
+  }
+  process.exit(result.status);
 } else {
   console.log('⏭️  Skipping migrations (development environment)');
   console.log('   To run migrations manually, use: npm run migrate');
