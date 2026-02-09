@@ -126,7 +126,26 @@ export interface PFRaceFields {
   ratingsUpdated: string;
 }
 
-// Scratching information
+// Scratching information (raw API response)
+// Note: The API does not provide horseName (only runnerId)
+// The reason field is optional and may not be provided by the API
+export interface PFScratchingRaw {
+  meetingId: string;
+  raceId: string;
+  runnerId: string;  // API provides runnerId, not horseName
+  meetingDate: string;
+  meetingDateUTC: string | null;
+  track: string;  // API uses 'track', not 'trackName'
+  raceNo: number;  // API uses 'raceNo', not 'raceNumber'
+  tabNo: number;  // API uses 'tabNo', not 'tabNumber'
+  timeStamp: string;  // API uses 'timeStamp', not 'scratchingTime'
+  deduction: number;
+  country: string;
+  code: string;
+  reason?: string;  // Optional: may not be provided by API
+}
+
+// Scratching information (normalized format used by frontend)
 export interface PFScratching {
   meetingId: string;
   raceId: string;
@@ -233,7 +252,7 @@ export class PuntingFormClient {
    * Get scratchings for a jurisdiction
    * @param jurisdiction - 0 (AU), 1 (NZ), 2 (International)
    */
-  async getScratchings(jurisdiction: number = 0): Promise<PuntingFormResponse<PFScratching[]>> {
+  async getScratchings(jurisdiction: number = 0): Promise<PuntingFormResponse<PFScratchingRaw[]>> {
     return this.get(`/Updates/Scratchings?jurisdiction=${jurisdiction}`);
   }
 
