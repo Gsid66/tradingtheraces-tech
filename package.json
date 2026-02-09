@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "migrate": "tsx scripts/run-migrations.ts",
-    "postinstall": "npm run migrate",
+    "postinstall": "tsx scripts/conditional-migrate.ts",
     "sync:scratchings": "tsx scripts/sync-scratchings.ts",
     "db:migrate:scratchings": "psql $DATABASE_URL -f migrations/007_create_scratchings_table.sql"
   },
