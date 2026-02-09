@@ -62,8 +62,9 @@ async function syncScratchings() {
             newScratchings++;
             console.log(`  ✅ Added: ${itemRecord.horseName} - R${itemRecord.raceNumber} at ${itemRecord.trackName}`);
           }
-        } catch (error: any) {
-          console.error(`  ❌ Error inserting scratching:`, error.message);
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          console.error(`  ❌ Error inserting scratching:`, errorMessage);
         }
       }
     }
@@ -76,8 +77,9 @@ async function syncScratchings() {
     console.log(`✅ Existing scratchings updated: ${totalScratchings - newScratchings}`);
     console.log('\n✨ Scratchings sync completed!\n');
 
-  } catch (error: any) {
-    console.error('❌ Sync failed:', error.message);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('❌ Sync failed:', errorMessage);
     throw error;
   } finally {
     await dbClient.end();
