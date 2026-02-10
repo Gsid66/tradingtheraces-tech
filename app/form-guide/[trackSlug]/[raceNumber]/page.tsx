@@ -247,25 +247,27 @@ export default async function RacePage({ params }: Props) {
       (tr: any) => horseNamesMatch(tr.horse_name, runner.horseName || runner.name)
     );
 
-    // Check if horse is scratched
+    // Check if horse is scratched - USE TAB NUMBER for reliable matching
     const scratchingInfo = getScratchingInfo(
       scratchings,
       meeting.meetingId,
       raceNum,
       runner.horseName || runner.name,
       meeting.track.name,
-      runner.tabNumber  // Pass TAB number for most reliable matching
+      runner.tabNumber || runner.tabNo  // ✅ TAB number for 100% accurate matching
     );
 
-    console.log(`🔍 [Form Guide] Scratching check:`, {
-      horse: runner.horseName || runner.name,
-      tabNumber: runner.tabNumber,
-      meetingId: meeting.meetingId,
-      raceNumber: raceNum,
-      totalScratchings: scratchings.length,
-      matchFound: !!scratchingInfo,
-      scratchingData: scratchingInfo || 'No match'
-    });
+    // Debug logging to help diagnose matching issues
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔍 [Form Guide] Scratching check:`, {
+        horse: runner.horseName || runner.name,
+        tabNumber: runner.tabNumber || runner.tabNo,
+        meetingId: meeting.meetingId,
+        raceNumber: raceNum,
+        isScratched: !!scratchingInfo,
+        reason: scratchingInfo?.reason || 'N/A'
+      });
+    }
 
     const enriched = {
       ...runner,
@@ -292,6 +294,44 @@ export default async function RacePage({ params }: Props) {
     
     return enriched;
   });
+
+  // Log scratching summary for debugging
+  if (process.env.NODE_ENV === 'development') {
+    const scratchedCount = enrichedRunners.filter(r => r.isScratched).length;
+    const totalRunners = enrichedRunners.length;
+    const availableScratchings = scratchings.filter(
+      s => s.meetingId === meeting.meetingId && s.raceNumber === raceNum
+    );
+    
+    console.log(`📊 [Form Guide] ${meeting.track.name} R${raceNumber} Scratching Summary:`, {
+      totalRunners,
+      scratchedCount,
+      activeRunners: totalRunners - scratchedCount,
+      scratchingsInDatabase: availableScratchings.length
+    });
+    
+    if (scratchedCount > 0) {
+      console.log(`🔴 [Form Guide] Scratched horses:`, 
+        enrichedRunners
+          .filter(r => r.isScratched)
+          .map(r => ({
+            name: r.horseName || r.name,
+            tabNo: r.tabNumber || r.tabNo,
+            reason: r.scratchingReason
+          }))
+      );
+    }
+    
+    if (availableScratchings.length > scratchedCount) {
+      console.warn(`⚠️ [Form Guide] Found ${availableScratchings.length} scratchings but only matched ${scratchedCount}`);
+      console.log('Unmatched scratchings:', 
+        availableScratchings.map(s => ({
+          horse: s.horseName,
+          tabNo: s.tabNumber
+        }))
+      );
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
