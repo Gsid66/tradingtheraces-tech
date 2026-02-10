@@ -71,6 +71,7 @@ const TRACK_TO_STATE: Record<string, string> = {
   // WA
   'ascot': 'WA',
   'belmont': 'WA',
+  'belmont park': 'WA',
   'bunbury': 'WA',
   'albany': 'WA',
   'geraldton': 'WA',
@@ -135,6 +136,7 @@ const TRACK_TO_STATE: Record<string, string> = {
   'alexandra': 'NZ',
   'kurow': 'NZ',
   'tauherenikau': 'NZ',
+  'te aroha': 'NZ',
 };
 
 export function getStateFromTrackName(trackName: string): string {
