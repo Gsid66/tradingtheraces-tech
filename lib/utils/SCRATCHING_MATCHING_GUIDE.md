@@ -63,7 +63,7 @@ The system automatically handles these name variations:
 
 ### 2. Apostrophe Variations
 - `"O'Really"` matches `"O Really"`
-- `"O'Really"` matches `"ORe ally"`
+- `"O'Really"` matches `"OReally"`
 - Handles multiple apostrophe types: `'`, `` ` ``, `'`
 
 ### 3. Spacing Variations

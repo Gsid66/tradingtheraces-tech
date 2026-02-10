@@ -1,3 +1,8 @@
+// Configuration constants for fuzzy matching
+const MIN_SUBSTRING_MATCH_LENGTH = 8;  // Minimum length for substring matching
+const FUZZY_MATCH_THRESHOLD = 0.15;    // Allow 15% character difference
+const MAX_CHAR_DIFFERENCE = 3;          // Maximum absolute character difference
+
 export function normalizeHorseName(name: string | null | undefined): string {
   if (!name) return '';
   
@@ -71,7 +76,7 @@ export function horseNamesMatch(name1: string | null | undefined, name2: string 
   
   // 2. Check if one name contains the other (with minimum length threshold)
   const minLength = Math.min(normalized1.length, normalized2.length);
-  if (minLength >= 8) {  // Only for reasonably long names
+  if (minLength >= MIN_SUBSTRING_MATCH_LENGTH) {  // Only for reasonably long names
     if (normalized1.includes(normalized2) || normalized2.includes(normalized1)) {
       if (process.env.NODE_ENV === 'development') {
         console.log(`🔍 [Matcher] Fuzzy match (substring): "${name1}" ≈ "${name2}"`);
@@ -82,9 +87,9 @@ export function horseNamesMatch(name1: string | null | undefined, name2: string 
   
   // 3. Calculate Levenshtein distance for very close matches (typos)
   const distance = levenshteinDistance(normalized1, normalized2);
-  const maxAllowedDistance = Math.floor(Math.max(normalized1.length, normalized2.length) * 0.15); // Allow 15% difference
+  const maxAllowedDistance = Math.floor(Math.max(normalized1.length, normalized2.length) * FUZZY_MATCH_THRESHOLD);
   
-  if (distance <= maxAllowedDistance && distance <= 3) {  // Max 3 character difference
+  if (distance <= maxAllowedDistance && distance <= MAX_CHAR_DIFFERENCE) {
     if (process.env.NODE_ENV === 'development') {
       console.log(`🔍 [Matcher] Fuzzy match (typo tolerance): "${name1}" ≈ "${name2}" (distance: ${distance})`);
     }
