@@ -252,11 +252,14 @@ export default async function RacePage({ params }: Props) {
       scratchings,
       meeting.meetingId,
       raceNum,
-      runner.horseName || runner.name
+      runner.horseName || runner.name,
+      meeting.track.name,
+      runner.tabNumber  // Pass TAB number for most reliable matching
     );
 
     console.log(`🔍 [Form Guide] Scratching check:`, {
       horse: runner.horseName || runner.name,
+      tabNumber: runner.tabNumber,
       meetingId: meeting.meetingId,
       raceNumber: raceNum,
       totalScratchings: scratchings.length,
