@@ -294,7 +294,7 @@ function MeetingCard({ meeting }: { meeting: MeetingWithRaces }) {
               )}
               <span className="flex items-center gap-1">
                 <span className="opacity-50">•</span>
-                <WeatherBadge trackName={meeting.track.name} className="bg-white/20 text-white" />
+                <WeatherBadge trackName={meeting.track.name} className="bg-purple-900/30 text-white border border-white/20" />
               </span>
             </div>
           </div>

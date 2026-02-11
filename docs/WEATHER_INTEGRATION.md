@@ -254,7 +254,10 @@ Add to GitHub Actions workflow or cron job:
 - name: Sync Weather Data
   run: npx tsx scripts/sync-weather-data.ts
   schedule:
-    - cron: '*/30 19-10 * * *'  # Every 30 min during race hours AEDT
+    # Evening to late night (7 PM - 11:30 PM AEDT)
+    - cron: '*/30 19-23 * * *'
+    # Midnight to morning (12 AM - 10:30 AM AEDT)
+    - cron: '*/30 0-10 * * *'
 ```
 
 ## Wind Direction Display

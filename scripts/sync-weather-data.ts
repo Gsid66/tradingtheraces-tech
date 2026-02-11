@@ -163,7 +163,8 @@ async function syncWeatherData() {
 
         console.log(`  ✅ Stored hourly forecasts`);
 
-        // Rate limiting - wait 1 second between API calls to respect MET Norway
+        // Rate limiting - wait 1 second between API calls to respect MET Norway's fair use policy
+        // While MET Norway doesn't specify explicit rate limits, they request respectful usage
         await new Promise(resolve => setTimeout(resolve, 1000));
 
       } catch (error) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 interface WeatherData {
   temperature: number;
@@ -34,7 +34,7 @@ export default function WeatherDisplay({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchWeather = async () => {
+  const fetchWeather = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -67,7 +67,7 @@ export default function WeatherDisplay({
     } finally {
       setLoading(false);
     }
-  };
+  }, [trackName, meetingId]);
 
   useEffect(() => {
     fetchWeather();
@@ -78,7 +78,7 @@ export default function WeatherDisplay({
       const interval = setInterval(fetchWeather, intervalMs);
       return () => clearInterval(interval);
     }
-  }, [trackName, meetingId, autoRefresh, refreshInterval]);
+  }, [fetchWeather, autoRefresh, refreshInterval]);
 
   if (loading) {
     return (
