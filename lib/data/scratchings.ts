@@ -37,6 +37,28 @@ export async function getScratchingsFromDB(
   hoursAgo: number = 48
 ): Promise<ScratchingsResult> {
   try {
+    // Validate jurisdiction parameter
+    if (jurisdiction < 0 || jurisdiction > 2) {
+      console.error(`❌ [Scratchings DB] Invalid jurisdiction: ${jurisdiction}`);
+      return {
+        success: false,
+        data: [],
+        error: 'Invalid jurisdiction parameter',
+        message: 'Jurisdiction must be 0 (AU), 1 (NZ), or 2 (Both)'
+      };
+    }
+
+    // Validate hoursAgo parameter
+    if (hoursAgo < 0 || hoursAgo > 168) { // Max 1 week
+      console.error(`❌ [Scratchings DB] Invalid hoursAgo: ${hoursAgo}`);
+      return {
+        success: false,
+        data: [],
+        error: 'Invalid hoursAgo parameter',
+        message: 'hoursAgo must be between 0 and 168 hours'
+      };
+    }
+
     console.log(`🔍 [Scratchings DB] Fetching from database:`, {
       jurisdiction,
       hoursAgo
