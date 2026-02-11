@@ -9,10 +9,11 @@ import {
 
 export async function GET(
   request: Request,
-  { params }: { params: { trackName: string } }
+  { params }: { params: Promise<{ trackName: string }> }
 ) {
   try {
-    const trackName = params.trackName.toLowerCase();
+    const { trackName: rawTrackName } = await params;
+    const trackName = rawTrackName.toLowerCase();
     
     // Get track coordinates
     const coords = getTrackCoordinates(trackName);

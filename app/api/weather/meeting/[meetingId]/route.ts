@@ -8,10 +8,10 @@ import {
 
 export async function GET(
   request: Request,
-  { params }: { params: { meetingId: string } }
+  { params }: { params: Promise<{ meetingId: string }> }
 ) {
   try {
-    const meetingId = params.meetingId;
+    const { meetingId } = await params;
     
     const db = getDatabase();
     
