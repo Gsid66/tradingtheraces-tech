@@ -60,7 +60,7 @@ export const TTR_TO_PUNTINGFORM: Record<string, string[]> = {
   'eagle farm': ['Eagle Farm'],
   'morphettville': ['Morphettville'],
   'ascot': ['Ascot'],
-  'belmont': ['Belmont Park'],
+  'belmont park': ['Belmont Park'],
   'gold coast': ['Gold Coast'],
   'sunshine coast': ['Sunshine Coast'],
   'ipswich': ['Ipswich'],
@@ -168,7 +168,8 @@ export const PUNTINGFORM_TO_TTR: Record<string, string> = {
   'moonee valley': 'Moonee Valley',
   'the valley': 'Moonee Valley',
   'warwick farm': 'Warwick Farm',
-  'belmont park': 'Belmont',
+  'belmont park': 'Belmont Park',
+  'belmont': 'Belmont Park',
   
   // Exact matches
   'flemington': 'Flemington',
