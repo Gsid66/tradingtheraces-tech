@@ -1,0 +1,88 @@
+name: Sync PuntingForm and Weather Data
+
+# This comprehensive workflow syncs all core data in the correct order:
+# 1. PuntingForm data (meetings, races, runners) - MUST run first
+# 2. Weather data - depends on meetings being in database
+# 3. Scratchings - optional, non-critical
+#
+# Separate workflows still exist for individual syncs if needed:
+# - sync-main-data.yml: PuntingForm data only
+# - sync-weather.yml: Weather data only
+# - sync-scratchings.yml: Scratchings only
+# - sync-results.yml: Race results
+
+on:
+  schedule:
+    # 5:00 AM AEDT = 18:00 UTC (previous day) - Morning data load
+    - cron: '0 18 * * *'
+    # 8:00 AM AEDT = 21:00 UTC (previous day) - Pre-race update
+    - cron: '0 21 * * *'
+    # Every 30 minutes from 9:00 AM to 9:00 PM AEDT (requires split for UTC midnight wrap)
+    # 9:00-10:30 AM AEDT = 22:00-23:30 UTC (previous day)
+    - cron: '*/30 22-23 * * *'
+    # 11:00 AM - 9:00 PM AEDT = 00:00-10:00 UTC (same day)
+    - cron: '*/30 0-10 * * *'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  sync-data:
+    name: Sync Racing and Weather Data
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Sync PuntingForm Data (FIRST)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PUNTING_FORM_API_KEY: ${{ secrets.PUNTING_FORM_API_KEY }}
+        run: |
+          echo "📊 Syncing PuntingForm data to database..."
+          npx tsx scripts/sync-pf-data.ts
+          echo "✅ PuntingForm sync complete"
+      
+      - name: Sync Weather Data (SECOND - depends on meetings in DB)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          WEATHER_USER_AGENT: ${{ secrets.WEATHER_USER_AGENT }}
+        run: |
+          echo "🌤️  Syncing weather data..."
+          npx tsx scripts/sync-weather-data.ts
+          echo "✅ Weather sync complete"
+      
+      - name: Sync Scratchings (THIRD - optional)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PUNTING_FORM_API_KEY: ${{ secrets.PUNTING_FORM_API_KEY }}
+        run: |
+          echo "🔄 Syncing scratchings..."
+          npx tsx scripts/sync-scratchings.ts || echo "⚠️ Scratchings sync failed (non-critical)"
+      
+      - name: Summary
+        if: success()
+        run: |
+          echo "🎉 All data synced successfully!"
+          echo "✅ PuntingForm data → Database"
+          echo "✅ Weather data → Database"
+          echo "✅ Site ready for users"
+      
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "❌ Sync failed! Check the logs above."
+          echo "Common issues:"
+          echo "  - Database connection failed"
+          echo "  - API rate limits"
+          echo "  - Missing secrets"
