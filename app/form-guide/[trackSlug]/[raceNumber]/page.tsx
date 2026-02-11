@@ -7,7 +7,7 @@ import { getPostgresAPIClient } from '@/lib/integrations/postgres-api';
 import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 import { getScratchingInfo } from '@/lib/utils/scratchings-matcher';
-import { fetchAPI } from '@/lib/utils/api-helpers';
+import { getScratchingsFromDB } from '@/lib/data/scratchings';
 import TrackConditionBadge from '@/components/racing/TrackConditionBadge';
 import RaceDetails from './RaceDetails';
 import RaceContent from './RaceContent';
@@ -49,24 +49,16 @@ export default async function RacePage({ params }: Props) {
   try {
     // Fetch scratchings using absolute URLs
     const [scratchingsResponseAU, scratchingsResponseNZ, conditionsAU, conditionsNZ] = await Promise.all([
-      fetchAPI('/api/scratchings?jurisdiction=0&hoursAgo=48')
+      getScratchingsFromDB(0, 48)
         .then(data => {
           console.log(`✅ [Scratchings] Fetched ${data.data?.length || 0} AU scratchings`);
           return data;
-        })
-        .catch(err => {
-          console.error('❌ [Scratchings] AU fetch failed:', err.message);
-          return { success: false, data: [] };
         }),
       
-      fetchAPI('/api/scratchings?jurisdiction=1&hoursAgo=48')
+      getScratchingsFromDB(1, 48)
         .then(data => {
           console.log(`✅ [Scratchings] Fetched ${data.data?.length || 0} NZ scratchings`);
           return data;
-        })
-        .catch(err => {
-          console.error('❌ [Scratchings] NZ fetch failed:', err.message);
-          return { success: false, data: [] };
         }),
       
       pfClient.getConditions(0).catch(err => {

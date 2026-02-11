@@ -5,7 +5,7 @@ import { getPuntingFormClient, PFScratching, PFCondition } from '@/lib/integrati
 import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
 import { tracksMatch } from '@/lib/utils/scratchings-matcher';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
-import { fetchAPI } from '@/lib/utils/api-helpers';
+import { getScratchingsFromDB } from '@/lib/data/scratchings';
 import FilterableRaceTable from './FilterableRaceTable';
 
 export const dynamic = 'force-dynamic';
@@ -178,23 +178,15 @@ export default async function RaceViewerPage({ params }: PageProps) {
     const pfClient = getPuntingFormClient();
     
     const [scratchingsResponseAU, scratchingsResponseNZ, conditionsAU, conditionsNZ] = await Promise.all([
-      fetchAPI('/api/scratchings?jurisdiction=0&hoursAgo=48')
+      getScratchingsFromDB(0, 48)
         .then(data => {
           console.log(`✅ [Scratchings] Fetched ${data.data?.length || 0} AU scratchings`);
           return data;
-        })
-        .catch(err => {
-          console.error('❌ [Scratchings] AU fetch failed:', err.message);
-          return { success: false, data: [] };
         }),
-      fetchAPI('/api/scratchings?jurisdiction=1&hoursAgo=48')
+      getScratchingsFromDB(1, 48)
         .then(data => {
           console.log(`✅ [Scratchings] Fetched ${data.data?.length || 0} NZ scratchings`);
           return data;
-        })
-        .catch(err => {
-          console.error('❌ [Scratchings] NZ fetch failed:', err.message);
-          return { success: false, data: [] };
         }),
       pfClient.getConditions(0).catch(() => ({ payLoad: [] })),
       pfClient.getConditions(1).catch(() => ({ payLoad: [] }))
