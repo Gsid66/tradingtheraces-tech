@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import type { PFMeeting, PFRace } from '@/lib/integrations/punting-form/client';
 import { convertToAEDT } from '@/lib/utils/timezone-converter';
+import { WeatherBadge } from '@/components/WeatherDisplay';
 
 interface MeetingWithRaces extends PFMeeting {
   raceDetails?: PFRace[];
@@ -281,7 +282,7 @@ function MeetingCard({ meeting }: { meeting: MeetingWithRaces }) {
                 {meeting.track.name} ({raceCount} {raceCount === 1 ? 'race' : 'races'})
               </h2>
             </Link>
-            <div className="flex flex-wrap gap-3 text-sm">
+            <div className="flex flex-wrap gap-3 text-sm items-center">
               <span className="flex items-center gap-1">
                 <span className="font-semibold">{meeting.track.state}</span>
               </span>
@@ -291,6 +292,10 @@ function MeetingCard({ meeting }: { meeting: MeetingWithRaces }) {
                   <span>Rail: {meeting.railPosition}</span>
                 </span>
               )}
+              <span className="flex items-center gap-1">
+                <span className="opacity-50">•</span>
+                <WeatherBadge trackName={meeting.track.name} className="bg-purple-900/30 text-white border border-white/20" />
+              </span>
             </div>
           </div>
         </div>

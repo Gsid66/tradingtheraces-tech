@@ -9,6 +9,7 @@ import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 import { getScratchingInfo } from '@/lib/utils/scratchings-matcher';
 import { getScratchingsFromDB } from '@/lib/data/scratchings';
 import TrackConditionBadge from '@/components/racing/TrackConditionBadge';
+import WeatherDisplay from '@/components/WeatherDisplay';
 import RaceDetails from './RaceDetails';
 import RaceContent from './RaceContent';
 
@@ -410,6 +411,16 @@ export default async function RacePage({ params }: Props) {
             />
           </div>
         )}
+
+        {/* Weather Display */}
+        <div className="mb-6">
+          <WeatherDisplay 
+            trackName={meeting.track.name}
+            meetingId={meeting.meetingId}
+            autoRefresh={true}
+            refreshInterval={30}
+          />
+        </div>
 
         {/* Race Navigation Pills */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
