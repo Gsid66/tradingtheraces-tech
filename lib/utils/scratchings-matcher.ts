@@ -63,15 +63,36 @@ export function isHorseScratched(
   meetingId: string,
   raceNumber: number,
   horseName: string,
-  trackName?: string
+  trackName?: string,
+  tabNumber?: number
 ): boolean {
-  return scratchings.some(
-    s =>
-      s.meetingId === meetingId &&
-      s.raceNumber === raceNumber &&
-      horseNamesMatch(s.horseName, horseName) &&
-      (!trackName || !s.trackName || tracksMatch(s.trackName, trackName))
-  );
+  return scratchings.some(s => {
+    const meetingMatch = s.meetingId === meetingId;
+    const raceMatch = s.raceNumber === raceNumber;
+    
+    // PRIORITY 1: TAB number matching (most reliable)
+    if (tabNumber && s.tabNumber) {
+      const tabMatch = s.tabNumber === tabNumber;
+      if (meetingMatch && raceMatch && tabMatch) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`✅ [Matcher] TAB number match: ${horseName} (#${tabNumber})`);
+        }
+        return true;
+      }
+    }
+    
+    // PRIORITY 2: Horse name matching (fallback)
+    const nameMatch = horseNamesMatch(s.horseName, horseName);
+    const trackMatch = !trackName || !s.trackName || tracksMatch(s.trackName, trackName);
+    
+    const fullMatch = meetingMatch && raceMatch && nameMatch && trackMatch;
+    
+    if (fullMatch && process.env.NODE_ENV === 'development') {
+      console.log(`✅ [Matcher] Name match: ${horseName} -> ${s.horseName}`);
+    }
+    
+    return fullMatch;
+  });
 }
 
 export function getScratchingInfo(
@@ -79,43 +100,60 @@ export function getScratchingInfo(
   meetingId: string,
   raceNumber: number,
   horseName: string,
-  trackName?: string
+  trackName?: string,
+  tabNumber?: number
 ): Scratching | undefined {
   console.log(`🔍 [Matcher] Looking for scratching:`, {
     meetingId,
     raceNumber,
     horseName,
+    tabNumber,
     trackName,
     availableScratchings: scratchings.length
   });
   
-  const result = scratchings.find(
-    s => {
-      const meetingMatch = s.meetingId === meetingId;
-      const raceMatch = s.raceNumber === raceNumber;
-      const nameMatch = horseNamesMatch(s.horseName, horseName);
-      const trackMatch = !trackName || !s.trackName || tracksMatch(s.trackName, trackName);
-      
-      if (nameMatch && raceMatch) {
-        console.log(`🎯 [Matcher] Potential match found:`, {
-          scratchedHorse: s.horseName,
-          searchHorse: horseName,
-          meetingMatch,
-          raceMatch,
-          nameMatch,
-          trackMatch,
-          overallMatch: meetingMatch && raceMatch && nameMatch && trackMatch
-        });
-      }
-      
-      return meetingMatch && raceMatch && nameMatch && trackMatch;
+  // Try TAB number match first
+  if (tabNumber) {
+    const tabMatch = scratchings.find(
+      s => s.meetingId === meetingId && 
+           s.raceNumber === raceNumber && 
+           s.tabNumber === tabNumber
+    );
+    
+    if (tabMatch) {
+      console.log(`✅ [Matcher] TAB number match found:`, tabMatch);
+      return tabMatch;
     }
-  );
+  }
+  
+  // Fall back to name matching
+  const result = scratchings.find(s => {
+    const meetingMatch = s.meetingId === meetingId;
+    const raceMatch = s.raceNumber === raceNumber;
+    const nameMatch = horseNamesMatch(s.horseName, horseName);
+    const trackMatch = !trackName || !s.trackName || tracksMatch(s.trackName, trackName);
+    
+    if (nameMatch && raceMatch) {
+      console.log(`🎯 [Matcher] Potential match found:`, {
+        scratchedHorse: s.horseName,
+        scratchedTabNo: s.tabNumber,
+        searchHorse: horseName,
+        searchTabNo: tabNumber,
+        meetingMatch,
+        raceMatch,
+        nameMatch,
+        trackMatch,
+        overallMatch: meetingMatch && raceMatch && nameMatch && trackMatch
+      });
+    }
+    
+    return meetingMatch && raceMatch && nameMatch && trackMatch;
+  });
   
   if (result) {
-    console.log(`✅ [Matcher] Match found:`, result);
+    console.log(`✅ [Matcher] Name-based match found:`, result);
   } else {
-    console.log(`❌ [Matcher] No match found for ${horseName} in R${raceNumber}`);
+    console.log(`❌ [Matcher] No match found for ${horseName} (#${tabNumber || 'N/A'}) in R${raceNumber}`);
   }
   
   return result;

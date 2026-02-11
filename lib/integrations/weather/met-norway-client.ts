@@ -1,0 +1,470 @@
+/**
+ * MET Norway Weather API Client
+ * 
+ * Integration with MET Norway Locationforecast API for weather data.
+ * API Documentation: https://api.met.no/weatherapi/locationforecast/2.0/documentation
+ * 
+ * Terms of Service: https://api.met.no/doc/TermsOfService
+ * - Must include User-Agent header
+ * - Must respect cache headers
+ * - Attribution required
+ */
+
+export interface WeatherTimeseries {
+  time: string;
+  data: {
+    instant: {
+      details: {
+        air_temperature: number;
+        wind_speed: number;
+        wind_from_direction: number;
+        wind_speed_of_gust?: number;
+        relative_humidity?: number;
+        air_pressure_at_sea_level?: number;
+        cloud_area_fraction?: number;
+        fog_area_fraction?: number;
+        dew_point_temperature?: number;
+        ultraviolet_index_clear_sky?: number;
+      };
+    };
+    next_1_hours?: {
+      summary: {
+        symbol_code: string;
+      };
+      details: {
+        precipitation_amount?: number;
+        precipitation_amount_max?: number;
+        precipitation_amount_min?: number;
+        probability_of_precipitation?: number;
+      };
+    };
+    next_6_hours?: {
+      summary: {
+        symbol_code: string;
+      };
+      details: {
+        precipitation_amount?: number;
+        precipitation_amount_max?: number;
+        precipitation_amount_min?: number;
+        probability_of_precipitation?: number;
+      };
+    };
+  };
+}
+
+export interface WeatherForecast {
+  type: string;
+  geometry: {
+    type: string;
+    coordinates: number[];
+  };
+  properties: {
+    meta: {
+      updated_at: string;
+      units: {
+        air_temperature: string;
+        wind_speed: string;
+        precipitation_amount: string;
+      };
+    };
+    timeseries: WeatherTimeseries[];
+  };
+}
+
+export interface WeatherData {
+  temperature: number;
+  windSpeed: number;
+  windDirection: number;
+  windGust?: number;
+  weatherSymbol: string;
+  precipitation: number;
+  precipitationProbability?: number;
+  humidity?: number;
+  pressure?: number;
+  cloudCover?: number;
+  uvIndex?: number;
+  visibility?: number;
+  feelsLike?: number;
+  time: string;
+}
+
+export interface HourlyForecast {
+  time: string;
+  temperature: number;
+  feelsLike?: number;
+  windSpeed: number;
+  windGust?: number;
+  windDirection: number;
+  weatherSymbol: string;
+  precipitation: number;
+  precipitationProbability?: number;
+  humidity?: number;
+  cloudCover?: number;
+}
+
+// Weather symbol mapping to emojis
+const WEATHER_SYMBOLS: Record<string, string> = {
+  'clearsky_day': '☀️',
+  'clearsky_night': '🌙',
+  'clearsky_polartwilight': '☀️',
+  'fair_day': '🌤️',
+  'fair_night': '🌤️',
+  'fair_polartwilight': '🌤️',
+  'partlycloudy_day': '⛅',
+  'partlycloudy_night': '⛅',
+  'partlycloudy_polartwilight': '⛅',
+  'cloudy': '☁️',
+  'rainshowers_day': '🌦️',
+  'rainshowers_night': '🌦️',
+  'rainshowers_polartwilight': '🌦️',
+  'rain': '🌧️',
+  'lightrain': '🌦️',
+  'lightrainshowers_day': '🌦️',
+  'lightrainshowers_night': '🌦️',
+  'lightrainshowers_polartwilight': '🌦️',
+  'heavyrain': '⛈️',
+  'heavyrainshowers_day': '⛈️',
+  'heavyrainshowers_night': '⛈️',
+  'heavyrainshowers_polartwilight': '⛈️',
+  'sleet': '🌨️',
+  'sleetshowers_day': '🌨️',
+  'sleetshowers_night': '🌨️',
+  'sleetshowers_polartwilight': '🌨️',
+  'snow': '❄️',
+  'snowshowers_day': '❄️',
+  'snowshowers_night': '❄️',
+  'snowshowers_polartwilight': '❄️',
+  'fog': '🌫️',
+  'lightsnowshowersandthunder_day': '⛈️',
+  'lightsnowshowersandthunder_night': '⛈️',
+  'lightsnowshowersandthunder_polartwilight': '⛈️',
+  'lightsleetandthunder': '⛈️',
+  'lightsnowandthunder': '⛈️',
+  'sleetandthunder': '⛈️',
+  'snowandthunder': '⛈️',
+  'heavysleetshowersandthunder_day': '⛈️',
+  'heavysleetshowersandthunder_night': '⛈️',
+  'heavysleetshowersandthunder_polartwilight': '⛈️',
+  'heavysnowshowersandthunder_day': '⛈️',
+  'heavysnowshowersandthunder_night': '⛈️',
+  'heavysnowshowersandthunder_polartwilight': '⛈️',
+  'rainandthunder': '⛈️',
+  'heavyrainandthunder': '⛈️',
+  'lightrainandthunder': '⛈️',
+};
+
+// Convert wind direction degrees to compass direction
+export function degreesToCompass(degrees: number): string {
+  const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const index = Math.round(degrees / 45) % 8;
+  return directions[index];
+}
+
+// Get weather emoji from symbol code
+export function getWeatherEmoji(symbolCode: string): string {
+  return WEATHER_SYMBOLS[symbolCode] || '☁️';
+}
+
+// Get human-readable description from symbol code
+export function getWeatherDescription(symbolCode: string): string {
+  const descriptions: Record<string, string> = {
+    'clearsky_day': 'Clear sky',
+    'clearsky_night': 'Clear sky',
+    'clearsky_polartwilight': 'Clear sky',
+    'fair_day': 'Fair',
+    'fair_night': 'Fair',
+    'fair_polartwilight': 'Fair',
+    'partlycloudy_day': 'Partly cloudy',
+    'partlycloudy_night': 'Partly cloudy',
+    'partlycloudy_polartwilight': 'Partly cloudy',
+    'cloudy': 'Cloudy',
+    'rainshowers_day': 'Rain showers',
+    'rainshowers_night': 'Rain showers',
+    'rainshowers_polartwilight': 'Rain showers',
+    'rain': 'Rain',
+    'lightrain': 'Light rain',
+    'lightrainshowers_day': 'Light rain showers',
+    'lightrainshowers_night': 'Light rain showers',
+    'lightrainshowers_polartwilight': 'Light rain showers',
+    'heavyrain': 'Heavy rain',
+    'heavyrainshowers_day': 'Heavy rain showers',
+    'heavyrainshowers_night': 'Heavy rain showers',
+    'heavyrainshowers_polartwilight': 'Heavy rain showers',
+    'sleet': 'Sleet',
+    'snow': 'Snow',
+    'fog': 'Fog',
+    'rainandthunder': 'Thunderstorm',
+    'heavyrainandthunder': 'Heavy thunderstorm',
+    'lightrainandthunder': 'Light thunderstorm',
+  };
+  return descriptions[symbolCode] || 'Unknown';
+}
+
+/**
+ * Fetch weather forecast from MET Norway API
+ */
+export async function fetchWeatherForecast(
+  latitude: number,
+  longitude: number
+): Promise<WeatherForecast> {
+  const userAgent = process.env.WEATHER_USER_AGENT || 
+    'TradingTheRaces/1.0 (https://tradingtheraces.com; contact@tradingtheraces.com)';
+
+  const url = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${latitude}&lon=${longitude}`;
+
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': userAgent,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`MET Norway API error: ${response.status} ${response.statusText}`);
+  }
+
+  // Store cache headers for future reference
+  const expires = response.headers.get('Expires');
+  const lastModified = response.headers.get('Last-Modified');
+  
+  const data = await response.json() as WeatherForecast;
+  
+  return data;
+}
+
+/**
+ * Get current weather from forecast data
+ * Extracts all available metrics including enhanced data
+ */
+export function getCurrentWeather(forecast: WeatherForecast): WeatherData | null {
+  if (!forecast.properties.timeseries || forecast.properties.timeseries.length === 0) {
+    return null;
+  }
+
+  const current = forecast.properties.timeseries[0];
+  const instant = current.data.instant.details;
+  const next = current.data.next_1_hours || current.data.next_6_hours;
+
+  // Calculate feels-like temperature (simple wind chill approximation)
+  const feelsLike = calculateFeelsLike(
+    instant.air_temperature,
+    instant.wind_speed,
+    instant.relative_humidity
+  );
+
+  // Estimate visibility from fog fraction (inverse relationship)
+  const visibility = instant.fog_area_fraction !== undefined
+    ? Math.round(10 - (instant.fog_area_fraction / 10))
+    : 10;
+
+  return {
+    temperature: instant.air_temperature,
+    feelsLike,
+    windSpeed: instant.wind_speed,
+    windGust: instant.wind_speed_of_gust,
+    windDirection: instant.wind_from_direction,
+    weatherSymbol: next?.summary.symbol_code || 'cloudy',
+    precipitation: next?.details.precipitation_amount || 0,
+    precipitationProbability: next?.details.probability_of_precipitation,
+    humidity: instant.relative_humidity,
+    pressure: instant.air_pressure_at_sea_level,
+    cloudCover: instant.cloud_area_fraction,
+    uvIndex: instant.ultraviolet_index_clear_sky,
+    visibility,
+    time: current.time,
+  };
+}
+
+/**
+ * Calculate feels-like temperature using wind chill and heat index
+ * 
+ * Wind Chill Formula: Environment Canada/US National Weather Service formula
+ * Valid for: T ≤ 10°C and wind speed > 4.8 km/h
+ * Formula: 13.12 + 0.6215*T - 11.37*V^0.16 + 0.3965*T*V^0.16
+ * where T = temperature in °C, V = wind speed in km/h
+ * 
+ * Heat Index: Simplified approximation for hot/humid conditions
+ * Valid for: T ≥ 27°C and humidity > 40%
+ */
+function calculateFeelsLike(
+  tempC: number,
+  windSpeedMs: number,
+  humidity?: number
+): number {
+  // Convert wind speed from m/s to km/h
+  const windKmh = windSpeedMs * 3.6;
+
+  // Wind chill (for cold temperatures with wind)
+  if (tempC <= 10 && windKmh > 4.8) {
+    const windChill =
+      13.12 +
+      0.6215 * tempC -
+      11.37 * Math.pow(windKmh, 0.16) +
+      0.3965 * tempC * Math.pow(windKmh, 0.16);
+    return Math.round(windChill * 10) / 10;
+  }
+
+  // Heat index (for hot temperatures with humidity)
+  if (tempC >= 27 && humidity !== undefined && humidity > 40) {
+    // Simplified heat index calculation
+    const hi =
+      tempC +
+      0.5555 * ((humidity / 100) * 6.112 * Math.exp((17.67 * tempC) / (tempC + 243.5)) - 10);
+    return Math.round(hi * 10) / 10;
+  }
+
+  // No significant wind chill or heat index effect
+  return tempC;
+}
+
+/**
+ * Get hourly forecast for next N hours
+ * Includes all available weather metrics
+ */
+export function getHourlyForecast(
+  forecast: WeatherForecast,
+  hours: number = 12
+): HourlyForecast[] {
+  if (!forecast.properties.timeseries) {
+    return [];
+  }
+
+  const hourlyData: HourlyForecast[] = [];
+  const now = new Date();
+
+  for (const entry of forecast.properties.timeseries) {
+    const entryTime = new Date(entry.time);
+    const hoursDiff = (entryTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+    // Only include future times within the requested hours
+    if (hoursDiff >= 0 && hoursDiff <= hours) {
+      const instant = entry.data.instant.details;
+      const next = entry.data.next_1_hours || entry.data.next_6_hours;
+
+      const feelsLike = calculateFeelsLike(
+        instant.air_temperature,
+        instant.wind_speed,
+        instant.relative_humidity
+      );
+
+      hourlyData.push({
+        time: entry.time,
+        temperature: instant.air_temperature,
+        feelsLike,
+        windSpeed: instant.wind_speed,
+        windGust: instant.wind_speed_of_gust,
+        windDirection: instant.wind_from_direction,
+        weatherSymbol: next?.summary.symbol_code || 'cloudy',
+        precipitation: next?.details.precipitation_amount || 0,
+        precipitationProbability: next?.details.probability_of_precipitation,
+        humidity: instant.relative_humidity,
+        cloudCover: instant.cloud_area_fraction,
+      });
+    }
+  }
+
+  return hourlyData;
+}
+
+/**
+ * Get weather for specific time
+ * Includes all available weather metrics
+ */
+export function getWeatherAtTime(
+  forecast: WeatherForecast,
+  targetTime: Date
+): WeatherData | null {
+  if (!forecast.properties.timeseries) {
+    return null;
+  }
+
+  // Find the closest timeseries entry to the target time
+  let closest: WeatherTimeseries | null = null;
+  let smallestDiff = Infinity;
+
+  for (const entry of forecast.properties.timeseries) {
+    const entryTime = new Date(entry.time);
+    const diff = Math.abs(entryTime.getTime() - targetTime.getTime());
+
+    if (diff < smallestDiff) {
+      smallestDiff = diff;
+      closest = entry;
+    }
+  }
+
+  if (!closest) {
+    return null;
+  }
+
+  const instant = closest.data.instant.details;
+  const next = closest.data.next_1_hours || closest.data.next_6_hours;
+
+  const feelsLike = calculateFeelsLike(
+    instant.air_temperature,
+    instant.wind_speed,
+    instant.relative_humidity
+  );
+
+  const visibility = instant.fog_area_fraction !== undefined
+    ? Math.round(10 - (instant.fog_area_fraction / 10))
+    : 10;
+
+  return {
+    temperature: instant.air_temperature,
+    feelsLike,
+    windSpeed: instant.wind_speed,
+    windGust: instant.wind_speed_of_gust,
+    windDirection: instant.wind_from_direction,
+    weatherSymbol: next?.summary.symbol_code || 'cloudy',
+    precipitation: next?.details.precipitation_amount || 0,
+    precipitationProbability: next?.details.probability_of_precipitation,
+    humidity: instant.relative_humidity,
+    pressure: instant.air_pressure_at_sea_level,
+    cloudCover: instant.cloud_area_fraction,
+    uvIndex: instant.ultraviolet_index_clear_sky,
+    visibility,
+    time: closest.time,
+  };
+}
+
+/**
+ * Simple in-memory cache for weather forecasts
+ * In production, this should use a database or Redis
+ */
+const weatherCache = new Map<string, { data: WeatherForecast; expires: number }>();
+
+/**
+ * Get weather with caching
+ */
+export async function getWeatherWithCache(
+  latitude: number,
+  longitude: number,
+  cacheHours: number = 1
+): Promise<WeatherForecast> {
+  const cacheKey = `${latitude.toFixed(4)},${longitude.toFixed(4)}`;
+  const cached = weatherCache.get(cacheKey);
+
+  if (cached && cached.expires > Date.now()) {
+    return cached.data;
+  }
+
+  const forecast = await fetchWeatherForecast(latitude, longitude);
+  
+  weatherCache.set(cacheKey, {
+    data: forecast,
+    expires: Date.now() + (cacheHours * 60 * 60 * 1000),
+  });
+
+  return forecast;
+}
+
+/**
+ * Clear expired cache entries
+ */
+export function clearExpiredCache(): void {
+  const now = Date.now();
+  for (const [key, value] of weatherCache.entries()) {
+    if (value.expires <= now) {
+      weatherCache.delete(key);
+    }
+  }
+}

@@ -7,7 +7,9 @@ import { getPostgresAPIClient } from '@/lib/integrations/postgres-api';
 import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 import { getScratchingInfo } from '@/lib/utils/scratchings-matcher';
+import { getScratchingsFromDB } from '@/lib/data/scratchings';
 import TrackConditionBadge from '@/components/racing/TrackConditionBadge';
+import WeatherDisplay from '@/components/WeatherDisplay';
 import RaceDetails from './RaceDetails';
 import RaceContent from './RaceContent';
 
@@ -41,31 +43,34 @@ export default async function RacePage({ params }: Props) {
   // Fetch scratchings from database (has complete horse names) and conditions from API
   let scratchings: PFScratching[] = [];
   let conditions: PFCondition[] = [];
+  
+  console.log('\n🔍 === FETCHING SCRATCHINGS FOR FORM GUIDE ===');
+  console.log(`📋 Meeting: ${meeting.track.name}, Race: ${raceNumber}`);
+  
   try {
-    // Fetch scratchings from database endpoint (has horse names resolved)
+    // Fetch scratchings using absolute URLs
     const [scratchingsResponseAU, scratchingsResponseNZ, conditionsAU, conditionsNZ] = await Promise.all([
-      fetch('/api/scratchings?jurisdiction=0&hoursAgo=48').then(async r => {
-        if (!r.ok) {
-          console.error(`Error fetching AU scratchings: HTTP ${r.status}`);
-          return { success: false, data: [] };
-        }
-        return r.json();
-      }).catch(err => {
-        console.error('Error fetching AU scratchings:', err);
-        return { success: false, data: [] };
+      getScratchingsFromDB(0, 48)
+        .then(data => {
+          console.log(`✅ [Scratchings] Fetched ${data.data?.length || 0} AU scratchings`);
+          return data;
+        }),
+      
+      getScratchingsFromDB(1, 48)
+        .then(data => {
+          console.log(`✅ [Scratchings] Fetched ${data.data?.length || 0} NZ scratchings`);
+          return data;
+        }),
+      
+      pfClient.getConditions(0).catch(err => {
+        console.error('❌ [Conditions] AU fetch failed:', err.message);
+        return { payLoad: [] };
       }),
-      fetch('/api/scratchings?jurisdiction=1&hoursAgo=48').then(async r => {
-        if (!r.ok) {
-          console.error(`Error fetching NZ scratchings: HTTP ${r.status}`);
-          return { success: false, data: [] };
-        }
-        return r.json();
-      }).catch(err => {
-        console.error('Error fetching NZ scratchings:', err);
-        return { success: false, data: [] };
-      }),
-      pfClient.getConditions(0),   // 0 = AU
-      pfClient.getConditions(1)    // 1 = NZ
+      
+      pfClient.getConditions(1).catch(err => {
+        console.error('❌ [Conditions] NZ fetch failed:', err.message);
+        return { payLoad: [] };
+      })
     ]);
     
     // Combine scratchings from both jurisdictions
@@ -75,9 +80,35 @@ export default async function RacePage({ params }: Props) {
     
     conditions = [...(conditionsAU.payLoad || []), ...(conditionsNZ.payLoad || [])];
     
-    console.log(`✅ Loaded ${scratchingsAU.length} AU scratchings + ${scratchingsNZ.length} NZ scratchings from database`);
+    console.log(`\n📊 [Scratchings] Summary:`, {
+      totalScratchings: scratchings.length,
+      auScratchings: scratchingsAU.length,
+      nzScratchings: scratchingsNZ.length,
+      forThisMeeting: scratchings.filter(s => s.meetingId === meeting.meetingId).length,
+      forThisRace: scratchings.filter(s => 
+        s.meetingId === meeting.meetingId && 
+        s.raceNumber === parseInt(raceNumber)
+      ).length
+    });
+    
+    // Log scratchings for this specific race
+    const raceScratchings = scratchings.filter(s => 
+      s.meetingId === meeting.meetingId && 
+      s.raceNumber === parseInt(raceNumber)
+    );
+    
+    if (raceScratchings.length > 0) {
+      console.log(`\n🔴 [Scratchings] Found ${raceScratchings.length} scratching(s) for ${meeting.track.name} R${raceNumber}:`);
+      raceScratchings.forEach(s => {
+        console.log(`   - ${s.horseName} (TAB #${s.tabNumber}) - ${s.reason || 'No reason'}`);
+      });
+    } else {
+      console.log(`\n✅ [Scratchings] No scratchings for ${meeting.track.name} R${raceNumber}`);
+    }
+    
   } catch (error: any) {
-    console.warn('⚠️ Scratchings/conditions unavailable:', error.message);
+    console.error('\n❌ [Scratchings] CRITICAL ERROR:', error);
+    console.error('Stack:', error.stack);
   }
 
   // Get track condition for this meeting
@@ -247,22 +278,27 @@ export default async function RacePage({ params }: Props) {
       (tr: any) => horseNamesMatch(tr.horse_name, runner.horseName || runner.name)
     );
 
-    // Check if horse is scratched
+    // Check if horse is scratched - USE TAB NUMBER for reliable matching
     const scratchingInfo = getScratchingInfo(
       scratchings,
       meeting.meetingId,
       raceNum,
-      runner.horseName || runner.name
+      runner.horseName || runner.name,
+      meeting.track.name,
+      runner.tabNumber || runner.tabNo  // ✅ TAB number for 100% accurate matching
     );
 
-    console.log(`🔍 [Form Guide] Scratching check:`, {
-      horse: runner.horseName || runner.name,
-      meetingId: meeting.meetingId,
-      raceNumber: raceNum,
-      totalScratchings: scratchings.length,
-      matchFound: !!scratchingInfo,
-      scratchingData: scratchingInfo || 'No match'
-    });
+    // Debug logging to help diagnose matching issues
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔍 [Form Guide] Scratching check:`, {
+        horse: runner.horseName || runner.name,
+        tabNumber: runner.tabNumber || runner.tabNo,
+        meetingId: meeting.meetingId,
+        raceNumber: raceNum,
+        isScratched: !!scratchingInfo,
+        reason: scratchingInfo?.reason || 'N/A'
+      });
+    }
 
     const enriched = {
       ...runner,
@@ -289,6 +325,44 @@ export default async function RacePage({ params }: Props) {
     
     return enriched;
   });
+
+  // Log scratching summary for debugging
+  if (process.env.NODE_ENV === 'development') {
+    const scratchedCount = enrichedRunners.filter(r => r.isScratched).length;
+    const totalRunners = enrichedRunners.length;
+    const availableScratchings = scratchings.filter(
+      s => s.meetingId === meeting.meetingId && s.raceNumber === raceNum
+    );
+    
+    console.log(`📊 [Form Guide] ${meeting.track.name} R${raceNumber} Scratching Summary:`, {
+      totalRunners,
+      scratchedCount,
+      activeRunners: totalRunners - scratchedCount,
+      scratchingsInDatabase: availableScratchings.length
+    });
+    
+    if (scratchedCount > 0) {
+      console.log(`🔴 [Form Guide] Scratched horses:`, 
+        enrichedRunners
+          .filter(r => r.isScratched)
+          .map(r => ({
+            name: r.horseName || r.name,
+            tabNo: r.tabNumber || r.tabNo,
+            reason: r.scratchingReason
+          }))
+      );
+    }
+    
+    if (availableScratchings.length > scratchedCount) {
+      console.warn(`⚠️ [Form Guide] Found ${availableScratchings.length} scratchings but only matched ${scratchedCount}`);
+      console.log('Unmatched scratchings:', 
+        availableScratchings.map(s => ({
+          horse: s.horseName,
+          tabNo: s.tabNumber
+        }))
+      );
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -337,6 +411,16 @@ export default async function RacePage({ params }: Props) {
             />
           </div>
         )}
+
+        {/* Weather Display */}
+        <div className="mb-6">
+          <WeatherDisplay 
+            trackName={meeting.track.name}
+            meetingId={meeting.meetingId}
+            autoRefresh={true}
+            refreshInterval={30}
+          />
+        </div>
 
         {/* Race Navigation Pills */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
