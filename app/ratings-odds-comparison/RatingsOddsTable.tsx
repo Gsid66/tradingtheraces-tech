@@ -112,7 +112,10 @@ export default function RatingsOddsTable({ data }: RatingsOddsTableProps) {
       'TTR Rating', 'TTR Price', 'TAB Win', 'TAB Place'
     ];
     
-    const rows = sortedData.map(row => [
+    // ALWAYS exclude scratched horses from exports
+    const dataForExport = data.filter(d => !d.isScratched);
+    
+    const rows = dataForExport.map(row => [
       formatDate(row.race_date),
       row.track || row.meeting_name || '-',
       `Race ${row.race_number}`,
@@ -178,6 +181,7 @@ export default function RatingsOddsTable({ data }: RatingsOddsTableProps) {
       <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex gap-3 flex-wrap items-center">
         <button
           onClick={exportToCSV}
+          title="Export to CSV (excludes scratched horses)"
           className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"
         >
           <FiDownload />
@@ -185,6 +189,7 @@ export default function RatingsOddsTable({ data }: RatingsOddsTableProps) {
         </button>
         <button
           onClick={exportToExcel}
+          title="Export to Excel (excludes scratched horses)"
           className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"
         >
           <FiDownload />
@@ -202,6 +207,11 @@ export default function RatingsOddsTable({ data }: RatingsOddsTableProps) {
         <div className="ml-auto text-sm text-gray-600 flex items-center">
           <strong className="mr-2">{sortedData.length}</strong> records found
         </div>
+        {data.filter(d => d.isScratched).length > 0 && (
+          <p className="text-xs text-gray-500 italic mt-2 w-full">
+            ℹ️ Exports exclude scratched horses. Toggle above only affects table display.
+          </p>
+        )}
       </div>
 
       {/* Table */}
