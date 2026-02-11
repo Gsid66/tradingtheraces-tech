@@ -37,15 +37,15 @@ export function getBaseUrl(): string {
  * 
  * @param {string} endpoint - API endpoint (e.g., '/api/scratchings?jurisdiction=0')
  * @param {RequestInit} options - Optional fetch options
- * @returns {Promise<any>} Parsed JSON response
+ * @returns {Promise<T>} Parsed JSON response
  * @throws {Error} If the fetch fails or returns non-OK status
  * 
  * @example
  * ```typescript
- * const data = await fetchAPI('/api/scratchings?jurisdiction=0&hoursAgo=48');
+ * const data = await fetchAPI<{ success: boolean; data: any[] }>('/api/scratchings?jurisdiction=0&hoursAgo=48');
  * ```
  */
-export async function fetchAPI(endpoint: string, options?: RequestInit): Promise<any> {
+export async function fetchAPI<T = any>(endpoint: string, options?: RequestInit): Promise<T> {
   const baseUrl = getBaseUrl();
   const url = endpoint.startsWith('/') ? `${baseUrl}${endpoint}` : endpoint;
   
@@ -53,9 +53,9 @@ export async function fetchAPI(endpoint: string, options?: RequestInit): Promise
   
   try {
     const response = await fetch(url, {
-      ...options,
-      // Add cache: 'no-store' for dynamic data
+      // Add cache: 'no-store' for dynamic data by default, but allow override
       cache: 'no-store',
+      ...options,
     });
     
     if (!response.ok) {
