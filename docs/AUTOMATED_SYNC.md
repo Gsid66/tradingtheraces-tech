@@ -236,11 +236,13 @@ Format: `minute hour day month dayOfWeek`
 
 Examples:
 - `0 18 * * *` - Daily at 18:00 UTC (5:00 AM AEDT)
-- `*/30 22-10 * * *` - Every 30 minutes between 22:00-10:00 UTC
+- `*/30 22-23 * * *` and `*/30 0-10 * * *` - Every 30 minutes across midnight (requires two expressions)
 - `0 */2 * * *` - Every 2 hours
 - `0 9-17 * * 1-5` - Hourly, 9am-5pm, Monday-Friday
 
 **Remember**: GitHub Actions uses UTC time, not local time!
+
+**Note**: Cron doesn't support hour ranges that wrap around midnight (like `22-10`). Use two separate expressions instead.
 
 ### Time Zone Conversion
 
