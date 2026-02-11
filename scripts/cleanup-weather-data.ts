@@ -16,8 +16,8 @@ config({ path: '.env.local' });
  * 
  * Run daily via cron or GitHub Actions
  */
-async function cleanupWeatherData() {
-  console.log('🧹 Starting weather data cleanup...\n');
+async function cleanupWeatherData(dryRun: boolean = false) {
+  console.log(`🧹 Starting weather data cleanup${dryRun ? ' (DRY RUN)' : ''}...\n`);
 
   const dbClient = new Client({
     connectionString: process.env.DATABASE_URL,
@@ -33,24 +33,36 @@ async function cleanupWeatherData() {
 
     // 1. Clean up track_weather table (rolling 48-hour cache)
     console.log('🗑️  Cleaning track_weather table (rolling 48h cache)...');
-    const trackWeatherResult = await dbClient.query(
-      `DELETE FROM track_weather 
-       WHERE fetched_at < NOW() - INTERVAL '48 hours'`
-    );
-    const trackWeatherDeleted = trackWeatherResult.rowCount || 0;
-    console.log(`  ✅ Deleted ${trackWeatherDeleted} old forecast entries\n`);
-    totalDeleted += trackWeatherDeleted;
+    if (dryRun) {
+      const countResult = await dbClient.query(
+        `SELECT COUNT(*) FROM track_weather WHERE fetched_at < NOW() - INTERVAL '48 hours'`
+      );
+      console.log(`  [DRY RUN] Would delete ${countResult.rows[0].count} old forecast entries\n`);
+    } else {
+      const trackWeatherResult = await dbClient.query(
+        `DELETE FROM track_weather WHERE fetched_at < NOW() - INTERVAL '48 hours'`
+      );
+      const trackWeatherDeleted = trackWeatherResult.rowCount || 0;
+      console.log(`  ✅ Deleted ${trackWeatherDeleted} old forecast entries\n`);
+      totalDeleted += trackWeatherDeleted;
+    }
 
     // 2. Clean up track_weather_history (keep last 90 days of detailed data)
     // Note: In production, you might want to aggregate older data instead of deleting
     console.log('🗑️  Cleaning track_weather_history table (keep last 90 days)...');
-    const historyResult = await dbClient.query(
-      `DELETE FROM track_weather_history 
-       WHERE created_at < NOW() - INTERVAL '90 days'`
-    );
-    const historyDeleted = historyResult.rowCount || 0;
-    console.log(`  ✅ Deleted ${historyDeleted} old history entries\n`);
-    totalDeleted += historyDeleted;
+    if (dryRun) {
+      const countResult = await dbClient.query(
+        `SELECT COUNT(*) FROM track_weather_history WHERE created_at < NOW() - INTERVAL '90 days'`
+      );
+      console.log(`  [DRY RUN] Would delete ${countResult.rows[0].count} old history entries\n`);
+    } else {
+      const historyResult = await dbClient.query(
+        `DELETE FROM track_weather_history WHERE created_at < NOW() - INTERVAL '90 days'`
+      );
+      const historyDeleted = historyResult.rowCount || 0;
+      console.log(`  ✅ Deleted ${historyDeleted} old history entries\n`);
+      totalDeleted += historyDeleted;
+    }
 
     // 3. Report on race_weather_conditions (NEVER delete, just report stats)
     console.log('📊 Race weather conditions statistics:');
@@ -79,13 +91,17 @@ async function cleanupWeatherData() {
     console.log('  ℹ️  Race weather conditions are permanently retained\n');
 
     // 4. Vacuum analyze tables for optimal performance
-    console.log('🔧 Optimizing database tables...');
-    await dbClient.query('VACUUM ANALYZE track_weather');
-    console.log('  ✅ Optimized track_weather');
-    await dbClient.query('VACUUM ANALYZE track_weather_history');
-    console.log('  ✅ Optimized track_weather_history');
-    await dbClient.query('VACUUM ANALYZE race_weather_conditions');
-    console.log('  ✅ Optimized race_weather_conditions\n');
+    if (!dryRun) {
+      console.log('🔧 Optimizing database tables...');
+      await dbClient.query('VACUUM ANALYZE track_weather');
+      console.log('  ✅ Optimized track_weather');
+      await dbClient.query('VACUUM ANALYZE track_weather_history');
+      console.log('  ✅ Optimized track_weather_history');
+      await dbClient.query('VACUUM ANALYZE race_weather_conditions');
+      console.log('  ✅ Optimized race_weather_conditions\n');
+    } else {
+      console.log('  [DRY RUN] Would optimize database tables\n');
+    }
 
     // Summary
     console.log('='.repeat(50));
@@ -111,12 +127,10 @@ const isDryRun = process.argv.includes('--dry-run');
 
 if (isDryRun) {
   console.log('🔍 DRY RUN MODE - No data will be deleted\n');
-  console.log('Remove --dry-run flag to perform actual cleanup\n');
-  process.exit(0);
 }
 
 // Run the cleanup
-cleanupWeatherData().catch((error) => {
+cleanupWeatherData(isDryRun).catch((error) => {
   console.error('❌ Unhandled error:', error);
   process.exit(1);
 });

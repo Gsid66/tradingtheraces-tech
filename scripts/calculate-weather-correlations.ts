@@ -190,26 +190,27 @@ async function calculatePearsonCorrelation(
   track: string | null
 ): Promise<{ r: number; n: number } | null> {
   try {
-    let query = `
+    const trackFilter = track ? 'AND LOWER(rwc.track_name) = $1' : '';
+    const trackFilter2 = track ? `AND LOWER(rwc2.track_name) = $1` : '';
+    const params = track ? [track.toLowerCase()] : [];
+
+    const query = `
       SELECT 
         COUNT(*) as n,
         AVG(rwc.${weatherColumn}) as mean_x,
         AVG(rr.${outcomeColumn}) as mean_y,
         STDDEV_POP(rwc.${weatherColumn}) as std_x,
         STDDEV_POP(rr.${outcomeColumn}) as std_y,
-        SUM((rwc.${weatherColumn} - (SELECT AVG(rwc2.${weatherColumn}) FROM race_weather_conditions rwc2 JOIN race_results rr2 ON rwc2.race_id = rr2.race_id WHERE rr2.${outcomeColumn} IS NOT NULL AND rwc2.${weatherColumn} IS NOT NULL ${track ? `AND LOWER(rwc2.track_name) = '${track.toLowerCase()}'` : ''})) * 
-            (rr.${outcomeColumn} - (SELECT AVG(rr2.${outcomeColumn}) FROM race_weather_conditions rwc2 JOIN race_results rr2 ON rwc2.race_id = rr2.race_id WHERE rr2.${outcomeColumn} IS NOT NULL AND rwc2.${weatherColumn} IS NOT NULL ${track ? `AND LOWER(rwc2.track_name) = '${track.toLowerCase()}'` : ''}))) as covariance
+        SUM((rwc.${weatherColumn} - (SELECT AVG(rwc2.${weatherColumn}) FROM race_weather_conditions rwc2 JOIN race_results rr2 ON rwc2.race_id = rr2.race_id WHERE rr2.${outcomeColumn} IS NOT NULL AND rwc2.${weatherColumn} IS NOT NULL ${trackFilter2})) * 
+            (rr.${outcomeColumn} - (SELECT AVG(rr2.${outcomeColumn}) FROM race_weather_conditions rwc2 JOIN race_results rr2 ON rwc2.race_id = rr2.race_id WHERE rr2.${outcomeColumn} IS NOT NULL AND rwc2.${weatherColumn} IS NOT NULL ${trackFilter2}))) as covariance
       FROM race_weather_conditions rwc
       JOIN race_results rr ON rwc.race_id = rr.race_id
       WHERE rr.${outcomeColumn} IS NOT NULL
         AND rwc.${weatherColumn} IS NOT NULL
+        ${trackFilter}
     `;
 
-    if (track) {
-      query += ` AND LOWER(rwc.track_name) = '${track.toLowerCase()}'`;
-    }
-
-    const result = await client.query(query);
+    const result = await client.query(query, params);
     
     if (result.rows.length === 0 || result.rows[0].n < 10) {
       return null;

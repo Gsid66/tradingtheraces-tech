@@ -276,6 +276,14 @@ export function getCurrentWeather(forecast: WeatherForecast): WeatherData | null
 
 /**
  * Calculate feels-like temperature using wind chill and heat index
+ * 
+ * Wind Chill Formula: Environment Canada/US National Weather Service formula
+ * Valid for: T ≤ 10°C and wind speed > 4.8 km/h
+ * Formula: 13.12 + 0.6215*T - 11.37*V^0.16 + 0.3965*T*V^0.16
+ * where T = temperature in °C, V = wind speed in km/h
+ * 
+ * Heat Index: Simplified approximation for hot/humid conditions
+ * Valid for: T ≥ 27°C and humidity > 40%
  */
 function calculateFeelsLike(
   tempC: number,
@@ -285,7 +293,7 @@ function calculateFeelsLike(
   // Convert wind speed from m/s to km/h
   const windKmh = windSpeedMs * 3.6;
 
-  // Wind chill (for cold temperatures)
+  // Wind chill (for cold temperatures with wind)
   if (tempC <= 10 && windKmh > 4.8) {
     const windChill =
       13.12 +

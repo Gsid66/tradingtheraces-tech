@@ -218,6 +218,9 @@ async function getJockeyStats(searchParams: URLSearchParams) {
   }
 
   let weatherFilter = '';
+  const params: any[] = [`%${jockeyId}%`];
+
+  // Build safe weather filter
   switch (condition.toLowerCase()) {
     case 'rain':
       weatherFilter = "rwc.weather_condition ILIKE '%rain%'";
@@ -232,7 +235,9 @@ async function getJockeyStats(searchParams: URLSearchParams) {
       weatherFilter = 'rwc.temperature < 10';
       break;
     default:
-      weatherFilter = `rwc.weather_condition ILIKE '%${condition}%'`;
+      // Parameterize the condition to prevent SQL injection
+      weatherFilter = 'rwc.weather_condition ILIKE $2';
+      params.push(`%${condition}%`);
   }
 
   const query = `
@@ -251,7 +256,7 @@ async function getJockeyStats(searchParams: URLSearchParams) {
 
   const client = await pool.connect();
   try {
-    const result = await client.query(query, [`%${jockeyId}%`]);
+    const result = await client.query(query, params);
 
     if (result.rows.length === 0 || result.rows[0].rides === '0') {
       return NextResponse.json({
@@ -342,6 +347,14 @@ async function getHistoricalData(searchParams: URLSearchParams) {
     return NextResponse.json({ error: 'Track parameter required' }, { status: 400 });
   }
 
+  // Validate days parameter to prevent SQL injection
+  if (isNaN(days) || days < 1 || days > 365) {
+    return NextResponse.json(
+      { error: 'Days parameter must be between 1 and 365' },
+      { status: 400 }
+    );
+  }
+
   const query = `
     SELECT 
       DATE(observation_time) as date,
@@ -354,14 +367,14 @@ async function getHistoricalData(searchParams: URLSearchParams) {
       AVG(humidity) as avg_humidity
     FROM track_weather_history
     WHERE LOWER(track_name) = $1
-      AND observation_time >= NOW() - INTERVAL '${days} days'
+      AND observation_time >= NOW() - INTERVAL '1 day' * $2
     GROUP BY DATE(observation_time)
     ORDER BY date DESC
   `;
 
   const client = await pool.connect();
   try {
-    const result = await client.query(query, [track.toLowerCase()]);
+    const result = await client.query(query, [track.toLowerCase(), days]);
 
     return NextResponse.json({
       track,

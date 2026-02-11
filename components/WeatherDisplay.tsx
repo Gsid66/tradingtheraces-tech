@@ -27,6 +27,8 @@ interface WeatherDisplayProps {
   trackName: string;
   meetingId?: string;
   mode?: DisplayMode;
+  /** @deprecated Use mode='compact' instead */
+  compact?: boolean;
   className?: string;
   autoRefresh?: boolean;
   refreshInterval?: number; // in minutes
@@ -35,11 +37,14 @@ interface WeatherDisplayProps {
 export default function WeatherDisplay({
   trackName,
   meetingId,
-  mode = 'standard',
+  mode: modeProp,
+  compact: compactProp,
   className = '',
   autoRefresh = false,
   refreshInterval = 30,
 }: WeatherDisplayProps) {
+  // Backward compatibility: support old compact prop
+  const mode = modeProp || (compactProp ? 'compact' : 'standard');
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
