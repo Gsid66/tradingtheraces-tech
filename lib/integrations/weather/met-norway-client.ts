@@ -101,7 +101,6 @@ export interface HourlyForecast {
   humidity?: number;
   cloudCover?: number;
 }
-}
 
 // Weather symbol mapping to emojis
 const WEATHER_SYMBOLS: Record<string, string> = {
