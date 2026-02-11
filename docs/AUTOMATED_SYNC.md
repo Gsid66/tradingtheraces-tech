@@ -3,6 +3,23 @@
 ## Overview
 This project uses GitHub Actions to automatically sync race data and weather information to the database every day. The automated workflow ensures that the database is populated each morning before users access the site, enabling weather features and historical analysis.
 
+## Workflows
+
+### Primary Workflow: sync-data.yml
+The main workflow (`.github/workflows/sync-data.yml`) syncs all core data in the correct order:
+1. PuntingForm data (meetings, races, runners) - MUST run first
+2. Weather data - depends on meetings being in database
+3. Scratchings - optional, non-critical
+
+### Individual Workflows (for specific needs)
+Separate workflows exist for granular control:
+- `sync-main-data.yml` - PuntingForm data only
+- `sync-weather.yml` - Weather data only
+- `sync-scratchings.yml` - Scratchings only (runs every 15 minutes)
+- `sync-results.yml` - Race results (different schedule)
+
+**Recommendation**: Use the comprehensive `sync-data.yml` workflow for normal operations. Individual workflows are available for testing or specific use cases.
+
 ## What Gets Synced
 
 ### 1. PuntingForm Data (meetings, races, runners)

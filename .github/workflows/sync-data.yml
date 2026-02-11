@@ -1,5 +1,16 @@
 name: Sync PuntingForm and Weather Data
 
+# This comprehensive workflow syncs all core data in the correct order:
+# 1. PuntingForm data (meetings, races, runners) - MUST run first
+# 2. Weather data - depends on meetings being in database
+# 3. Scratchings - optional, non-critical
+#
+# Separate workflows still exist for individual syncs if needed:
+# - sync-main-data.yml: PuntingForm data only
+# - sync-weather.yml: Weather data only
+# - sync-scratchings.yml: Scratchings only
+# - sync-results.yml: Race results
+
 on:
   schedule:
     # 5:00 AM AEDT = 18:00 UTC (previous day) - Morning data load
