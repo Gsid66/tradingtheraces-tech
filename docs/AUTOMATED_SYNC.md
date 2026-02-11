@@ -48,7 +48,9 @@ The automated sync runs at these times (Australian Eastern time):
 |-------------|------------|---------|
 | **5:00 AM** | `0 18 * * *` | Morning data load - get today's meetings |
 | **8:00 AM** | `0 21 * * *` | Pre-race update - final changes before racing |
-| **9 AM - 9 PM (every 30 min)** | `*/30 22-10 * * *` | Live race day updates during racing hours |
+| **9 AM - 9 PM (every 30 min)** | `*/30 22-23 * * *` and `*/30 0-10 * * *` | Live race day updates during racing hours |
+
+**Note**: The 9 AM - 9 PM AEDT schedule crosses midnight in UTC, so it's split into two cron expressions: 22:00-23:30 UTC (previous day) and 00:00-10:00 UTC (same day).
 
 **Important**: GitHub Actions uses UTC time. The cron expressions above are converted from AEDT (UTC+11).
 
