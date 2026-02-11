@@ -42,6 +42,7 @@ export function getBaseUrl(): string {
  * 
  * @example
  * ```typescript
+ * // Explicitly specify the response type for better type safety
  * const data = await fetchAPI<{ success: boolean; data: any[] }>('/api/scratchings?jurisdiction=0&hoursAgo=48');
  * ```
  */
@@ -62,7 +63,11 @@ export async function fetchAPI<T = any>(endpoint: string, options?: RequestInit)
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
     
-    return response.json();
+    try {
+      return await response.json();
+    } catch (parseError) {
+      throw new Error(`Failed to parse JSON response: ${parseError}`);
+    }
   } catch (error) {
     console.error(`❌ [API Fetch] Failed to fetch ${url}:`, error);
     throw error;
