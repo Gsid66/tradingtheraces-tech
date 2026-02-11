@@ -236,7 +236,7 @@ Format: `minute hour day month dayOfWeek`
 
 Examples:
 - `0 18 * * *` - Daily at 18:00 UTC (5:00 AM AEDT)
-- `*/30 22-23 * * *` and `*/30 0-10 * * *` - Every 30 minutes across midnight (requires two expressions)
+- `*/30 22-23 * * *` and `*/30 0-10 * * *` - Every 30 minutes, split into two expressions to handle midnight UTC wrap
 - `0 */2 * * *` - Every 2 hours
 - `0 9-17 * * 1-5` - Hourly, 9am-5pm, Monday-Friday
 
@@ -251,9 +251,9 @@ Australian Eastern Time zones:
 - **AEST** (UTC+10): April - October (Standard Time)
 
 To convert AEDT to UTC:
-- 5:00 AM AEDT = 18:00 previous day UTC (6:00 PM previous day)
-- 8:00 AM AEDT = 21:00 previous day UTC (9:00 PM previous day)
-- 12:00 PM AEDT = 01:00 same day UTC (1:00 AM same day)
+- 5:00 AM AEDT = 18:00 UTC previous day
+- 8:00 AM AEDT = 21:00 UTC previous day
+- 12:00 PM AEDT = 01:00 UTC same day
 
 ## Architecture
 
