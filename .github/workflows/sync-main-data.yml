@@ -1,9 +1,14 @@
-name: Sync Scratchings
+name: Sync Main Data
 
 on:
   schedule:
-    # Run every 15 minutes, 24/7
-    - cron: '*/15 * * * *'
+    # Morning run at 6:00 AM AEDT (19:00 UTC previous day)
+    - cron: '0 19 * * *'
+    # Every 30 minutes from 6:00 AM to 10:00 PM AEDT
+    # Split to handle midnight wrap: 6am-11:30pm AEDT = 19:00-23:30 UTC (prev day)
+    - cron: '*/30 19-23 * * *'
+    # And 12:00am-10:30pm AEDT = 00:00-11:00 UTC (same day)
+    - cron: '*/30 0-11 * * *'
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
@@ -21,8 +26,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
-      - name: Run scratchings sync
+      - name: Run main data sync
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           PUNTING_FORM_API_KEY: ${{ secrets.PUNTING_FORM_API_KEY }}
-        run: npx tsx scripts/sync-scratchings.ts
+        run: npx tsx scripts/sync-pf-data.ts
