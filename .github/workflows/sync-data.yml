@@ -67,8 +67,9 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           PUNTING_FORM_API_KEY: ${{ secrets.PUNTING_FORM_API_KEY }}
         run: |
-          echo "🔄 Syncing scratchings..."
+          echo "❌ Syncing scratchings..."
           npx tsx scripts/sync-scratchings.ts || echo "⚠️ Scratchings sync failed (non-critical)"
+        continue-on-error: true
       
       - name: Summary
         if: success()
@@ -85,4 +86,5 @@ jobs:
           echo "Common issues:"
           echo "  - Database connection failed"
           echo "  - API rate limits"
-          echo "  - Missing secrets"
+          echo "  - Missing GitHub secrets"
+          exit 1

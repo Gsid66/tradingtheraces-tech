@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS track_weather (
   forecast_time TIMESTAMP WITH TIME ZONE NOT NULL,
   temperature DECIMAL(5, 2),
   wind_speed DECIMAL(5, 2),
-  wind_direction INTEGER,
+  wind_direction NUMERIC(5, 2),
   precipitation DECIMAL(5, 2),
   weather_symbol VARCHAR(50),
   weather_description TEXT,
@@ -30,7 +30,7 @@ CREATE INDEX IF NOT EXISTS idx_track_weather_forecast_time ON track_weather(fore
 ALTER TABLE pf_meetings 
   ADD COLUMN IF NOT EXISTS current_temperature DECIMAL(5, 2),
   ADD COLUMN IF NOT EXISTS current_wind_speed DECIMAL(5, 2),
-  ADD COLUMN IF NOT EXISTS current_wind_direction INTEGER,
+  ADD COLUMN IF NOT EXISTS current_wind_direction NUMERIC(5, 2),
   ADD COLUMN IF NOT EXISTS current_weather_symbol VARCHAR(50),
   ADD COLUMN IF NOT EXISTS weather_updated_at TIMESTAMP WITH TIME ZONE;
 
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS track_weather_history (
   feels_like_temperature DECIMAL(5, 2),
   wind_speed DECIMAL(5, 2),
   wind_gust DECIMAL(5, 2),
-  wind_direction INTEGER,
+  wind_direction NUMERIC(5, 2),
   wind_direction_compass VARCHAR(3),
   humidity INTEGER,
   precipitation DECIMAL(5, 2),
@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS race_weather_conditions (
   feels_like DECIMAL(5, 2),
   wind_speed DECIMAL(5, 2),
   wind_gust DECIMAL(5, 2),
-  wind_direction INTEGER,
+  wind_direction NUMERIC(5, 2),
   wind_direction_compass VARCHAR(3),
   humidity INTEGER,
   precipitation_last_hour DECIMAL(5, 2),
