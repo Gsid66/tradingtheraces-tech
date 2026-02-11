@@ -5,6 +5,7 @@ import { getPostgresAPIClient, TabRace, TabRunner } from '@/lib/integrations/pos
 import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
 import { getPuntingFormClient, PFScratching, PFCondition } from '@/lib/integrations/punting-form/client';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
+import { fetchAPI } from '@/lib/utils/api-helpers';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 300; // Revalidate every 5 minutes for early morning odds
@@ -360,45 +361,45 @@ export default async function RatingsOddsComparisonPage() {
   // Fetch scratchings from database (has complete horse names) and conditions from API
   let scratchings: PFScratching[] = [];
   let conditions: PFCondition[] = [];
+  
+  console.log('\n🔍 === FETCHING SCRATCHINGS FOR RATINGS-ODDS COMPARISON ===');
+  
   try {
     const pfClient = getPuntingFormClient();
     
-    // Fetch scratchings from database endpoint (has horse names resolved)
     const [scratchingsResponseAU, scratchingsResponseNZ, conditionsAU, conditionsNZ] = await Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/scratchings?jurisdiction=0&hoursAgo=48`).then(async r => {
-        if (!r.ok) {
-          console.error(`Error fetching AU scratchings: HTTP ${r.status}`);
+      fetchAPI('/api/scratchings?jurisdiction=0&hoursAgo=48')
+        .then(data => {
+          console.log(`✅ [Scratchings] Fetched ${data.data?.length || 0} AU scratchings`);
+          return data;
+        })
+        .catch(err => {
+          console.error('❌ [Scratchings] AU fetch failed:', err.message);
           return { success: false, data: [] };
-        }
-        return r.json();
-      }).catch(err => {
-        console.error('Error fetching AU scratchings:', err);
-        return { success: false, data: [] };
-      }),
-      fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/scratchings?jurisdiction=1&hoursAgo=48`).then(async r => {
-        if (!r.ok) {
-          console.error(`Error fetching NZ scratchings: HTTP ${r.status}`);
+        }),
+      fetchAPI('/api/scratchings?jurisdiction=1&hoursAgo=48')
+        .then(data => {
+          console.log(`✅ [Scratchings] Fetched ${data.data?.length || 0} NZ scratchings`);
+          return data;
+        })
+        .catch(err => {
+          console.error('❌ [Scratchings] NZ fetch failed:', err.message);
           return { success: false, data: [] };
-        }
-        return r.json();
-      }).catch(err => {
-        console.error('Error fetching NZ scratchings:', err);
-        return { success: false, data: [] };
-      }),
-      pfClient.getConditions(0),   // 0 = AU
-      pfClient.getConditions(1)    // 1 = NZ
+        }),
+      pfClient.getConditions(0).catch(() => ({ payLoad: [] })),
+      pfClient.getConditions(1).catch(() => ({ payLoad: [] }))
     ]);
     
-    // Combine scratchings from both jurisdictions
     const scratchingsAU = scratchingsResponseAU.success ? scratchingsResponseAU.data : [];
     const scratchingsNZ = scratchingsResponseNZ.success ? scratchingsResponseNZ.data : [];
     scratchings = [...scratchingsAU, ...scratchingsNZ];
     
     conditions = [...(conditionsAU.payLoad || []), ...(conditionsNZ.payLoad || [])];
     
-    console.log(`✅ Loaded ${scratchingsAU.length} AU scratchings + ${scratchingsNZ.length} NZ scratchings from database`);
+    console.log(`📊 [Ratings-Odds] Loaded ${scratchings.length} total scratchings (AU: ${scratchingsAU.length}, NZ: ${scratchingsNZ.length})`);
   } catch (error: any) {
-    console.warn('⚠️ Scratchings/conditions unavailable:', error.message);
+    console.error('❌ [Scratchings] CRITICAL ERROR:', error);
+    console.error('Stack:', error.stack);
   }
 
   // Mark horses as scratched instead of filtering them out

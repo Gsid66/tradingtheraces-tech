@@ -7,6 +7,7 @@ import { getPostgresAPIClient } from '@/lib/integrations/postgres-api';
 import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 import { getScratchingInfo } from '@/lib/utils/scratchings-matcher';
+import { fetchAPI } from '@/lib/utils/api-helpers';
 import TrackConditionBadge from '@/components/racing/TrackConditionBadge';
 import RaceDetails from './RaceDetails';
 import RaceContent from './RaceContent';
@@ -41,31 +42,42 @@ export default async function RacePage({ params }: Props) {
   // Fetch scratchings from database (has complete horse names) and conditions from API
   let scratchings: PFScratching[] = [];
   let conditions: PFCondition[] = [];
+  
+  console.log('\n🔍 === FETCHING SCRATCHINGS FOR FORM GUIDE ===');
+  console.log(`📋 Meeting: ${meeting.track.name}, Race: ${raceNumber}`);
+  
   try {
-    // Fetch scratchings from database endpoint (has horse names resolved)
+    // Fetch scratchings using absolute URLs
     const [scratchingsResponseAU, scratchingsResponseNZ, conditionsAU, conditionsNZ] = await Promise.all([
-      fetch('/api/scratchings?jurisdiction=0&hoursAgo=48').then(async r => {
-        if (!r.ok) {
-          console.error(`Error fetching AU scratchings: HTTP ${r.status}`);
+      fetchAPI('/api/scratchings?jurisdiction=0&hoursAgo=48')
+        .then(data => {
+          console.log(`✅ [Scratchings] Fetched ${data.data?.length || 0} AU scratchings`);
+          return data;
+        })
+        .catch(err => {
+          console.error('❌ [Scratchings] AU fetch failed:', err.message);
           return { success: false, data: [] };
-        }
-        return r.json();
-      }).catch(err => {
-        console.error('Error fetching AU scratchings:', err);
-        return { success: false, data: [] };
-      }),
-      fetch('/api/scratchings?jurisdiction=1&hoursAgo=48').then(async r => {
-        if (!r.ok) {
-          console.error(`Error fetching NZ scratchings: HTTP ${r.status}`);
+        }),
+      
+      fetchAPI('/api/scratchings?jurisdiction=1&hoursAgo=48')
+        .then(data => {
+          console.log(`✅ [Scratchings] Fetched ${data.data?.length || 0} NZ scratchings`);
+          return data;
+        })
+        .catch(err => {
+          console.error('❌ [Scratchings] NZ fetch failed:', err.message);
           return { success: false, data: [] };
-        }
-        return r.json();
-      }).catch(err => {
-        console.error('Error fetching NZ scratchings:', err);
-        return { success: false, data: [] };
+        }),
+      
+      pfClient.getConditions(0).catch(err => {
+        console.error('❌ [Conditions] AU fetch failed:', err.message);
+        return { payLoad: [] };
       }),
-      pfClient.getConditions(0),   // 0 = AU
-      pfClient.getConditions(1)    // 1 = NZ
+      
+      pfClient.getConditions(1).catch(err => {
+        console.error('❌ [Conditions] NZ fetch failed:', err.message);
+        return { payLoad: [] };
+      })
     ]);
     
     // Combine scratchings from both jurisdictions
@@ -75,9 +87,35 @@ export default async function RacePage({ params }: Props) {
     
     conditions = [...(conditionsAU.payLoad || []), ...(conditionsNZ.payLoad || [])];
     
-    console.log(`✅ Loaded ${scratchingsAU.length} AU scratchings + ${scratchingsNZ.length} NZ scratchings from database`);
+    console.log(`\n📊 [Scratchings] Summary:`, {
+      totalScratchings: scratchings.length,
+      auScratchings: scratchingsAU.length,
+      nzScratchings: scratchingsNZ.length,
+      forThisMeeting: scratchings.filter(s => s.meetingId === meeting.meetingId).length,
+      forThisRace: scratchings.filter(s => 
+        s.meetingId === meeting.meetingId && 
+        s.raceNumber === parseInt(raceNumber)
+      ).length
+    });
+    
+    // Log scratchings for this specific race
+    const raceScratchings = scratchings.filter(s => 
+      s.meetingId === meeting.meetingId && 
+      s.raceNumber === parseInt(raceNumber)
+    );
+    
+    if (raceScratchings.length > 0) {
+      console.log(`\n🔴 [Scratchings] Found ${raceScratchings.length} scratching(s) for ${meeting.track.name} R${raceNumber}:`);
+      raceScratchings.forEach(s => {
+        console.log(`   - ${s.horseName} (TAB #${s.tabNumber}) - ${s.reason || 'No reason'}`);
+      });
+    } else {
+      console.log(`\n✅ [Scratchings] No scratchings for ${meeting.track.name} R${raceNumber}`);
+    }
+    
   } catch (error: any) {
-    console.warn('⚠️ Scratchings/conditions unavailable:', error.message);
+    console.error('\n❌ [Scratchings] CRITICAL ERROR:', error);
+    console.error('Stack:', error.stack);
   }
 
   // Get track condition for this meeting
