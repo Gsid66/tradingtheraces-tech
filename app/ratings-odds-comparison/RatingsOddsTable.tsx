@@ -76,6 +76,10 @@ export default function RatingsOddsTable({ data }: RatingsOddsTableProps) {
     });
   }, [data, sortField, sortDirection, showScratched]);
 
+  const scratchedCount = React.useMemo(() => {
+    return data.filter(d => d.isScratched).length;
+  }, [data]);
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { 
@@ -207,7 +211,7 @@ export default function RatingsOddsTable({ data }: RatingsOddsTableProps) {
         <div className="ml-auto text-sm text-gray-600 flex items-center">
           <strong className="mr-2">{sortedData.length}</strong> records found
         </div>
-        {data.filter(d => d.isScratched).length > 0 && (
+        {scratchedCount > 0 && (
           <p className="text-xs text-gray-500 italic w-full">
             ℹ️ Exports exclude scratched horses. Toggle above only affects table display.
           </p>
