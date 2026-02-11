@@ -208,7 +208,7 @@ export default function RatingsOddsTable({ data }: RatingsOddsTableProps) {
           <strong className="mr-2">{sortedData.length}</strong> records found
         </div>
         {data.filter(d => d.isScratched).length > 0 && (
-          <p className="text-xs text-gray-500 italic mt-2 w-full">
+          <p className="text-xs text-gray-500 italic w-full">
             ℹ️ Exports exclude scratched horses. Toggle above only affects table display.
           </p>
         )}
