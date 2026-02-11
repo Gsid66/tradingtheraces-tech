@@ -61,6 +61,7 @@ export const TTR_TO_PUNTINGFORM: Record<string, string[]> = {
   'morphettville': ['Morphettville'],
   'ascot': ['Ascot'],
   'belmont park': ['Belmont Park'],
+  'belmont': ['Belmont Park'],
   'gold coast': ['Gold Coast'],
   'sunshine coast': ['Sunshine Coast'],
   'ipswich': ['Ipswich'],
