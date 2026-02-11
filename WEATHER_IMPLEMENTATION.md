@@ -1,6 +1,6 @@
 # Weather Integration Implementation Summary
 
-This implementation adds comprehensive weather data integration for all Australian and New Zealand race tracks using the MET Norway Locationforecast API.
+This implementation adds comprehensive weather data integration and historical analysis for all Australian and New Zealand race tracks using the MET Norway Locationforecast API.
 
 ## What's Included
 
@@ -14,40 +14,107 @@ This implementation adds comprehensive weather data integration for all Australi
 ### 2. Weather API Integration
 - **MET Norway Client** (`lib/integrations/weather/met-norway-client.ts`)
   - Fetches weather forecasts from MET Norway API
+  - **Enhanced Metrics**: Temperature, feels-like, wind speed, wind gust, humidity, precipitation, visibility, pressure, cloud cover, UV index
   - Parses weather symbols to emojis (☀️🌤️⛅☁️🌧️⛈️)
   - Converts wind directions to compass points (N, NE, E, etc.)
   - In-memory caching to reduce API calls
   - Respects MET Norway terms of service
 
-### 3. Database Schema
-- **Migration 008** (`migrations/008_add_weather_tables.sql`)
-  - New `track_weather` table for hourly forecasts
-  - Weather columns added to `pf_meetings` table
-  - Indexes for efficient queries
-  - Automatic cleanup of old data
+### 3. Weather Analysis Tools
+- **Weather Analysis Module** (`lib/integrations/weather/weather-analysis.ts`)
+  - Track bias calculation (inside/outside/neutral)
+  - Wind impact categorization (light/moderate/strong/severe)
+  - Weather impact scoring (1-10 scale)
+  - Conditions note generation
+- **TypeScript Types** (`lib/integrations/weather/types.ts`)
+  - Comprehensive type definitions for weather data
+  - Analysis and correlation interfaces
 
-### 4. Data Synchronization
+### 4. Database Schema
+- **Migration 008** (`migrations/008_add_weather_tables.sql`)
+  - `track_weather` table for hourly forecasts (rolling 48h cache)
+  - `track_weather_history` table for permanent historical storage
+  - `race_weather_conditions` table for race-time snapshots (NEVER deleted)
+  - Weather columns added to `pf_meetings` table
+  - Comprehensive indexes for efficient analysis queries
+
+### 5. Data Collection Scripts
 - **Weather Sync Script** (`scripts/sync-weather-data.ts`)
   - Fetches weather for all tracks with meetings
   - Updates current conditions in meetings table
   - Stores 12-hour forecasts
+  - **NEW**: Also stores in track_weather_history
   - Rate-limited to respect API fair use
-  - Comprehensive logging
+  
+- **Race Weather Capture** (`scripts/capture-race-weather.ts`)
+  - Captures weather at exact race start times
+  - Calculates track bias and wind impact
+  - Stores in race_weather_conditions table
+  - Supports backfilling historical data
+  
+- **Data Cleanup** (`scripts/cleanup-weather-data.ts`)
+  - Intelligent data retention (48h cache, 90d history)
+  - Permanent retention of race conditions
+  - Database optimization with VACUUM ANALYZE
 
-### 5. API Endpoints
+- **Data Export** (`scripts/export-weather-data.ts`)
+  - Export to CSV or JSON formats
+  - Filter by track, date range, meeting
+  - Option to join with race results
+
+### 6. Analysis Scripts
+- **Performance Analyzer** (`scripts/analyze-weather-performance.ts`)
+  - CLI tool for weather impact analysis
+  - Analyze by metric (wind, temperature, humidity)
+  - Jockey performance by condition
+  - Full track reports
+  
+- **Correlation Calculator** (`scripts/calculate-weather-correlations.ts`)
+  - Calculate Pearson correlations
+  - Weather metrics vs race outcomes
+  - Statistical significance testing
+  - Export correlation matrices
+
+### 7. Analysis API Endpoints
+- **Weather Analysis** (`/api/analysis/weather`)
+  - `?type=track-performance` - Performance by weather metric
+  - `?type=jockey-stats` - Jockey stats by condition
+  - `?type=optimal-conditions` - Best conditions for track
+  - `?type=historical` - Historical weather data
+  - `?type=correlations` - Correlation analysis
+  
+- **Impact Prediction** (`/api/analysis/weather/predict`)
+  - POST endpoint for race impact predictions
+  - Expected time impact calculation
+  - Track bias prediction
+  - Wind impact categorization
+  - Confidence scores
+  - Recommendations
+
+### 8. Enhanced UI Components
+- **WeatherDisplay** (`components/WeatherDisplay.tsx`)
+  - **Three Display Modes**:
+    - `compact`: Minimal for cards (emoji + temp + wind)
+    - `standard`: Balanced for lists (includes humidity, precipitation)
+    - `detailed`: Full panel (all metrics, track impact notes)
+  - Enhanced data display with feels-like temperature
+  - Auto-refresh capability
+  - Graceful error handling
+  
+- **WeatherImpactBadge** (`components/WeatherImpactBadge.tsx`)
+  - Color-coded severity indicators:
+    - 🟢 Ideal (score 1-2)
+    - 🟡 Moderate (score 3-4)
+    - 🟠 Significant (score 5-7)
+    - 🔴 Severe (score 8-10)
+  - Dynamic fetching from API
+  - Tooltip with descriptions
+
+### 9. API Endpoints (Original)
 - **Track Weather** (`/api/weather/track/[trackName]`)
   - Returns current and forecast weather for a track
 - **Meeting Weather** (`/api/weather/meeting/[meetingId]`)
   - Returns weather specific to a meeting
-
-### 6. UI Components
-- **WeatherDisplay** (`components/WeatherDisplay.tsx`)
-  - Full weather display with temperature, wind, conditions
-  - Compact mode for cards
-  - Auto-refresh capability
-  - Graceful error handling
-- **WeatherBadge**
-  - Minimal inline weather badge
   - Shows temp + wind + emoji
 
 ### 7. Integration Points

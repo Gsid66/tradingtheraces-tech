@@ -18,8 +18,13 @@ export interface WeatherTimeseries {
         air_temperature: number;
         wind_speed: number;
         wind_from_direction: number;
+        wind_speed_of_gust?: number;
         relative_humidity?: number;
         air_pressure_at_sea_level?: number;
+        cloud_area_fraction?: number;
+        fog_area_fraction?: number;
+        dew_point_temperature?: number;
+        ultraviolet_index_clear_sky?: number;
       };
     };
     next_1_hours?: {
@@ -28,6 +33,9 @@ export interface WeatherTimeseries {
       };
       details: {
         precipitation_amount?: number;
+        precipitation_amount_max?: number;
+        precipitation_amount_min?: number;
+        probability_of_precipitation?: number;
       };
     };
     next_6_hours?: {
@@ -36,6 +44,9 @@ export interface WeatherTimeseries {
       };
       details: {
         precipitation_amount?: number;
+        precipitation_amount_max?: number;
+        precipitation_amount_min?: number;
+        probability_of_precipitation?: number;
       };
     };
   };
@@ -64,20 +75,31 @@ export interface WeatherData {
   temperature: number;
   windSpeed: number;
   windDirection: number;
+  windGust?: number;
   weatherSymbol: string;
   precipitation: number;
+  precipitationProbability?: number;
   humidity?: number;
   pressure?: number;
+  cloudCover?: number;
+  uvIndex?: number;
+  visibility?: number;
+  feelsLike?: number;
   time: string;
 }
 
 export interface HourlyForecast {
   time: string;
   temperature: number;
+  feelsLike?: number;
   windSpeed: number;
+  windGust?: number;
   windDirection: number;
   weatherSymbol: string;
   precipitation: number;
+  precipitationProbability?: number;
+  humidity?: number;
+  cloudCover?: number;
 }
 
 // Weather symbol mapping to emojis
@@ -211,6 +233,7 @@ export async function fetchWeatherForecast(
 
 /**
  * Get current weather from forecast data
+ * Extracts all available metrics including enhanced data
  */
 export function getCurrentWeather(forecast: WeatherForecast): WeatherData | null {
   if (!forecast.properties.timeseries || forecast.properties.timeseries.length === 0) {
@@ -221,20 +244,81 @@ export function getCurrentWeather(forecast: WeatherForecast): WeatherData | null
   const instant = current.data.instant.details;
   const next = current.data.next_1_hours || current.data.next_6_hours;
 
+  // Calculate feels-like temperature (simple wind chill approximation)
+  const feelsLike = calculateFeelsLike(
+    instant.air_temperature,
+    instant.wind_speed,
+    instant.relative_humidity
+  );
+
+  // Estimate visibility from fog fraction (inverse relationship)
+  const visibility = instant.fog_area_fraction !== undefined
+    ? Math.round(10 - (instant.fog_area_fraction / 10))
+    : 10;
+
   return {
     temperature: instant.air_temperature,
+    feelsLike,
     windSpeed: instant.wind_speed,
+    windGust: instant.wind_speed_of_gust,
     windDirection: instant.wind_from_direction,
     weatherSymbol: next?.summary.symbol_code || 'cloudy',
     precipitation: next?.details.precipitation_amount || 0,
+    precipitationProbability: next?.details.probability_of_precipitation,
     humidity: instant.relative_humidity,
     pressure: instant.air_pressure_at_sea_level,
+    cloudCover: instant.cloud_area_fraction,
+    uvIndex: instant.ultraviolet_index_clear_sky,
+    visibility,
     time: current.time,
   };
 }
 
 /**
+ * Calculate feels-like temperature using wind chill and heat index
+ * 
+ * Wind Chill Formula: Environment Canada/US National Weather Service formula
+ * Valid for: T ≤ 10°C and wind speed > 4.8 km/h
+ * Formula: 13.12 + 0.6215*T - 11.37*V^0.16 + 0.3965*T*V^0.16
+ * where T = temperature in °C, V = wind speed in km/h
+ * 
+ * Heat Index: Simplified approximation for hot/humid conditions
+ * Valid for: T ≥ 27°C and humidity > 40%
+ */
+function calculateFeelsLike(
+  tempC: number,
+  windSpeedMs: number,
+  humidity?: number
+): number {
+  // Convert wind speed from m/s to km/h
+  const windKmh = windSpeedMs * 3.6;
+
+  // Wind chill (for cold temperatures with wind)
+  if (tempC <= 10 && windKmh > 4.8) {
+    const windChill =
+      13.12 +
+      0.6215 * tempC -
+      11.37 * Math.pow(windKmh, 0.16) +
+      0.3965 * tempC * Math.pow(windKmh, 0.16);
+    return Math.round(windChill * 10) / 10;
+  }
+
+  // Heat index (for hot temperatures with humidity)
+  if (tempC >= 27 && humidity !== undefined && humidity > 40) {
+    // Simplified heat index calculation
+    const hi =
+      tempC +
+      0.5555 * ((humidity / 100) * 6.112 * Math.exp((17.67 * tempC) / (tempC + 243.5)) - 10);
+    return Math.round(hi * 10) / 10;
+  }
+
+  // No significant wind chill or heat index effect
+  return tempC;
+}
+
+/**
  * Get hourly forecast for next N hours
+ * Includes all available weather metrics
  */
 export function getHourlyForecast(
   forecast: WeatherForecast,
@@ -256,13 +340,24 @@ export function getHourlyForecast(
       const instant = entry.data.instant.details;
       const next = entry.data.next_1_hours || entry.data.next_6_hours;
 
+      const feelsLike = calculateFeelsLike(
+        instant.air_temperature,
+        instant.wind_speed,
+        instant.relative_humidity
+      );
+
       hourlyData.push({
         time: entry.time,
         temperature: instant.air_temperature,
+        feelsLike,
         windSpeed: instant.wind_speed,
+        windGust: instant.wind_speed_of_gust,
         windDirection: instant.wind_from_direction,
         weatherSymbol: next?.summary.symbol_code || 'cloudy',
         precipitation: next?.details.precipitation_amount || 0,
+        precipitationProbability: next?.details.probability_of_precipitation,
+        humidity: instant.relative_humidity,
+        cloudCover: instant.cloud_area_fraction,
       });
     }
   }
@@ -272,6 +367,7 @@ export function getHourlyForecast(
 
 /**
  * Get weather for specific time
+ * Includes all available weather metrics
  */
 export function getWeatherAtTime(
   forecast: WeatherForecast,
@@ -302,14 +398,30 @@ export function getWeatherAtTime(
   const instant = closest.data.instant.details;
   const next = closest.data.next_1_hours || closest.data.next_6_hours;
 
+  const feelsLike = calculateFeelsLike(
+    instant.air_temperature,
+    instant.wind_speed,
+    instant.relative_humidity
+  );
+
+  const visibility = instant.fog_area_fraction !== undefined
+    ? Math.round(10 - (instant.fog_area_fraction / 10))
+    : 10;
+
   return {
     temperature: instant.air_temperature,
+    feelsLike,
     windSpeed: instant.wind_speed,
+    windGust: instant.wind_speed_of_gust,
     windDirection: instant.wind_from_direction,
     weatherSymbol: next?.summary.symbol_code || 'cloudy',
     precipitation: next?.details.precipitation_amount || 0,
+    precipitationProbability: next?.details.probability_of_precipitation,
     humidity: instant.relative_humidity,
     pressure: instant.air_pressure_at_sea_level,
+    cloudCover: instant.cloud_area_fraction,
+    uvIndex: instant.ultraviolet_index_clear_sky,
+    visibility,
     time: closest.time,
   };
 }

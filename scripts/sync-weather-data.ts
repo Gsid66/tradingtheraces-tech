@@ -6,6 +6,7 @@ import {
   getCurrentWeather,
   getHourlyForecast,
   getWeatherDescription,
+  degreesToCompass,
 } from '../lib/integrations/weather/met-norway-client';
 
 config({ path: '.env.local' });
@@ -86,6 +87,54 @@ async function syncWeatherData() {
 
         const description = getWeatherDescription(current.weatherSymbol);
         console.log(`  🌤️  Current: ${current.temperature}°C, Wind: ${current.windSpeed} m/s, ${description}`);
+
+        // Store in track_weather_history for permanent record
+        try {
+          await dbClient.query(
+            `INSERT INTO track_weather_history (
+              track_name,
+              meeting_id,
+              observation_time,
+              temperature,
+              feels_like_temperature,
+              wind_speed,
+              wind_gust,
+              wind_direction,
+              wind_direction_compass,
+              humidity,
+              precipitation,
+              precipitation_probability,
+              weather_symbol,
+              weather_description,
+              visibility,
+              pressure,
+              cloud_cover,
+              uv_index
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
+            [
+              trackName.toLowerCase(),
+              meetings.find(m => m.track_name.toLowerCase() === trackName.toLowerCase())?.meeting_id || null,
+              current.time,
+              current.temperature,
+              current.feelsLike,
+              current.windSpeed,
+              current.windGust,
+              current.windDirection,
+              degreesToCompass(current.windDirection),
+              current.humidity,
+              current.precipitation,
+              current.precipitationProbability,
+              current.weatherSymbol,
+              description,
+              current.visibility,
+              current.pressure,
+              current.cloudCover,
+              current.uvIndex,
+            ]
+          );
+        } catch (err) {
+          console.warn(`  ⚠️  Error storing history: ${err}`);
+        }
 
         // Update pf_meetings with current weather
         const updateResult = await dbClient.query(
