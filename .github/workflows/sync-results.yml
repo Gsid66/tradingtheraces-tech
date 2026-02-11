@@ -3,8 +3,8 @@ name: Sync Results
 on:
   schedule:
     # Every 30 minutes from 12:00 PM to 10:00 PM AEDT (when races are running/finishing)
-    # 12pm-10:30pm AEDT = 01:00-11:00 UTC (same day)
-    - cron: '*/30 1-11 * * *'
+    # 12pm-10:30pm AEDT = 01:00-10:30 UTC (same day)
+    - cron: '*/30 1-10 * * *'
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
