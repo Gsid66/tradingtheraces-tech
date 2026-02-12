@@ -2,12 +2,13 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { FiArrowLeft } from 'react-icons/fi';
 import { format } from 'date-fns';
-import { getPuntingFormClient, PFScratching, PFCondition } from '@/lib/integrations/punting-form/client';
+import { getPuntingFormClient, PFScratching } from '@/lib/integrations/punting-form/client';
 import { getPostgresAPIClient } from '@/lib/integrations/postgres-api';
 import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 import { getScratchingInfo } from '@/lib/utils/scratchings-matcher';
 import { getScratchingsFromDB } from '@/lib/data/scratchings';
+import { getConditionForMeeting } from '@/lib/data/conditions';
 import TrackConditionBadge from '@/components/racing/TrackConditionBadge';
 import WeatherDisplay from '@/components/WeatherDisplay';
 import RaceDetails from './RaceDetails';
@@ -40,16 +41,15 @@ export default async function RacePage({ params }: Props) {
     notFound();
   }
 
-  // Fetch scratchings from database (has complete horse names) and conditions from API
+  // Fetch scratchings from database (has complete horse names)
   let scratchings: PFScratching[] = [];
-  let conditions: PFCondition[] = [];
   
   console.log('\n🔍 === FETCHING SCRATCHINGS FOR FORM GUIDE ===');
   console.log(`📋 Meeting: ${meeting.track.name}, Race: ${raceNumber}`);
   
   try {
     // Fetch scratchings using absolute URLs
-    const [scratchingsResponseAU, scratchingsResponseNZ, conditionsAU, conditionsNZ] = await Promise.all([
+    const [scratchingsResponseAU, scratchingsResponseNZ] = await Promise.all([
       getScratchingsFromDB(0, 48)
         .then(data => {
           console.log(`✅ [Scratchings] Fetched ${data.data?.length || 0} AU scratchings`);
@@ -60,25 +60,13 @@ export default async function RacePage({ params }: Props) {
         .then(data => {
           console.log(`✅ [Scratchings] Fetched ${data.data?.length || 0} NZ scratchings`);
           return data;
-        }),
-      
-      pfClient.getConditions(0).catch(err => {
-        console.error('❌ [Conditions] AU fetch failed:', err.message);
-        return { payLoad: [] };
-      }),
-      
-      pfClient.getConditions(1).catch(err => {
-        console.error('❌ [Conditions] NZ fetch failed:', err.message);
-        return { payLoad: [] };
-      })
+        })
     ]);
     
     // Combine scratchings from both jurisdictions
     const scratchingsAU = scratchingsResponseAU.success ? scratchingsResponseAU.data : [];
     const scratchingsNZ = scratchingsResponseNZ.success ? scratchingsResponseNZ.data : [];
     scratchings = [...scratchingsAU, ...scratchingsNZ];
-    
-    conditions = [...(conditionsAU.payLoad || []), ...(conditionsNZ.payLoad || [])];
     
     console.log(`\n📊 [Scratchings] Summary:`, {
       totalScratchings: scratchings.length,
@@ -111,8 +99,8 @@ export default async function RacePage({ params }: Props) {
     console.error('Stack:', error.stack);
   }
 
-  // Get track condition for this meeting
-  const trackCondition = conditions.find(c => c.meetingId === meeting.meetingId);
+  // Get track condition for this meeting from database
+  const trackCondition = await getConditionForMeeting(meeting.meetingId);
 
   // Get all races for this meeting
   const racesResponse = await pfClient.getAllRacesForMeeting(meeting.meetingId);
@@ -404,10 +392,13 @@ export default async function RacePage({ params }: Props) {
         {/* Track Condition */}
         {trackCondition && (
           <div className="mb-6">
+            <h3 className="text-sm font-semibold text-gray-600 mb-2">Track Conditions</h3>
             <TrackConditionBadge 
               condition={trackCondition.trackCondition}
               railPosition={trackCondition.railPosition}
               weather={trackCondition.weather}
+              updatedAt={trackCondition.updatedAt}
+              showTimestamp={true}
             />
           </div>
         )}
