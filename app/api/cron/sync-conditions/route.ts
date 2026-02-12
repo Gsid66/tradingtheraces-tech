@@ -109,14 +109,14 @@ export async function GET(request: Request) {
               ]);
               newConditions++;
             }
-          } catch (error: any) {
-            const errorMsg = `Error processing ${condition.trackName}: ${error.message}`;
+          } catch (error: unknown) {
+            const errorMsg = `Error processing ${condition.trackName}: ${error instanceof Error ? error.message : 'Unknown error'}`;
             errors.push(errorMsg);
             console.error(errorMsg);
           }
         }
-      } catch (error: any) {
-        const errorMsg = `Error fetching ${jurisdictionName} conditions: ${error.message}`;
+      } catch (error: unknown) {
+        const errorMsg = `Error fetching ${jurisdictionName} conditions: ${error instanceof Error ? error.message : 'Unknown error'}`;
         errors.push(errorMsg);
         console.error(errorMsg);
       }
@@ -141,13 +141,14 @@ export async function GET(request: Request) {
 
     return NextResponse.json(result);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('❌ Sync failed:', error);
     return NextResponse.json(
       { 
         success: false,
         error: 'Sync failed',
-        message: error.message,
+        message: errorMessage,
         timestamp: new Date().toISOString()
       },
       { status: 500 }

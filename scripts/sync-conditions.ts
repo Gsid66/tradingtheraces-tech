@@ -117,18 +117,14 @@ async function syncConditions() {
     console.log(`   Conditions updated: ${updatedConditions}`);
     console.log(`\n✅ Sync completed successfully at ${new Date().toISOString()}`);
 
-  } catch (error) {
-    console.error('❌ Sync failed:', error);
-    process.exit(1);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('❌ Sync failed:', errorMessage);
+    throw error;
   } finally {
     await dbClient.end();
     console.log('\n🔌 Database connection closed');
   }
 }
 
-// Run the sync if this script is executed directly
-if (require.main === module) {
-  syncConditions();
-}
-
-export default syncConditions;
+syncConditions().catch(console.error);

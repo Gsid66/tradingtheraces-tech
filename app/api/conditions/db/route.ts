@@ -35,13 +35,14 @@ export async function GET() {
       conditions: result.rows
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error fetching conditions from database:', error);
     return NextResponse.json(
       { 
         success: false,
         error: 'Failed to fetch conditions',
-        message: error.message 
+        message: errorMessage 
       },
       { status: 500 }
     );

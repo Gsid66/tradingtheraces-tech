@@ -33,9 +33,10 @@ export default function ConditionsPage() {
       setConditions(data.conditions || []);
       setLastRefresh(new Date());
       setError(null);
-    } catch (err: any) {
-      setError(err.message);
-      console.error('Error fetching conditions:', err);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setError(errorMessage);
+      console.error('Error fetching conditions:', error);
     } finally {
       setLoading(false);
     }
