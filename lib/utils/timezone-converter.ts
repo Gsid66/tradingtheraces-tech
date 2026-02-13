@@ -1,4 +1,4 @@
-const STATE_TIMEZONES: Record<string, string> = {
+export const STATE_TIMEZONES: Record<string, string> = {
   'NSW': 'Australia/Sydney',
   'VIC': 'Australia/Melbourne',
   'ACT': 'Australia/Sydney',
@@ -151,95 +151,46 @@ export function getStateFromTrackName(trackName: string): string {
   return state;
 }
 
-export function convertToAEDT(timeStr: string, state: string): string {
+export function convertToAEDT(timeStr: string, state: string, raceDate?: Date): string {
   if (!timeStr || !state) return timeStr;
   
   const venueTimezone = STATE_TIMEZONES[state.toUpperCase()];
   if (!venueTimezone) return timeStr;
   
   try {
+    // Parse the time string
     const time12h = timeStr.trim().toLowerCase();
     const timeMatch = time12h.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/);
     if (!timeMatch) return timeStr;
     
-    let [_, hours, minutes, period] = timeMatch;
-    let hour = parseInt(hours);
+    const [_, hours, minutes, period] = timeMatch;
     
-    // Convert to 24-hour format
-    if (period) {
-      if (period === 'pm' && hour !== 12) hour += 12;
-      if (period === 'am' && hour === 12) hour = 0;
-    }
+    // Use the race date if provided, otherwise use today
+    const baseDate = raceDate || new Date();
     
-    // Get today's date
-    const today = new Date();
+    // Create a time string for parsing
+    const timeFor12HourFormat = period 
+      ? `${hours}:${minutes} ${period.toUpperCase()}`
+      : `${hours}:${minutes}`;
     
-    // Create a date/time string that represents the time in the venue's timezone
-    // We'll use toLocaleString to parse it correctly
-    const dateStr = today.toLocaleDateString('en-CA'); // YYYY-MM-DD format
-    const timeStr24 = `${hour.toString().padStart(2, '0')}:${minutes}:00`;
+    // Import date-fns functions at runtime
+    const { zonedTimeToUtc, utcToZonedTime, format } = require('date-fns-tz');
+    const { parse } = require('date-fns');
     
-    // Create ISO string (this is in local browser timezone, but we'll adjust)
-    const isoStr = `${dateStr}T${timeStr24}`;
+    // Parse as 12-hour or 24-hour depending on format
+    const parsedTime = period
+      ? parse(timeFor12HourFormat, 'h:mm a', baseDate)
+      : parse(timeFor12HourFormat, 'H:mm', baseDate);
     
-    // The key insight: we need to treat the input time as if it's in the venue timezone
-    // and convert it to AEDT. We do this by:
-    // 1. Creating a reference date
-    // 2. Formatting it in both timezones
-    // 3. Calculating the offset
-    // 4. Applying that offset to our time
+    // Interpret this time as being in the venue's timezone
+    const utcTime = zonedTimeToUtc(parsedTime, venueTimezone);
     
-    const refDate = today;
-    
-    // Format reference in venue timezone to get its representation
-    const venueFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: venueTimezone,
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
-    
-    // Format reference in AEDT to get its representation
-    const aedtFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Australia/Sydney',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
-    
-    // Get the same moment in time in both timezones
-    const venueTimeStr = venueFormatter.format(refDate);
-    const aedtTimeStr = aedtFormatter.format(refDate);
-    
-    // Parse the times to get hours and minutes
-    const [venueHour, venueMin] = venueTimeStr.split(':').map(Number);
-    const [aedtHour, aedtMin] = aedtTimeStr.split(':').map(Number);
-    
-    // Calculate the total offset in minutes
-    const venueTotalMins = venueHour * 60 + venueMin;
-    const aedtTotalMins = aedtHour * 60 + aedtMin;
-    const offsetMins = aedtTotalMins - venueTotalMins;
-    
-    // Apply offset to our race time
-    const raceTotalMins = hour * 60 + parseInt(minutes);
-    let resultTotalMins = raceTotalMins + offsetMins;
-    
-    // Handle day overflow/underflow
-    if (resultTotalMins >= 24 * 60) {
-      resultTotalMins -= 24 * 60;
-    } else if (resultTotalMins < 0) {
-      resultTotalMins += 24 * 60;
-    }
-    
-    // Convert back to hours and minutes
-    const resultHour = Math.floor(resultTotalMins / 60);
-    const resultMin = resultTotalMins % 60;
+    // Convert to AEDT
+    const aedtTime = utcToZonedTime(utcTime, 'Australia/Sydney');
     
     // Format as 12-hour time
-    const ampm = resultHour >= 12 ? 'pm' : 'am';
-    const display12Hour = resultHour % 12 || 12;
+    return format(aedtTime, 'h:mm a', { timeZone: 'Australia/Sydney' });
     
-    return `${display12Hour}:${resultMin.toString().padStart(2, '0')} ${ampm}`;
   } catch (error) {
     console.error('Error converting time:', error);
     return timeStr;
@@ -264,4 +215,41 @@ export function convertTo24Hour(time12h: string): string {
   if (period === 'am' && hour === 12) hour = 0;
   
   return `${hour.toString().padStart(2, '0')}:${minutes}`;
+}
+
+/**
+ * Convert a full datetime string from track local time to AEDT
+ * Handles format: "1/29/2026 1:40:00 PM"
+ */
+export function convertDateTimeToAEDT(dateTimeStr: string, state: string): Date | null {
+  if (!dateTimeStr || !state) return null;
+  
+  const venueTimezone = STATE_TIMEZONES[state.toUpperCase()];
+  if (!venueTimezone) return null;
+  
+  try {
+    // Parse the datetime string: "M/d/yyyy h:mm:ss a"
+    const match = dateTimeStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})\s+(AM|PM)/i);
+    if (!match) return null;
+    
+    const [, month, day, year, hours, minutes, seconds, period] = match;
+    
+    // Import date-fns functions at runtime
+    const { zonedTimeToUtc, utcToZonedTime } = require('date-fns-tz');
+    const { parse } = require('date-fns');
+    
+    // Create date string in a parseable format
+    const dateStr = `${month}/${day}/${year} ${hours}:${minutes}:${seconds} ${period}`;
+    const parsedDate = parse(dateStr, 'M/d/yyyy h:mm:ss a', new Date());
+    
+    // Interpret as being in the venue's timezone
+    const utcTime = zonedTimeToUtc(parsedDate, venueTimezone);
+    
+    // Convert to AEDT and return as Date object
+    return utcToZonedTime(utcTime, 'Australia/Sydney');
+    
+  } catch (error) {
+    console.error('Error converting datetime:', error);
+    return null;
+  }
 }

@@ -7,26 +7,30 @@ import { getStateFromTrackName, convertToAEDT } from '@/lib/utils/timezone-conve
 function extractTimeAndConvertToAEDT(datetime: string, trackName: string): string {
   try {
     // Parse "1/29/2026 1:15:00 PM" - this is in LOCAL TRACK TIME
-    const timeMatch = datetime.match(/(\d{1,2}):(\d{2}):(\d{2})\s*(AM|PM)/i)
-    if (!timeMatch) {
-      return datetime
+    const match = datetime.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})\s+(AM|PM)/i);
+    if (!match) {
+      return datetime;
     }
     
-    // Extract time components (ignoring full match and seconds)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_fullMatch, hours, minutes, _seconds, period] = timeMatch
-    const localTime = `${hours}:${minutes} ${period.toUpperCase()}`
+    const [, month, day, year, hours, minutes, _seconds, period] = match;
+    const localTime = `${hours}:${minutes} ${period.toUpperCase()}`;
+    
+    // Create the race date
+    const raceDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     
     // Get the track's state/timezone
-    const trackState = getStateFromTrackName(trackName)
+    const trackState = getStateFromTrackName(trackName);
     
-    // Convert from local track time to AEDT
-    const aedtTime = convertToAEDT(localTime, trackState)
+    // Convert from local track time to AEDT with race date context
+    const aedtTime = convertToAEDT(localTime, trackState, raceDate);
     
-    return aedtTime
+    // Debug logging
+    console.log(`🕐 Time conversion: ${trackName} | Original: ${datetime} | Track State: ${trackState} | Converted AEDT: ${aedtTime}`);
+    
+    return aedtTime;
   } catch (error) {
-    console.error('Error converting time:', error)
-    return datetime
+    console.error('Error converting time:', error);
+    return datetime;
   }
 }
 
