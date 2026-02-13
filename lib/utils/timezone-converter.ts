@@ -174,7 +174,7 @@ export function convertToAEDT(timeStr: string, state: string, raceDate?: Date): 
       : `${hours}:${minutes}`;
     
     // Import date-fns functions at runtime
-    const { zonedTimeToUtc, utcToZonedTime, format } = require('date-fns-tz');
+    const { fromZonedTime, formatInTimeZone } = require('date-fns-tz');
     const { parse } = require('date-fns');
     
     // Parse as 12-hour or 24-hour depending on format
@@ -182,14 +182,11 @@ export function convertToAEDT(timeStr: string, state: string, raceDate?: Date): 
       ? parse(timeFor12HourFormat, 'h:mm a', baseDate)
       : parse(timeFor12HourFormat, 'H:mm', baseDate);
     
-    // Interpret this time as being in the venue's timezone
-    const utcTime = zonedTimeToUtc(parsedTime, venueTimezone);
+    // Interpret this time as being in the venue's timezone and convert to UTC
+    const utcTime = fromZonedTime(parsedTime, venueTimezone);
     
-    // Convert to AEDT
-    const aedtTime = utcToZonedTime(utcTime, 'Australia/Sydney');
-    
-    // Format as 12-hour time
-    return format(aedtTime, 'h:mm a', { timeZone: 'Australia/Sydney' });
+    // Format directly from UTC to AEDT timezone
+    return formatInTimeZone(utcTime, 'Australia/Sydney', 'h:mm a');
     
   } catch (error) {
     console.error('Error converting time:', error);
@@ -235,18 +232,18 @@ export function convertDateTimeToAEDT(dateTimeStr: string, state: string): Date 
     const [, month, day, year, hours, minutes, seconds, period] = match;
     
     // Import date-fns functions at runtime
-    const { zonedTimeToUtc, utcToZonedTime } = require('date-fns-tz');
+    const { fromZonedTime, toZonedTime } = require('date-fns-tz');
     const { parse } = require('date-fns');
     
     // Create date string in a parseable format
     const dateStr = `${month}/${day}/${year} ${hours}:${minutes}:${seconds} ${period}`;
     const parsedDate = parse(dateStr, 'M/d/yyyy h:mm:ss a', new Date());
     
-    // Interpret as being in the venue's timezone
-    const utcTime = zonedTimeToUtc(parsedDate, venueTimezone);
+    // Interpret as being in the venue's timezone and convert to UTC
+    const utcTime = fromZonedTime(parsedDate, venueTimezone);
     
     // Convert to AEDT and return as Date object
-    return utcToZonedTime(utcTime, 'Australia/Sydney');
+    return toZonedTime(utcTime, 'Australia/Sydney');
     
   } catch (error) {
     console.error('Error converting datetime:', error);
