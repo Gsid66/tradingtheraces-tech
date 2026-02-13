@@ -1,6 +1,6 @@
 import { config } from 'dotenv';
 import { Client } from 'pg';
-import { getPuntingFormClient, PFCondition } from '../lib/integrations/punting-form/client';
+import { getPuntingFormClient } from '../lib/integrations/punting-form/client';
 
 config({ path: '.env.local' });
 
