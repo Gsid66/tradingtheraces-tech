@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import type { PFMeeting, PFRace } from '@/lib/integrations/punting-form/client';
-import { convertToAEDT } from '@/lib/utils/timezone-converter';
+import { convertToAEDT, convertDateTimeToAEDT, STATE_TIMEZONES } from '@/lib/utils/timezone-converter';
 import { WeatherBadge } from '@/components/WeatherDisplay';
 
 interface MeetingWithRaces extends PFMeeting {
@@ -60,104 +60,15 @@ export default function FormGuideContent({ meetings }: Props) {
   );
 }
 
-// Timezone mappings for Australian states (using IANA timezone identifiers)
-const STATE_TIMEZONES: Record<string, string> = {
-  'NSW': 'Australia/Sydney',
-  'VIC': 'Australia/Melbourne',
-  'ACT': 'Australia/Sydney',
-  'TAS': 'Australia/Hobart',
-  'QLD': 'Australia/Brisbane',
-  'SA': 'Australia/Adelaide',
-  'NT': 'Australia/Darwin',
-  'WA': 'Australia/Perth',
-  'NZ': 'Pacific/Auckland',
-};
-
 // Helper function to convert a datetime string in track local time to a Date object in AEDT
 function parseTrackTimeToAEDT(startTime: string, trackTimezone: string): Date | null {
   try {
-    // Parse the datetime string: "1/29/2026 1:40:00 PM"
-    const match = startTime.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})\s+(AM|PM)/i);
-    if (!match) return null;
+    // Get the state code from timezone
+    const stateEntry = Object.entries(STATE_TIMEZONES).find(([_, tz]) => tz === trackTimezone);
+    if (!stateEntry) return null;
     
-    const [, month, day, year, hours, minutes, seconds, period] = match;
-    let hour = parseInt(hours);
-    
-    // Convert to 24-hour format
-    if (period.toUpperCase() === 'PM' && hour !== 12) hour += 12;
-    if (period.toUpperCase() === 'AM' && hour === 12) hour = 0;
-    
-    // Create an ISO-like string for the track local time
-    const paddedMonth = month.padStart(2, '0');
-    const paddedDay = day.padStart(2, '0');
-    
-    // Now we need to interpret the parsed time as if it's in the track's timezone
-    // and get the equivalent UTC timestamp
-    
-    // Strategy: Create two dates at the same moment in time
-    // 1. A reference date to understand the offset
-    // 2. Calculate how to adjust our parsed date
-    
-    // Use a known reference point - use the parsed date components
-    const referenceDate = new Date(`${year}-${paddedMonth}-${paddedDay}T12:00:00Z`);
-    
-    // Format this reference in both timezones to get the offset
-    const trackFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: trackTimezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    });
-    
-    const utcFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'UTC',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    });
-    
-    const trackParts = trackFormatter.formatToParts(referenceDate);
-    const utcParts = utcFormatter.formatToParts(referenceDate);
-    
-    const parseTimeFromParts = (parts: Intl.DateTimeFormatPart[]) => {
-      const year = parseInt(parts.find(p => p.type === 'year')?.value || '0');
-      const month = parseInt(parts.find(p => p.type === 'month')?.value || '0');
-      const day = parseInt(parts.find(p => p.type === 'day')?.value || '0');
-      const hour = parseInt(parts.find(p => p.type === 'hour')?.value || '0');
-      const minute = parseInt(parts.find(p => p.type === 'minute')?.value || '0');
-      const second = parseInt(parts.find(p => p.type === 'second')?.value || '0');
-      return Date.UTC(year, month - 1, day, hour, minute, second);
-    };
-    
-    const trackMs = parseTimeFromParts(trackParts);
-    const utcMs = parseTimeFromParts(utcParts);
-    
-    // The offset is the difference between UTC and track time
-    const offsetMs = utcMs - trackMs;
-    
-    // Now create the race time by treating our parsed components as track local time
-    const raceLocalMs = Date.UTC(
-      parseInt(year),
-      parseInt(month) - 1,
-      parseInt(day),
-      hour,
-      parseInt(minutes),
-      parseInt(seconds)
-    );
-    
-    // Adjust by the offset to get the actual UTC time
-    const raceUtcMs = raceLocalMs + offsetMs;
-    
-    // Create the Date object (which will be in UTC internally)
-    return new Date(raceUtcMs);
+    const state = stateEntry[0];
+    return convertDateTimeToAEDT(startTime, state);
   } catch (error) {
     console.error('Error parsing race time:', error);
     return null;

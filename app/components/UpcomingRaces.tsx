@@ -175,13 +175,12 @@ export default function UpcomingRaces() {
       // Step 5: Filter races that haven't started yet
       // Note: This assumes all races are on the same date (today)
       // For races past midnight, they would be on tomorrow's data
-      console.log(`⏰ Current AEDT time: ${currentTimeStr}`)
-      console.log(`📅 Checking ${flattenedRaces.length} total races`)
+      console.log(`⏰ Current AEDT time: ${currentTimeStr} | Checking ${flattenedRaces.length} races`)
       const upcomingRacesFiltered = flattenedRaces.filter(race => {
         if (!race.race_time) return false
         const raceTime24 = convertTo24Hour(race.race_time)
         const isUpcoming = raceTime24 > currentTimeStr
-        console.log(`${isUpcoming ? '✅' : '❌'} ${race.track_name} R${race.race_number}: ${race.race_time} (${raceTime24}) ${isUpcoming ? '>' : '≤'} ${currentTimeStr}`)
+        console.log(`${isUpcoming ? '✅' : '❌'} ${race.track_name} (${race.track_state}) R${race.race_number}: ${race.race_time} (${raceTime24}) ${isUpcoming ? '>' : '≤'} ${currentTimeStr}`)
         
         // Compare only if we're looking at today's races
         // If the fetched date matches current date, filter by time
