@@ -157,14 +157,25 @@ export interface PFScratching {
   reason?: string;
 }
 
-// Track condition information
+// Track condition information (raw API response)
 export interface PFCondition {
-  meetingId: string;
-  trackName: string;
-  trackCondition: string; // e.g., "Good 4", "Heavy 8", "Synthetic"
-  railPosition?: string;
+  meetingId: number;  // Changed from string to number
+  track: string;  // Changed from trackName to match API
+  trackCondition: string;
+  trackConditionNumber?: string;
   weather?: string;
-  updatedAt: string;
+  rail?: string;  // Changed from railPosition to match API
+  penetrometer?: string;
+  irrigation?: string;
+  rainfall?: string;
+  comment?: string;
+  abandonded?: boolean;
+  wind?: string | null;
+  windDirection?: string | null;
+  meetingDate?: string;
+  meetingDateUTC?: string | null;
+  source?: string | null;
+  lastUpdate?: string;
 }
 
 export class PuntingFormClient {

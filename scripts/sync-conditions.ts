@@ -1,6 +1,6 @@
 import { config } from 'dotenv';
 import { Client } from 'pg';
-import { getPuntingFormClient, PFCondition } from '../lib/integrations/punting-form/client';
+import { getPuntingFormClient } from '../lib/integrations/punting-form/client';
 
 config({ path: '.env.local' });
 
@@ -36,7 +36,12 @@ async function syncConditions() {
 
         // Process each condition
         for (const condition of conditions) {
-          if (!condition.meetingId || !condition.trackName || !condition.trackCondition) {
+          if (
+            condition.meetingId === null || 
+            condition.meetingId === undefined || 
+            !condition.track || 
+            !condition.trackCondition
+          ) {
             console.log(`⚠️  Skipping incomplete condition: ${JSON.stringify(condition)}`);
             continue;
           }
@@ -55,7 +60,7 @@ async function syncConditions() {
               const existing = existingResult.rows[0];
               const hasChanges = 
                 existing.track_condition !== condition.trackCondition ||
-                existing.rail_position !== (condition.railPosition || null) ||
+                existing.rail_position !== (condition.rail || null) ||
                 existing.weather !== (condition.weather || null);
 
               if (hasChanges) {
@@ -70,12 +75,12 @@ async function syncConditions() {
                 `;
                 await dbClient.query(updateQuery, [
                   condition.trackCondition,
-                  condition.railPosition || null,
+                  condition.rail || null,
                   condition.weather || null,
                   condition.meetingId
                 ]);
                 updatedConditions++;
-                console.log(`🔄 Updated: ${condition.trackName} - ${condition.trackCondition}`);
+                console.log(`🔄 Updated: ${condition.track} - ${condition.trackCondition}`);
               }
             } else {
               // Insert new record
@@ -93,17 +98,17 @@ async function syncConditions() {
               `;
               await dbClient.query(insertQuery, [
                 condition.meetingId,
-                condition.trackName,
+                condition.track,
                 condition.trackCondition,
-                condition.railPosition || null,
+                condition.rail || null,
                 condition.weather || null,
                 jurisdiction
               ]);
               newConditions++;
-              console.log(`✨ Created: ${condition.trackName} - ${condition.trackCondition}`);
+              console.log(`✨ Created: ${condition.track} - ${condition.trackCondition}`);
             }
           } catch (error) {
-            console.error(`❌ Error processing condition for ${condition.trackName}:`, error);
+            console.error(`❌ Error processing condition for ${condition.track}:`, error);
           }
         }
       } catch (error) {

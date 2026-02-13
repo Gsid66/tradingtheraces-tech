@@ -46,7 +46,12 @@ export async function GET(request: Request) {
 
         // Process each condition
         for (const condition of conditions) {
-          if (!condition.meetingId || !condition.trackName || !condition.trackCondition) {
+          if (
+            condition.meetingId === null || 
+            condition.meetingId === undefined || 
+            !condition.track || 
+            !condition.trackCondition
+          ) {
             continue;
           }
 
@@ -64,7 +69,7 @@ export async function GET(request: Request) {
               const existing = existingResult.rows[0];
               const hasChanges = 
                 existing.track_condition !== condition.trackCondition ||
-                existing.rail_position !== (condition.railPosition || null) ||
+                existing.rail_position !== (condition.rail || null) ||
                 existing.weather !== (condition.weather || null);
 
               if (hasChanges) {
@@ -79,7 +84,7 @@ export async function GET(request: Request) {
                 `;
                 await dbClient.query(updateQuery, [
                   condition.trackCondition,
-                  condition.railPosition || null,
+                  condition.rail || null,
                   condition.weather || null,
                   condition.meetingId
                 ]);
@@ -101,16 +106,16 @@ export async function GET(request: Request) {
               `;
               await dbClient.query(insertQuery, [
                 condition.meetingId,
-                condition.trackName,
+                condition.track,
                 condition.trackCondition,
-                condition.railPosition || null,
+                condition.rail || null,
                 condition.weather || null,
                 jurisdiction
               ]);
               newConditions++;
             }
           } catch (error: unknown) {
-            const errorMsg = `Error processing ${condition.trackName}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+            const errorMsg = `Error processing ${condition.track}: ${error instanceof Error ? error.message : 'Unknown error'}`;
             errors.push(errorMsg);
             console.error(errorMsg);
           }
