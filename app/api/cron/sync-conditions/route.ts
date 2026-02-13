@@ -56,13 +56,13 @@ export async function GET(request: Request) {
           }
 
           try {
-            // Check if condition already exists for this meeting
+            // Check if condition already exists for this meeting and track
             const existingQuery = `
               SELECT id, track_condition, rail_position, weather, updated_at 
               FROM pf_track_conditions 
-              WHERE meeting_id = $1
+              WHERE meeting_id = $1 AND track_name = $2
             `;
-            const existingResult = await dbClient.query(existingQuery, [condition.meetingId]);
+            const existingResult = await dbClient.query(existingQuery, [condition.meetingId, condition.track]);
 
             if (existingResult.rows.length > 0) {
               // Update existing record
@@ -80,13 +80,14 @@ export async function GET(request: Request) {
                     rail_position = $2,
                     weather = $3,
                     updated_at = NOW()
-                  WHERE meeting_id = $4
+                  WHERE meeting_id = $4 AND track_name = $5
                 `;
                 await dbClient.query(updateQuery, [
                   condition.trackCondition,
                   condition.rail || null,
                   condition.weather || null,
-                  condition.meetingId
+                  condition.meetingId,
+                  condition.track
                 ]);
                 updatedConditions++;
               }
