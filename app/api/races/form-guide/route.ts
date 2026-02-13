@@ -12,7 +12,8 @@ function extractTimeAndConvertToAEDT(datetime: string, trackName: string): strin
       return datetime;
     }
     
-    const [, month, day, year, hours, minutes, _seconds, period] = match;
+    // Extract time components (seconds are not needed for display)
+    const [, month, day, year, hours, minutes, , period] = match;
     const localTime = `${hours}:${minutes} ${period.toUpperCase()}`;
     
     // Create the race date

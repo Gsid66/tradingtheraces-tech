@@ -1,3 +1,6 @@
+import { fromZonedTime, toZonedTime, formatInTimeZone } from 'date-fns-tz';
+import { parse } from 'date-fns';
+
 export const STATE_TIMEZONES: Record<string, string> = {
   'NSW': 'Australia/Sydney',
   'VIC': 'Australia/Melbourne',
@@ -173,10 +176,6 @@ export function convertToAEDT(timeStr: string, state: string, raceDate?: Date): 
       ? `${hours}:${minutes} ${period.toUpperCase()}`
       : `${hours}:${minutes}`;
     
-    // Import date-fns functions at runtime
-    const { fromZonedTime, formatInTimeZone } = require('date-fns-tz');
-    const { parse } = require('date-fns');
-    
     // Parse as 12-hour or 24-hour depending on format
     const parsedTime = period
       ? parse(timeFor12HourFormat, 'h:mm a', baseDate)
@@ -230,10 +229,6 @@ export function convertDateTimeToAEDT(dateTimeStr: string, state: string): Date 
     if (!match) return null;
     
     const [, month, day, year, hours, minutes, seconds, period] = match;
-    
-    // Import date-fns functions at runtime
-    const { fromZonedTime, toZonedTime } = require('date-fns-tz');
-    const { parse } = require('date-fns');
     
     // Create date string in a parseable format
     const dateStr = `${month}/${day}/${year} ${hours}:${minutes}:${seconds} ${period}`;
