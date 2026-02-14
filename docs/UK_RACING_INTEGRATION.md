@@ -274,20 +274,10 @@ DATABASE_URL=postgresql://user:password@host:port/database
 
 - All database operations use parameterized queries (SQL injection safe)
 - File uploads validated for type (CSV/Excel only)
-- **File size limit**: 50MB maximum to prevent ReDoS attacks
+- **File size limit**: 50MB maximum to prevent resource exhaustion
+- Uses `exceljs` library (no known vulnerabilities) instead of vulnerable `xlsx` package
 - Temporary files cleaned up after processing
 - Scraper respects rate limits to be respectful to source website
-
-### Known Security Advisory
-
-The `xlsx` package (v0.18.5) has known vulnerabilities (ReDoS and Prototype Pollution). However, the risk is **minimal** because:
-- Only admin users can import files
-- Files are from trusted sources
-- Server-side processing only
-- File size limits enforced
-- Input validation in place
-
-See `docs/SECURITY_ADVISORY_XLSX.md` for full details and mitigation strategies.
 
 ## Future Enhancements
 

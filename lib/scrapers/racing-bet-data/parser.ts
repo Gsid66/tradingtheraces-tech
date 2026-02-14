@@ -1,7 +1,7 @@
 // CSV/Excel parser for UK & Ireland racing data
 import * as fs from 'fs';
 import * as path from 'path';
-import * as xlsx from 'xlsx';
+import * as ExcelJS from 'exceljs';
 import { parse as parseDate } from 'date-fns';
 import { RaceResult, RaceField, ParsedCSVData } from './types';
 import { validateResults, validateFields } from './validator';
@@ -23,19 +23,43 @@ export async function parseFile(filePath: string, type: 'results' | 'ratings'): 
 }
 
 /**
- * Parse Excel file using xlsx library
+ * Parse Excel file using ExcelJS library
  */
-function parseExcelFile(filePath: string, type: 'results' | 'ratings'): ParsedCSVData {
+async function parseExcelFile(filePath: string, type: 'results' | 'ratings'): Promise<ParsedCSVData> {
   try {
-    const workbook = xlsx.readFile(filePath);
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(filePath);
     
-    // Convert to JSON with header row
-    const rawData = xlsx.utils.sheet_to_json(worksheet, { 
-      raw: false, // Get formatted strings
-      defval: null // Use null for empty cells
-    }) as Record<string, unknown>[];
+    const worksheet = workbook.worksheets[0];
+    if (!worksheet) {
+      throw new Error('No worksheets found in Excel file');
+    }
+    
+    // Extract headers from first row
+    const headers: string[] = [];
+    const firstRow = worksheet.getRow(1);
+    firstRow.eachCell((cell) => {
+      headers.push(String(cell.value || '').trim());
+    });
+    
+    // Extract data rows
+    const rawData: Record<string, unknown>[] = [];
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return; // Skip header row
+      
+      const rowData: Record<string, unknown> = {};
+      row.eachCell((cell, colNumber) => {
+        const header = headers[colNumber - 1];
+        if (header) {
+          rowData[header] = cell.value;
+        }
+      });
+      
+      // Only add rows with data
+      if (Object.keys(rowData).length > 0) {
+        rawData.push(rowData);
+      }
+    });
     
     if (type === 'results') {
       return parseResultsData(rawData);

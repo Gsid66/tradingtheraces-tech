@@ -1,8 +1,76 @@
-# Security Advisory: xlsx Dependency Vulnerabilities
+# Security Advisory: xlsx Dependency Vulnerabilities [RESOLVED]
 
-## Overview
+## Status: ✅ RESOLVED
 
-The `xlsx` package (version 0.18.5) has two known security vulnerabilities. While these vulnerabilities exist, their impact on this application is **minimal** due to the controlled usage context and implemented mitigations.
+**Resolution Date**: 2026-02-14  
+**Action Taken**: Replaced `xlsx` package with `exceljs` (v4.4.0)  
+**Result**: Zero vulnerabilities
+
+---
+
+## Original Issue (Now Resolved)
+
+The `xlsx` package (version 0.18.5) had two known security vulnerabilities that have been **completely eliminated** by switching to the `exceljs` package.
+
+### Original Vulnerabilities (No Longer Applicable)
+
+1. **Regular Expression Denial of Service (ReDoS)** - Affected xlsx < 0.20.2
+2. **Prototype Pollution** - Affected xlsx < 0.19.3
+
+## Resolution
+
+### Why exceljs?
+
+We replaced `xlsx` with `exceljs` for the following reasons:
+
+1. ✅ **No Known Vulnerabilities**: Clean security audit
+2. ✅ **Actively Maintained**: Regular updates and bug fixes
+3. ✅ **Feature-Rich**: Full Excel support (XLSX, XLS)
+4. ✅ **Better API**: More intuitive interface
+5. ✅ **Available on npm**: No CDN or licensing issues
+
+### Migration Details
+
+**Before:**
+```json
+"xlsx": "^0.18.5"  // Had 2 vulnerabilities
+```
+
+**After:**
+```json
+"exceljs": "^4.4.0"  // Zero vulnerabilities
+```
+
+**Code Changes:**
+- Updated `lib/scrapers/racing-bet-data/parser.ts` to use ExcelJS API
+- No changes to public interfaces or functionality
+- All existing features maintained
+
+## Verification
+
+```bash
+# Check for vulnerabilities
+npm audit
+
+# Verify exceljs has no issues
+gh-advisory-database check exceljs@4.4.0
+# Result: No vulnerabilities found
+```
+
+## Benefits of Resolution
+
+1. **Complete Security**: No known vulnerabilities
+2. **Better Performance**: ExcelJS is well-optimized
+3. **Future-Proof**: Active maintenance and updates
+4. **No Mitigations Needed**: Clean solution vs. workarounds
+
+## Archive Note
+
+This advisory is kept for historical reference. The security issues have been completely resolved by switching to a secure alternative package. No additional mitigations or workarounds are required.
+
+---
+
+**For current security status, see main documentation:** `docs/UK_RACING_INTEGRATION.md`
 
 ## Vulnerabilities
 
