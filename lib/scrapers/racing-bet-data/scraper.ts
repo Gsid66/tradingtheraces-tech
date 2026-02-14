@@ -196,9 +196,9 @@ export async function scrapeFiles(
     
     let result: DownloadResult;
     if (type === 'results') {
-      result = await scraper.downloadResults(date);
+      result = await scraper.downloadResults();
     } else {
-      result = await scraper.downloadRatings(date);
+      result = await scraper.downloadRatings();
     }
     
     return result;
