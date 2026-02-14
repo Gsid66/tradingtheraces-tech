@@ -46,7 +46,7 @@ function parseArgs(): Args {
     process.exit(1);
   }
   
-  return args as Args;
+  return args as unknown as Args;
 }
 
 /**

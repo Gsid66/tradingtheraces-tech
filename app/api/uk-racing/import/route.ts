@@ -9,11 +9,17 @@ import { importResults, importFields, createScraperLog, updateScraperLog } from 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes
 
+// Security: Limit file size to prevent ReDoS attacks
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
 export async function POST(request: Request) {
   const startTime = Date.now();
   let tempFilePath: string | null = null;
   
   try {
+    // TODO: Add authentication check to ensure only admin users can import
+    // Example: if (!isAdmin(request)) { return NextResponse.json({ error: 'Unauthorized' }, { status: 401 }); }
+    
     // Parse form data
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -23,6 +29,14 @@ export async function POST(request: Request) {
     if (!file) {
       return NextResponse.json(
         { success: false, message: 'No file provided' },
+        { status: 400 }
+      );
+    }
+    
+    // Security: Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { success: false, message: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB` },
         { status: 400 }
       );
     }

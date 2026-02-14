@@ -12,6 +12,9 @@ export async function POST(request: Request) {
   const startTime = Date.now();
   
   try {
+    // TODO: Add authentication check to ensure only admin users can trigger scrapes
+    // Example: if (!isAdmin(request)) { return NextResponse.json({ error: 'Unauthorized' }, { status: 401 }); }
+    
     // Parse request body
     const body = await request.json().catch(() => ({}));
     const date = body.date || format(new Date(), 'yyyy-MM-dd');
