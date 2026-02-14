@@ -35,7 +35,7 @@ function parseExcelFile(filePath: string, type: 'results' | 'ratings'): ParsedCS
     const rawData = xlsx.utils.sheet_to_json(worksheet, { 
       raw: false, // Get formatted strings
       defval: null // Use null for empty cells
-    });
+    }) as Record<string, unknown>[];
     
     if (type === 'results') {
       return parseResultsData(rawData);
@@ -61,7 +61,8 @@ function parseCSVFile(filePath: string, type: 'results' | 'ratings'): ParsedCSVD
       try {
         content = fs.readFileSync(filePath, encoding as BufferEncoding);
         break;
-      } catch (err) {
+      } catch {
+        // Try next encoding
         continue;
       }
     }
@@ -80,12 +81,12 @@ function parseCSVFile(filePath: string, type: 'results' | 'ratings'): ParsedCSVD
     const headers = parseCSVLine(lines[0]);
     
     // Parse data rows
-    const rawData: any[] = [];
+    const rawData: Record<string, unknown>[] = [];
     for (let i = 1; i < lines.length; i++) {
       const values = parseCSVLine(lines[i]);
       if (values.length === 0) continue;
       
-      const row: any = {};
+      const row: Record<string, unknown> = {};
       headers.forEach((header, index) => {
         row[header] = values[index] || null;
       });
@@ -131,7 +132,7 @@ function parseCSVLine(line: string): string[] {
 /**
  * Parse results data (post-race)
  */
-function parseResultsData(rawData: any[]): ParsedCSVData {
+function parseResultsData(rawData: Record<string, unknown>[]): ParsedCSVData {
   const parsed: RaceResult[] = [];
   const errors: string[] = [];
   
@@ -202,7 +203,7 @@ function parseResultsData(rawData: any[]): ParsedCSVData {
 /**
  * Parse fields data (pre-race)
  */
-function parseFieldsData(rawData: any[]): ParsedCSVData {
+function parseFieldsData(rawData: Record<string, unknown>[]): ParsedCSVData {
   const parsed: RaceField[] = [];
   const errors: string[] = [];
   
@@ -271,7 +272,7 @@ function parseFieldsData(rawData: any[]): ParsedCSVData {
  * Helper functions for parsing fields
  */
 
-function parseDateField(value: any): string | undefined {
+function parseDateField(value: unknown): string | undefined {
   if (!value) return undefined;
   
   const str = String(value).trim();
@@ -301,19 +302,19 @@ function parseDateField(value: any): string | undefined {
   return str;
 }
 
-function parseIntField(value: any): number | undefined {
+function parseIntField(value: unknown): number | undefined {
   if (value === null || value === undefined || value === '') return undefined;
   const num = parseInt(String(value), 10);
   return isNaN(num) ? undefined : num;
 }
 
-function parseFloatField(value: any): number | undefined {
+function parseFloatField(value: unknown): number | undefined {
   if (value === null || value === undefined || value === '') return undefined;
   const num = parseFloat(String(value));
   return isNaN(num) ? undefined : num;
 }
 
-function parseBooleanField(value: any): boolean | undefined {
+function parseBooleanField(value: unknown): boolean | undefined {
   if (value === null || value === undefined || value === '') return undefined;
   const str = String(value).toLowerCase().trim();
   if (str === 'true' || str === 'yes' || str === '1' || str === 'y') return true;
@@ -321,7 +322,7 @@ function parseBooleanField(value: any): boolean | undefined {
   return undefined;
 }
 
-function normalizeString(value: any): string | undefined {
+function normalizeString(value: unknown): string | undefined {
   if (value === null || value === undefined) return undefined;
   const str = String(value).trim();
   return str === '' ? undefined : str;

@@ -50,10 +50,8 @@ export class RacingBetDataScraper {
       
       this.page = await this.browser.newPage();
       
-      // Set download behavior
-      await this.page.context().setDownloadBehavior({
-        downloadPath: SCRAPER_CONFIG.downloadDir,
-      } as any);
+      // Note: Download behavior would be set here for actual implementation
+      // Playwright's download handling varies by browser and version
       
       await this.page.setViewportSize({ width: 1280, height: 720 });
     } catch (error) {
@@ -87,7 +85,7 @@ export class RacingBetDataScraper {
    * Note: This is a placeholder. Actual implementation needs to be customized
    * based on the site's structure and authentication requirements
    */
-  async downloadResults(date?: string): Promise<DownloadResult> {
+  async downloadResults(): Promise<DownloadResult> {
     if (!this.page) {
       return { success: false, error: 'Browser not initialized' };
     }
@@ -119,7 +117,7 @@ export class RacingBetDataScraper {
    * Download ratings file
    * Note: This is a placeholder. Actual implementation needs to be customized
    */
-  async downloadRatings(date?: string): Promise<DownloadResult> {
+  async downloadRatings(): Promise<DownloadResult> {
     if (!this.page) {
       return { success: false, error: 'Browser not initialized' };
     }

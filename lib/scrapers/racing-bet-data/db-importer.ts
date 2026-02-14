@@ -40,12 +40,12 @@ export async function importResults(
           // Get or create jockey
           const jockeyId = result.jockey_name 
             ? await getOrCreateJockey(client, { name: result.jockey_name })
-            : null;
+            : undefined;
           
           // Get or create trainer
           const trainerId = result.trainer_name
             ? await getOrCreateTrainer(client, { name: result.trainer_name })
-            : null;
+            : undefined;
           
           // Get or create race
           const raceId = await getOrCreateRace(client, {
@@ -140,12 +140,12 @@ export async function importFields(
           // Get or create jockey
           const jockeyId = field.jockey_name
             ? await getOrCreateJockey(client, { name: field.jockey_name })
-            : null;
+            : undefined;
           
           // Get or create trainer
           const trainerId = field.trainer_name
             ? await getOrCreateTrainer(client, { name: field.trainer_name })
-            : null;
+            : undefined;
           
           // Get or create race
           const raceId = await getOrCreateRace(client, {
@@ -513,12 +513,13 @@ export async function updateScraperLog(
     records_failed?: number;
     records_skipped?: number;
     execution_time_ms?: number;
+    file_path?: string;
     error_message?: string;
-    error_details?: any;
+    error_details?: unknown;
   }
 ): Promise<void> {
   const fields: string[] = [];
-  const values: any[] = [];
+  const values: unknown[] = [];
   let paramIndex = 1;
   
   Object.entries(updates).forEach(([key, value]) => {

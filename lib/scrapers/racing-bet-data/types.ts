@@ -153,7 +153,7 @@ export interface ScraperLog {
   execution_time_ms?: number;
   file_path?: string;
   error_message?: string;
-  error_details?: any;
+  error_details?: unknown;
 }
 
 export interface ScraperResult {

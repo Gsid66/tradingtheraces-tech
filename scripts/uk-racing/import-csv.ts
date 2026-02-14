@@ -24,7 +24,7 @@ interface Args {
  * Parse command line arguments
  */
 function parseArgs(): Args {
-  const args: any = {};
+  const args: Record<string, string> = {};
   
   process.argv.slice(2).forEach(arg => {
     const [key, value] = arg.replace(/^--/, '').split('=');
