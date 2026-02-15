@@ -108,7 +108,44 @@ export function parsePrice(priceText: string): number | null {
 }
 
 /**
- * Parse CSV content with tab-separated values
+ * Parse a CSV line respecting quoted fields
+ * Handles fields that contain the delimiter character when enclosed in quotes
+ */
+function parseCSVLine(line: string, delimiter: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const nextChar = line[i + 1];
+    
+    if (char === '"') {
+      // Handle escaped quotes ("")
+      if (inQuotes && nextChar === '"') {
+        current += '"';
+        i++; // Skip next quote
+      } else {
+        // Toggle quote state
+        inQuotes = !inQuotes;
+      }
+    } else if (char === delimiter && !inQuotes) {
+      // End of field
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  
+  // Add last field
+  result.push(current.trim());
+  
+  return result;
+}
+
+/**
+ * Parse CSV content with auto-detected delimiter (comma or tab)
  */
 export function parseTTRCSV(csvContent: string): TTRRating[] {
   if (!csvContent || typeof csvContent !== 'string') {
@@ -121,8 +158,14 @@ export function parseTTRCSV(csvContent: string): TTRRating[] {
     throw new Error('CSV file must contain a header row and at least one data row');
   }
 
-  // Parse header row (tab-separated)
-  const headers = lines[0].split('\t').map(h => h.trim());
+  // Detect delimiter: check if first line has more commas or tabs
+  const firstLine = lines[0];
+  const commaCount = (firstLine.match(/,/g) || []).length;
+  const tabCount = (firstLine.match(/\t/g) || []).length;
+  const delimiter = commaCount > tabCount ? ',' : '\t';
+
+  // Parse header row with detected delimiter
+  const headers = parseCSVLine(lines[0], delimiter);
   
   // Validate required columns
   const requiredColumns = ['Date', 'Track', 'Race', 'Horse'];
@@ -141,7 +184,7 @@ export function parseTTRCSV(csvContent: string): TTRRating[] {
     if (!line.trim()) continue;
 
     try {
-      const values = line.split('\t').map(v => v.trim());
+      const values = parseCSVLine(line, delimiter);
       
       // Create a row object mapping headers to values
       const row: { [key: string]: string } = {};
