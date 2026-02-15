@@ -115,12 +115,14 @@ function parseCSVLine(line: string, delimiter: string): string[] {
   const result: string[] = [];
   let current = '';
   let inQuotes = false;
+  let fieldWasQuoted = false;
   
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
     const nextChar = line[i + 1];
     
     if (char === '"') {
+      fieldWasQuoted = true;
       // Handle escaped quotes ("")
       if (inQuotes && nextChar === '"') {
         current += '"';
@@ -130,16 +132,17 @@ function parseCSVLine(line: string, delimiter: string): string[] {
         inQuotes = !inQuotes;
       }
     } else if (char === delimiter && !inQuotes) {
-      // End of field
-      result.push(current.trim());
+      // End of field - only trim if field was not quoted
+      result.push(fieldWasQuoted ? current : current.trim());
       current = '';
+      fieldWasQuoted = false;
     } else {
       current += char;
     }
   }
   
-  // Add last field
-  result.push(current.trim());
+  // Add last field - only trim if field was not quoted
+  result.push(fieldWasQuoted ? current : current.trim());
   
   return result;
 }
@@ -162,6 +165,12 @@ export function parseTTRCSV(csvContent: string): TTRRating[] {
   const firstLine = lines[0];
   const commaCount = (firstLine.match(/,/g) || []).length;
   const tabCount = (firstLine.match(/\t/g) || []).length;
+  
+  // Ensure at least one delimiter is found
+  if (commaCount === 0 && tabCount === 0) {
+    throw new Error('No delimiter found. CSV must be comma-separated or tab-separated.');
+  }
+  
   const delimiter = commaCount > tabCount ? ',' : '\t';
 
   // Parse header row with detected delimiter
