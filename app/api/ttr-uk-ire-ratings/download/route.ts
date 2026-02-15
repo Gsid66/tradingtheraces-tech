@@ -73,7 +73,7 @@ function convertToCSV(ratings: TTRRatingData[]): string {
     String(rating.race_date || ''),
     String(rating.track_name || ''),
     String(rating.race_name || ''),
-    String(rating.race_number),
+    String(rating.race_number || ''),
     rating.saddle_cloth !== null ? String(rating.saddle_cloth) : '',
     String(rating.horse_name || ''),
     String(rating.jockey_name || ''),
