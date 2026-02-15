@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { FiArrowRight, FiUpload } from 'react-icons/fi';
+import { FiArrowRight, FiDownload } from 'react-icons/fi';
 
 export default function TTRLandingPage() {
   // Today's date for 2026-02-15
@@ -42,11 +42,11 @@ export default function TTRLandingPage() {
               <p className="text-purple-200 text-lg">Saturday, February 15, 2026</p>
             </div>
             <Link
-              href="/ttr-uk-ire-ratings/upload"
+              href={`/ttr-uk-ire-ratings/${today}`}
               className="inline-flex items-center gap-2 bg-white text-purple-900 px-6 py-3 rounded-lg font-semibold hover:bg-purple-50 transition-all shadow-lg hover:shadow-xl"
             >
-              <FiUpload size={20} />
-              <span>Upload Data</span>
+              <FiDownload size={20} />
+              <span>Download Today&apos;s File</span>
             </Link>
           </div>
         </div>
@@ -106,7 +106,7 @@ export default function TTRLandingPage() {
                   <div className="flex items-center justify-center mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-6">
                     <div className="relative w-40 h-40">
                       <Image
-                        src="/images/new-sherlock-hooves.png"
+                        src="/images/s-h-image.png"
                         alt="Sherlock Hooves AI"
                         fill
                         className="object-contain drop-shadow-2xl"
@@ -132,7 +132,7 @@ export default function TTRLandingPage() {
                     <div className="flex items-center gap-3">
                       <div className="relative w-12 h-12 flex-shrink-0">
                         <Image
-                          src="/images/new-sherlock-hooves.png"
+                          src="/images/s-h-image.png"
                           alt="Sherlock Hooves"
                           fill
                           className="object-contain"
@@ -155,7 +155,7 @@ export default function TTRLandingPage() {
           <div className="flex items-start gap-4">
             <div className="relative w-16 h-16 flex-shrink-0">
               <Image
-                src="/images/new-sherlock-hooves.png"
+                src="/images/s-h-image.png"
                 alt="Sherlock Hooves"
                 fill
                 className="object-contain"
