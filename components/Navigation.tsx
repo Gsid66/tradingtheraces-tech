@@ -16,6 +16,7 @@ export default function Navigation() {
     { href: '/results', label: 'Results' },
     { href: '/trading-desk', label: 'Trading Desk' },
     { href: '/ratings-odds-comparison', label: 'Ratings vs Odds' },
+    { href: '/ttr-uk-ire-ratings/upload', label: 'TTR UK/IRE Upload' },
     { href: '/calculator', label: 'Calculator' },
   ];
 
