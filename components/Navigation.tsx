@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -10,12 +10,20 @@ export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
+  // Generate today's date in Australia/Sydney timezone (memoized)
+  const today = useMemo(() => {
+    return new Date().toLocaleDateString('en-CA', { 
+      timeZone: 'Australia/Sydney' 
+    });
+  }, []);
+
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/form-guide', label: 'Form Guide' },
     { href: '/results', label: 'Results' },
     { href: '/trading-desk', label: 'Trading Desk' },
     { href: '/ratings-odds-comparison', label: 'Ratings vs Odds' },
+    { href: '/ttr-uk-ire-ratings/', label: 'TTR UK Ratings' },
     { href: '/calculator', label: 'Calculator' },
   ];
 
@@ -35,15 +43,6 @@ export default function Navigation() {
             href="/" 
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
           >
-            <div className="bg-white rounded-lg p-1">
-              <Image
-                src="/images/ttr-logo.png"
-                alt="Trading the Races Logo"
-                width={40}
-                height={40}
-                className="w-10 h-10 object-contain"
-              />
-            </div>
             <span className="text-xl font-bold text-white hidden sm:inline">Trading the Races</span>
             <span className="text-xl font-bold text-white sm:hidden">TTR</span>
           </Link>

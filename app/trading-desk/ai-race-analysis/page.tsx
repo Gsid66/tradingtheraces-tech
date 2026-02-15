@@ -66,7 +66,7 @@ export default function AIRaceAnalysisPage() {
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex items-center gap-4 mb-6 sm:mb-8">
         <Image 
-          src="/images/new-sherlock-hooves.png"
+          src="/images/sh-image-round.png"
           alt="Sherlock Hooves"
           width={120}
           height={120}
@@ -155,7 +155,7 @@ export default function AIRaceAnalysisPage() {
         <div className="bg-purple-50 border-2 border-purple-300 rounded-lg p-6 animate-fadeIn">
           <div className="flex items-start gap-4 mb-4">
             <Image 
-              src="/images/new-sherlock-hooves.png"
+              src="/images/sh-image-round.png"
               alt="Sherlock Hooves"
               width={150}
               height={150}
