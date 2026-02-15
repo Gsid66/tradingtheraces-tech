@@ -41,7 +41,7 @@ export default function TTRLandingPage() {
               <p className="text-purple-200 text-lg">Saturday, February 15, 2026</p>
             </div>
             <Link
-              href={`/ttr-uk-ire-ratings/${today}`}
+              href={`/api/ttr-uk-ire-ratings/download?date=${today}`}
               className="inline-flex items-center gap-2 bg-white text-purple-900 px-6 py-3 rounded-lg font-semibold hover:bg-purple-50 transition-all shadow-lg hover:shadow-xl"
             >
               <FiDownload size={20} />
