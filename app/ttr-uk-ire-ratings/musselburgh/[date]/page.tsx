@@ -130,7 +130,7 @@ export default async function MusselburghPage({ params }: PageProps) {
             {/* Large Sherlock Image in Header */}
             <div className="relative w-48 h-48 md:w-64 md:h-64 flex-shrink-0 bg-white rounded-full p-4 shadow-2xl border-4 border-purple-300">
               <Image
-                src="/images/s-h-image.png"
+                src="/images/sh-image-round.png"
                 alt="Sherlock Hooves AI"
                 fill
                 className="object-contain"
@@ -221,7 +221,7 @@ export default async function MusselburghPage({ params }: PageProps) {
                   <div className="flex items-start gap-4">
                     <div className="relative w-20 h-20 flex-shrink-0">
                       <Image
-                        src="/images/s-h-image.png"
+                        src="/images/sh-image-round.png"
                         alt="Sherlock Hooves"
                         fill
                         className="object-contain drop-shadow-lg"

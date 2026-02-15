@@ -106,7 +106,7 @@ export default function TTRLandingPage() {
                   <div className="flex items-center justify-center mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-6">
                     <div className="relative w-40 h-40">
                       <Image
-                        src="/images/s-h-image.png"
+                        src="/images/sh-image-round.png"
                         alt="Sherlock Hooves AI"
                         fill
                         className="object-contain drop-shadow-2xl"
@@ -132,7 +132,7 @@ export default function TTRLandingPage() {
                     <div className="flex items-center gap-3">
                       <div className="relative w-12 h-12 flex-shrink-0">
                         <Image
-                          src="/images/s-h-image.png"
+                          src="/images/sh-image-round.png"
                           alt="Sherlock Hooves"
                           fill
                           className="object-contain"
@@ -155,7 +155,7 @@ export default function TTRLandingPage() {
           <div className="flex items-start gap-4">
             <div className="relative w-16 h-16 flex-shrink-0">
               <Image
-                src="/images/s-h-image.png"
+                src="/images/sh-image-round.png"
                 alt="Sherlock Hooves"
                 fill
                 className="object-contain"

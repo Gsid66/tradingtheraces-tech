@@ -74,7 +74,7 @@ export default function AICommentary({
         className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-purple-700 bg-purple-100 rounded-full hover:bg-purple-200 transition-colors"
       >
         <Image 
-          src="/images/new-sherlock-hooves.png"
+          src="/images/sh-image-round.png"
           alt="Sherlock"
           width={24}
           height={24}
@@ -100,7 +100,7 @@ export default function AICommentary({
             <div>
               <div className="flex items-start gap-2 mb-2">
                 <Image 
-                  src="/images/new-sherlock-hooves.png"
+                  src="/images/sh-image-round.png"
                   alt="Sherlock Hooves"
                   width={40}
                   height={40}
