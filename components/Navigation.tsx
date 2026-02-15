@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -10,13 +10,20 @@ export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
+  // Generate today's date in Australia/Sydney timezone (memoized)
+  const today = useMemo(() => {
+    return new Date().toLocaleDateString('en-CA', { 
+      timeZone: 'Australia/Sydney' 
+    });
+  }, []);
+
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/form-guide', label: 'Form Guide' },
     { href: '/results', label: 'Results' },
     { href: '/trading-desk', label: 'Trading Desk' },
     { href: '/ratings-odds-comparison', label: 'Ratings vs Odds' },
-    { href: '/ttr-uk-ire-ratings/upload', label: 'TTR UK/IRE Upload' },
+    { href: `/ttr-uk-ire-ratings/${today}`, label: 'TTR UK Ratings' },
     { href: '/calculator', label: 'Calculator' },
   ];
 
