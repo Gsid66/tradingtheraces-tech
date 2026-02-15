@@ -20,23 +20,26 @@ export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState<UploadResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
       setResult(null); // Clear previous result
+      setError(null); // Clear previous error
     }
   };
 
   const handleUpload = async () => {
     if (!file) {
-      alert('Please select a file first');
+      setError('Please select a file first');
       return;
     }
 
     setUploading(true);
     setResult(null);
+    setError(null);
 
     try {
       const formData = new FormData();
@@ -101,6 +104,13 @@ export default function UploadPage() {
 
         {/* Upload Form */}
         <div className="bg-white rounded-lg shadow p-6 mb-8">
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+          )}
+
           <div className="space-y-6">
             {/* File Input */}
             <div>

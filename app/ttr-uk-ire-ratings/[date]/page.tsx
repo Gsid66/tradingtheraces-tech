@@ -220,7 +220,7 @@ export default async function TTRRatingsPage({ params }: PageProps) {
                         {horse.rating !== null ? horse.rating.toFixed(2) : '-'}
                       </td>
                       <td className="px-4 py-3 text-sm text-right font-semibold text-gray-900">
-                        {horse.price !== null ? `$${horse.price.toFixed(2)}` : '-'}
+                        {horse.price !== null ? horse.price.toFixed(2) : '-'}
                       </td>
                     </tr>
                   ))}

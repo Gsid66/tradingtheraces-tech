@@ -86,7 +86,8 @@ export function parseRaceNumber(raceText: string): { number: number; name: strin
 }
 
 /**
- * Parse price in format "$2.15" to decimal number
+ * Parse price with currency symbols ($, £, €) to decimal number
+ * Examples: "$2.15" → 2.15, "£3.40" → 3.4, "€5.00" → 5.0
  */
 export function parsePrice(priceText: string): number | null {
   if (!priceText || typeof priceText !== 'string') {
