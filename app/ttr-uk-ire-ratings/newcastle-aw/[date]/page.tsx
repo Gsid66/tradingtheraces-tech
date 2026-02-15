@@ -137,16 +137,6 @@ export default async function NewcastleAWPage({ params }: PageProps) {
               <p className="text-blue-200 text-lg">Saturday, February 15, 2026 • Flat Racing</p>
               <p className="text-blue-300 text-sm mt-1">England • 8 Races</p>
             </div>
-            
-            {/* Large Sherlock Image in Header */}
-            <div className="relative w-48 h-48 md:w-64 md:h-64 flex-shrink-0 bg-white rounded-full p-4 shadow-2xl border-4 border-blue-300">
-              <Image
-                src="/images/sh-image-round.png"
-                alt="Sherlock Hooves AI"
-                fill
-                className="object-contain"
-              />
-            </div>
           </div>
         </div>
       </div>

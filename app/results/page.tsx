@@ -106,15 +106,6 @@ export default async function ResultsPage({
         <div className="bg-gradient-to-r from-purple-900 to-purple-700 text-white py-6 px-4 shadow-lg">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center gap-4 mb-4">
-              <div className="bg-white rounded-lg p-1">
-                <Image
-                  src="/images/ttr-logo.png"
-                  alt="TTR Logo"
-                  width={32}
-                  height={32}
-                  className="w-8 h-8 object-contain"
-                />
-              </div>
               <Link 
                 href="/" 
                 className="inline-flex items-center gap-2 text-purple-200 hover:text-white transition-colors"
@@ -148,15 +139,6 @@ export default async function ResultsPage({
         <div className="bg-gradient-to-r from-purple-900 to-purple-700 text-white py-6 px-4 shadow-lg">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center gap-4 mb-4">
-              <div className="bg-white rounded-lg p-1">
-                <Image
-                  src="/images/ttr-logo.png"
-                  alt="TTR Logo"
-                  width={32}
-                  height={32}
-                  className="w-8 h-8 object-contain"
-                />
-              </div>
               <Link 
                 href="/" 
                 className="inline-flex items-center gap-2 text-purple-200 hover:text-white transition-colors"
