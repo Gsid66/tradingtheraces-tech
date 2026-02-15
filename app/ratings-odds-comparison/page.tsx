@@ -36,7 +36,8 @@ function normalizeTrackName(trackName: string): string {
     'caulfield heath': 'caulfield',
     'rosehill gardens': 'rosehill',
     'sandown hillside': 'sandown',
-    'sandown lakeside': 'sandown'
+    'sandown lakeside': 'sandown',
+    'beaumont': 'newcastle',
   };
   
   // Check for direct mapping first
