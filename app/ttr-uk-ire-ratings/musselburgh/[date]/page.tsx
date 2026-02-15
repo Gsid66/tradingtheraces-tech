@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { FiArrowLeft } from 'react-icons/fi';
 
 interface PageProps {
@@ -209,14 +208,7 @@ export default async function MusselburghPage({ params }: PageProps) {
                 {/* Sherlock's Analysis */}
                 <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl p-6 text-white">
                   <div className="flex items-start gap-4">
-                    <div className="relative w-20 h-20 flex-shrink-0">
-                      <Image
-                        src="/images/sh-image-round.png"
-                        alt="Sherlock Hooves"
-                        fill
-                        className="object-contain drop-shadow-lg"
-                      />
-                    </div>
+                    <div className="text-5xl flex-shrink-0">🔍</div>
                     <div>
                       <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
                         🔍 Sherlock&apos;s Analysis
