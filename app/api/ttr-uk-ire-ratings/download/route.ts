@@ -76,8 +76,8 @@ function convertToCSV(ratings: TTRRatingData[]): string {
     String(rating.race_number),
     rating.saddle_cloth !== null ? String(rating.saddle_cloth) : '',
     String(rating.horse_name || ''),
-    rating.jockey_name ? String(rating.jockey_name) : '',
-    rating.trainer_name ? String(rating.trainer_name) : '',
+    String(rating.jockey_name || ''),
+    String(rating.trainer_name || ''),
     rating.rating !== null ? String(rating.rating) : '',
     rating.price !== null ? String(rating.price) : ''
   ]);
