@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { FiArrowRight, FiDownload } from 'react-icons/fi';
 
 export default function TTRLandingPage() {
@@ -102,18 +101,6 @@ export default function TTRLandingPage() {
                     </div>
                   </div>
 
-                  {/* Sherlock Hooves Image */}
-                  <div className="flex items-center justify-center mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-6">
-                    <div className="relative w-40 h-40">
-                      <Image
-                        src="/images/sh-image-round.png"
-                        alt="Sherlock Hooves AI"
-                        fill
-                        className="object-contain drop-shadow-2xl"
-                      />
-                    </div>
-                  </div>
-
                   {/* Race Count & CTA */}
                   <div className="flex items-center justify-between">
                     <div>
@@ -130,14 +117,7 @@ export default function TTRLandingPage() {
                   {/* Sherlock's Insight Badge */}
                   <div className="mt-6 bg-white/20 backdrop-blur-sm rounded-lg p-4 border border-white/30">
                     <div className="flex items-center gap-3">
-                      <div className="relative w-12 h-12 flex-shrink-0">
-                        <Image
-                          src="/images/sh-image-round.png"
-                          alt="Sherlock Hooves"
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
+                      <div className="text-3xl flex-shrink-0">🔍</div>
                       <div className="text-white text-sm">
                         <span className="font-bold">Sherlock Hooves Analysis:</span> Detailed AI-powered
                         insights for every race
@@ -153,14 +133,7 @@ export default function TTRLandingPage() {
         {/* Footer Info */}
         <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-600">
           <div className="flex items-start gap-4">
-            <div className="relative w-16 h-16 flex-shrink-0">
-              <Image
-                src="/images/sh-image-round.png"
-                alt="Sherlock Hooves"
-                fill
-                className="object-contain"
-              />
-            </div>
+            <div className="text-5xl flex-shrink-0">🔍</div>
             <div>
               <h3 className="text-lg font-bold text-gray-800 mb-2">
                 About Sherlock Hooves AI Analysis
