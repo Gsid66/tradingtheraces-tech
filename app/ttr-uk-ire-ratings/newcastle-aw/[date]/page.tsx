@@ -141,7 +141,7 @@ export default async function NewcastleAWPage({ params }: PageProps) {
             {/* Large Sherlock Image in Header */}
             <div className="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0">
               <Image
-                src="/images/new-sherlock-hooves.png"
+                src="/images/s-h-image.png"
                 alt="Sherlock Hooves AI"
                 fill
                 className="object-contain drop-shadow-2xl"
@@ -232,7 +232,7 @@ export default async function NewcastleAWPage({ params }: PageProps) {
                   <div className="flex items-start gap-4">
                     <div className="relative w-20 h-20 flex-shrink-0">
                       <Image
-                        src="/images/new-sherlock-hooves.png"
+                        src="/images/s-h-image.png"
                         alt="Sherlock Hooves"
                         fill
                         className="object-contain drop-shadow-lg"

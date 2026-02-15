@@ -23,7 +23,7 @@ export default function Navigation() {
     { href: '/results', label: 'Results' },
     { href: '/trading-desk', label: 'Trading Desk' },
     { href: '/ratings-odds-comparison', label: 'Ratings vs Odds' },
-    { href: `/ttr-uk-ire-ratings/${today}`, label: 'TTR UK Ratings' },
+    { href: '/ttr-uk-ire-ratings/', label: 'TTR UK Ratings' },
     { href: '/calculator', label: 'Calculator' },
   ];
 
