@@ -6,19 +6,8 @@ import UpcomingRacesWrapper from '@/components/UpcomingRacesWrapper'
 export default function Home() {
   return (
     <div className="max-w-7xl mx-auto px-4">
-      {/* Navigation Cards */}
-      <NavigationCards />
-
-      {/* Page Header */}
-      <div className="page-header mx-auto max-w-4xl mt-8">
-        <h1>Welcome to Trading the Races</h1>
-        <p className="page-subtitle">
-          Professional racing data, ratings, and analysis for horse and greyhound racing
-        </p>
-      </div>
-
-      {/* Trading Desk Login Banner */}
-      <div className="max-w-8xl mx-auto mt-8 mb-8">
+      {/* Trading Desk Login Banner - Scrolling Marquee */}
+      <div className="mt-8 mb-8">
         <div className="bg-gradient-to-r from-purple-700 to-purple-600 rounded-lg shadow-lg border-2 border-purple-400 overflow-hidden">
           <div className="py-4 px-6">
             <div className="animate-marquee whitespace-nowrap">
@@ -30,13 +19,28 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Navigation Cards */}
+      <NavigationCards />
+
+      {/* Main Page Image */}
+      <div className="mt-8 mb-8">
+        <Image
+          src="/images/ttr-mainpage.png"
+          alt="Trading the Races"
+          width={1400}
+          height={400}
+          className="w-full h-auto rounded-lg"
+          priority
+        />
+      </div>
+
       {/* Upcoming Races */}
-      <div className="max-w-8xl mx-auto mt-12">
+      <div className="mt-12">
         <UpcomingRacesWrapper />
       </div>
 
       {/* Coming Soon Cards */}
-      <div className="coming-soon-grid max-w-6xl mx-auto mt-12">
+      <div className="coming-soon-grid mt-12">
         <div className="coming-soon-card">
           <div className="coming-soon-icon">
             <FaGlobeAsia />
@@ -62,7 +66,7 @@ export default function Home() {
 
       {/* Premium Banner */}
       <div 
-        className="info-banner max-w-4xl mx-auto mt-12" 
+        className="info-banner mt-12" 
         style={{ 
           background: 'linear-gradient(135deg, #9333ea 0%, #7c3aed 100%)',
           border: '2px solid #fbbf24',
