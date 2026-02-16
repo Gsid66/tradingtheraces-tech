@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { FiArrowRight, FiDownload } from 'react-icons/fi';
 import { Client } from 'pg';
 import { format, parseISO } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 300;
@@ -26,6 +27,15 @@ function formatDateSafely(dateString: string, formatString: string): string {
   }
 }
 
+/**
+ * Get the current date in Sydney timezone as YYYY-MM-DD string
+ * @returns Today's date in Sydney timezone formatted as YYYY-MM-DD
+ */
+function getTodaySydney(): string {
+  const sydneyDate = toZonedTime(new Date(), 'Australia/Sydney');
+  return format(sydneyDate, 'yyyy-MM-dd');
+}
+
 async function getLatestRaceDate(): Promise<string | null> {
   if (!process.env.DATABASE_URL) {
     return null;
@@ -38,13 +48,18 @@ async function getLatestRaceDate(): Promise<string | null> {
 
   try {
     await client.connect();
+    
+    // Get current date in Sydney timezone
+    const todaySydney = getTodaySydney();
+    
     const query = `
       SELECT race_date::text as date
       FROM race_cards_ratings
+      WHERE race_date >= $1::date
       ORDER BY race_date DESC
       LIMIT 1
     `;
-    const result = await client.query(query);
+    const result = await client.query(query, [todaySydney]);
     return result.rows[0]?.date || null;
   } catch (error) {
     console.error('❌ Error fetching latest date:', error);
@@ -66,16 +81,21 @@ async function getAvailableDates(): Promise<RaceDate[]> {
 
   try {
     await client.connect();
+    
+    // Get current date in Sydney timezone
+    const todaySydney = getTodaySydney();
+    
     const query = `
       SELECT 
         race_date::text as date,
         COUNT(*) as count
       FROM race_cards_ratings
+      WHERE race_date >= $1::date
       GROUP BY race_date
       ORDER BY race_date DESC
       LIMIT 10
     `;
-    const result = await client.query(query);
+    const result = await client.query(query, [todaySydney]);
     return result.rows;
   } catch (error) {
     console.error('❌ Error fetching available dates:', error);

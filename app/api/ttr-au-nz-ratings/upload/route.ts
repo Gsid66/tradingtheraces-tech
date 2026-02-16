@@ -68,8 +68,7 @@ async function importRatings(pool: Pool, ratings: TTRAUNZRating[]): Promise<Impo
           jockey = EXCLUDED.jockey,
           trainer = EXCLUDED.trainer,
           rating = EXCLUDED.rating,
-          price = EXCLUDED.price,
-          updated_at = NOW()
+          price = EXCLUDED.price
         RETURNING id
       `;
 
