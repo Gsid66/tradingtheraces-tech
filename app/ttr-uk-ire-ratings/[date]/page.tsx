@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { FiArrowLeft } from 'react-icons/fi';
 import { Client } from 'pg';
 import { format, parseISO, isValid } from 'date-fns';
 
@@ -138,6 +140,15 @@ export default async function TTRRatingsPage({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
+        {/* Back Button */}
+        <Link
+          href="/ttr-uk-ire-ratings"
+          className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-800 transition-colors mb-4"
+        >
+          <FiArrowLeft size={20} />
+          <span>Back to UK/IRE Ratings</span>
+        </Link>
+
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
