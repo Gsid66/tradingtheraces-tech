@@ -56,7 +56,7 @@ async function importRatings(pool: Pool, ratings: TTRAUNZRating[]): Promise<Impo
       });
 
       const query = `
-        INSERT INTO ttr_au_nz_ratings (
+        INSERT INTO race_cards_ratings (
           race_date, track, race_name, race_number, saddle_cloth,
           horse_name, jockey, trainer, rating, price
         )
