@@ -177,9 +177,21 @@ export default async function RacePage({ params }: Props) {
           (r: any) => {
             // Improved track matching: normalize both names before comparison
             const normalizeForMatch = (s: string) => {
-              if (!s) return '';
-              return s.toLowerCase().replace(/\s*(hillside|lakeside|park|gardens|racecourse)\s*$/, '').trim();
-            };
+  if (!s) return '';
+  
+  // Convert to lowercase first
+  let normalized = s.toLowerCase().trim();
+  
+  // Handle surface-specific track names - map Beaumont to Newcastle
+  if (normalized === 'beaumont') {
+    return 'newcastle';
+  }
+  
+  // Remove common suffixes
+  normalized = normalized.replace(/\s*(hillside|lakeside|park|gardens|racecourse)\s*$/, '');
+  
+  return normalized.trim();
+};
             const apiTrack = normalizeForMatch(r.meeting_name);
             const targetTrack = normalizeForMatch(meeting.track.name);
             const meetingMatch = apiTrack && targetTrack && (
