@@ -25,7 +25,7 @@ export default function Home() {
       {/* Main Page Image */}
       <div className="mt-8 mb-8">
         <div className="relative group">
-          <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-lg blur-lg opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+          <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-lg blur-lg opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 motion-safe:animate-pulse"></div>
           <div className="relative">
             <Image
               src="/images/ttr-main-page.png"
