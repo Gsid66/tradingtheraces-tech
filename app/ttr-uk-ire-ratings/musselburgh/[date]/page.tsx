@@ -20,7 +20,6 @@ interface RaceData {
     price: string;
     label: string;
   }>;
-  analysis: string;
 }
 
 export default async function MusselburghPage({ params }: PageProps) {
@@ -36,7 +35,6 @@ export default async function MusselburghPage({ params }: PageProps) {
         { name: 'Desert Dreamer', rating: 205, price: '$3.20', label: 'Strong Second Choice' },
         { name: 'Highland Hope', rating: 198, price: '$4.50', label: 'Value Play' },
       ],
-      analysis: `Fantasy World stands out as the clear TTR Model Favorite with an impressive rating of 218. The horse has shown consistent form over similar distances and should handle the Musselburgh track well. Desert Dreamer offers solid value as a backup option with a rating of 205, particularly if track conditions favor front-runners. The key to this race will be early positioning, as the winner typically establishes control before the final hurdle.`,
     },
     {
       number: 2,
@@ -47,7 +45,6 @@ export default async function MusselburghPage({ params }: PageProps) {
         { name: 'Bella Vista', rating: 129, price: '$3.80', label: 'Improving Mare' },
         { name: 'Celtic Queen', rating: 125, price: '$4.20', label: 'Each-Way Chance' },
       ],
-      analysis: `Siorai emerges as the TTR favorite in this mares' contest, carrying a rating of 137 into what looks a winnable assignment. She has been knocking on the door in recent starts and this trip should suit perfectly. Bella Vista represents danger as an improving type who could appreciate the step up in distance. The extended journey will test stamina reserves, making this an intriguing tactical battle where patient riding could prove decisive.`,
     },
     {
       number: 3,
@@ -58,7 +55,6 @@ export default async function MusselburghPage({ params }: PageProps) {
         { name: 'Mountain King', rating: 128, price: '$3.50', label: 'Well Handicapped' },
         { name: 'Valley Runner', rating: 124, price: '$5.00', label: 'Longshot Appeal' },
       ],
-      analysis: `Inca Prince heads the TTR ratings at 133 in this competitive handicap hurdle. His recent form figures suggest he's ready to peak, and the return to this distance looks a positive move. Mountain King cannot be dismissed lightly given his favorable handicap mark and proven ability at the track. This shapes as a genuine test of handicapping skill, with the pace likely to be honest throughout. Expect the principals to be fighting it out from the last flight.`,
     },
     {
       number: 4,
@@ -69,7 +65,6 @@ export default async function MusselburghPage({ params }: PageProps) {
         { name: 'Noble Warrior', rating: 122, price: '$3.90', label: 'Track Specialist' },
         { name: 'Thunder Jump', rating: 119, price: '$4.60', label: 'Fresh & Fit' },
       ],
-      analysis: `Divas Doyen is the standout selection according to TTR ratings (128), bringing strong chase form into this contest. The extended trip plays to his strengths, and his jumping has been clean in recent outings. Noble Warrior knows Musselburgh well and could pose problems if allowed to dictate terms. The key factor here is fence jumping - any mistakes could prove costly over this stamina-sapping distance. Look for Divas Doyen to assert from three out.`,
     },
     {
       number: 5,
@@ -80,7 +75,6 @@ export default async function MusselburghPage({ params }: PageProps) {
         { name: 'Marathon Man', rating: 110, price: '$4.20', label: 'Stayer Supreme' },
         { name: 'Last Chance', rating: 107, price: '$5.50', label: 'Improver' },
       ],
-      analysis: `Lelantos takes favoritism in this marathon hurdle with a TTR rating of 114. The extreme distance should suit this genuine stayer who has shown he relishes a test of stamina. Marathon Man lives up to his name and will ensure a true gallop from the outset. This is all about staying power and maintaining jumping rhythm over nearly three miles. The winner will likely emerge from the final half-mile, with tactical positioning crucial entering the home straight.`,
     },
     {
       number: 6,
@@ -91,7 +85,6 @@ export default async function MusselburghPage({ params }: PageProps) {
         { name: 'Golden Fence', rating: 136, price: '$3.40', label: 'Solid Rival' },
         { name: 'Chase Master', rating: 132, price: '$4.80', label: 'Best of Rest' },
       ],
-      analysis: `Jus De Citron commands respect with a TTR rating of 141, the highest on the card. His chase credentials are strong, and he's proven over this demanding trip. Golden Fence rates a genuine threat and could exploit any jumping errors from the favorite. This marathon chase will be a war of attrition, with fitness and fence accuracy paramount. Expect a tactical affair where the winner preserves energy for a late challenge. Jus De Citron's class should tell in the closing stages.`,
     },
     {
       number: 7,
@@ -102,7 +95,6 @@ export default async function MusselburghPage({ params }: PageProps) {
         { name: 'Rising Star', rating: 133, price: '$3.70', label: 'Conditional Special' },
         { name: 'Young Gun', rating: 129, price: '$4.90', label: 'Outsider Threat' },
       ],
-      analysis: `Gemini Man is the clear TTR favorite with a rating of 139 in this conditional jockeys' contest. The handicapper has him well treated, and the booking of an up-and-coming claimer looks astute. Rising Star brings strong recent form and could benefit from the weight allowance. This race often produces surprises as inexperienced riders navigate the pressure. The key will be maintaining composure over the final hurdle where mistakes often occur. Gemini Man's experience gives him the edge.`,
     },
   ];
 
@@ -202,19 +194,6 @@ export default async function MusselburghPage({ params }: PageProps) {
                         </div>
                       </div>
                     ))}
-                  </div>
-                </div>
-
-                {/* Sherlock's Analysis */}
-                <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl p-6 text-white">
-                  <div className="flex items-start gap-4">
-                    <div className="text-5xl flex-shrink-0">🔍</div>
-                    <div>
-                      <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                        🔍 Sherlock&apos;s Analysis
-                      </h3>
-                      <p className="text-purple-100 leading-relaxed">{race.analysis}</p>
-                    </div>
                   </div>
                 </div>
               </div>
