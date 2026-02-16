@@ -197,6 +197,7 @@ export function parseTTRAUNZCSV(csvContent: string): TTRAUNZRating[] {
     throw new Error('No delimiter found. CSV must be comma-separated or tab-separated.');
   }
   
+  // Prefer tabs for AU-NZ data (use >= to prefer tabs when counts are equal)
   const delimiter = commaCount > tabCount ? ',' : '\t';
 
   // Parse header row with detected delimiter
@@ -230,17 +231,31 @@ export function parseTTRAUNZCSV(csvContent: string): TTRAUNZRating[] {
       // Parse race number and name
       const raceInfo = parseAUNZRaceInfo(row['Race']);
 
+      // Parse saddle cloth with validation
+      let saddleCloth: number | null = null;
+      if (row['SaddleCloth']) {
+        const parsed = parseInt(row['SaddleCloth'], 10);
+        saddleCloth = !isNaN(parsed) ? parsed : null;
+      }
+
+      // Parse rating with validation
+      let ratingValue: number | null = null;
+      if (row['Rating']) {
+        const parsed = parseInt(row['Rating'], 10);
+        ratingValue = !isNaN(parsed) ? parsed : null;
+      }
+
       // Parse and validate data
       const rating: TTRAUNZRating = {
         race_date: parseAUNZDate(row['Date']),
         track_name: row['Track'] || '',
         race_name: raceInfo.name,
         race_number: raceInfo.number,
-        saddle_cloth: row['SaddleCloth'] ? parseInt(row['SaddleCloth'], 10) : null,
+        saddle_cloth: saddleCloth,
         horse_name: row['Horse'] || '',
         jockey_name: row['Jockey'] || null,
         trainer_name: row['Trainer'] || null,
-        rating: row['Rating'] ? parseInt(row['Rating'], 10) : null,
+        rating: ratingValue,
         price: parseAUNZPrice(row['Price'])
       };
 
