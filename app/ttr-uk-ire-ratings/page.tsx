@@ -49,17 +49,13 @@ async function getLatestRaceDate(): Promise<string | null> {
   try {
     await client.connect();
     
-    // Get current date in London timezone
-    const todayLondon = getTodayLondon();
-    
     const query = `
       SELECT race_date::text as date
       FROM ttr_uk_ire_ratings
-      WHERE race_date >= $1::date
       ORDER BY race_date DESC
       LIMIT 1
     `;
-    const result = await client.query(query, [todayLondon]);
+    const result = await client.query(query);
     return result.rows[0]?.date || null;
   } catch (error) {
     console.error('❌ Error fetching latest date:', error);
@@ -82,20 +78,16 @@ async function getAvailableDates(): Promise<RaceDate[]> {
   try {
     await client.connect();
     
-    // Get current date in London timezone
-    const todayLondon = getTodayLondon();
-    
     const query = `
       SELECT 
         race_date::text as date,
         COUNT(*) as count
       FROM ttr_uk_ire_ratings
-      WHERE race_date >= $1::date
       GROUP BY race_date
       ORDER BY race_date DESC
       LIMIT 10
     `;
-    const result = await client.query(query, [todayLondon]);
+    const result = await client.query(query);
     return result.rows;
   } catch (error) {
     console.error('❌ Error fetching available dates:', error);
