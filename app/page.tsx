@@ -23,6 +23,7 @@ export default function Home() {
       </div>
 
       {/* Main Page Image */}
+      {/* Note: ttr-mainpage.png currently uses ttr-logo.png as placeholder */}
       <div className="mt-8 mb-8">
         <div className="relative w-full rounded-lg overflow-hidden">
           <Image
