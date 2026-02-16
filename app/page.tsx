@@ -68,7 +68,7 @@ export default function Home() {
       <div 
         className="info-banner mt-12" 
         style={{ 
-          background: 'linear-gradient(135deg, #9333ea 0%, #7c3aed 100%)',
+          background: 'linear-gradient(135deg, #111013 0%, #0c0b0e 100%)',
           border: '2px solid #fbbf24',
         }}
       >
