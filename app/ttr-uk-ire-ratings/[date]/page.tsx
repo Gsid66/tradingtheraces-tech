@@ -90,6 +90,21 @@ function groupRatings(ratings: TTRRatingData[]): RaceGroup[] {
   });
 }
 
+// Helper functions for safe number formatting
+function formatPrice(price: number | null | undefined): string {
+  if (price === null || price === undefined || typeof price !== 'number' || isNaN(price)) {
+    return '-';
+  }
+  return price.toFixed(2);
+}
+
+function formatRating(rating: number | null | undefined): string {
+  if (rating === null || rating === undefined || typeof rating !== 'number' || isNaN(rating)) {
+    return '-';
+  }
+  return rating.toFixed(2);
+}
+
 export default async function TTRRatingsPage({ params }: PageProps) {
   const { date } = await params;
   
@@ -217,10 +232,10 @@ export default async function TTRRatingsPage({ params }: PageProps) {
                         {horse.trainer_name || '-'}
                       </td>
                       <td className="px-4 py-3 text-sm text-right font-semibold text-purple-600">
-                        {horse.rating !== null ? horse.rating.toFixed(2) : '-'}
+                        {formatRating(horse.rating)}
                       </td>
                       <td className="px-4 py-3 text-sm text-right font-semibold text-gray-900">
-                        {horse.price !== null ? horse.price.toFixed(2) : '-'}
+                        {formatPrice(horse.price)}
                       </td>
                     </tr>
                   ))}
