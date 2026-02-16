@@ -94,14 +94,14 @@ function groupRatings(ratings: TTRRatingData[]): RaceGroup[] {
 
 // Helper functions for safe number formatting
 function formatPrice(price: number | null | undefined): string {
-  if (price === null || price === undefined || typeof price !== 'number' || isNaN(price)) {
+  if (typeof price !== 'number' || isNaN(price)) {
     return '-';
   }
   return price.toFixed(2);
 }
 
 function formatRating(rating: number | null | undefined): string {
-  if (rating === null || rating === undefined || typeof rating !== 'number' || isNaN(rating)) {
+  if (typeof rating !== 'number' || isNaN(rating)) {
     return '-';
   }
   return rating.toFixed(0);
