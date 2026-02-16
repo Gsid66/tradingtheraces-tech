@@ -18,7 +18,7 @@ export default function NavigationCards() {
 
         {/* UK Ratings Card - ACTIVE */}
         <Link href="/ttr-uk-ire-ratings">
-          <div className="bg-black/60 rounded-lg p-8 text-center hover:bg-black/80 hover:border-2 hover:border-purple-400 hover:shadow-lg hover:shadow-purple-500/50 transition-all cursor-pointer border-2 border-purple-500 shadow-lg shadow-purple-500/30">
+          <div className="bg-black/60 rounded-lg p-8 text-center hover:bg-black/80 hover:border-2 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/50 transition-all cursor-pointer border-2 border-red-600 shadow-lg shadow-red-500/30">
             <FaGlobeEurope className="text-white text-5xl mb-4 mx-auto" />
             <h2 className="text-white text-xl font-semibold mb-2">UK Ratings</h2>
             <p className="text-gray-300 text-sm">United Kingdom ratings</p>
