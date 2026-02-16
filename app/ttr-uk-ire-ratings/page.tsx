@@ -26,6 +26,10 @@ function formatDateSafely(dateString: string, formatString: string): string {
   }
 }
 
+/**
+ * Get the most recent race date in the database
+ * @returns The latest race date as YYYY-MM-DD string, or null if no data exists
+ */
 async function getLatestRaceDate(): Promise<string | null> {
   if (!process.env.DATABASE_URL) {
     return null;
@@ -55,6 +59,11 @@ async function getLatestRaceDate(): Promise<string | null> {
   }
 }
 
+/**
+ * Get available race dates from the database
+ * Returns the 10 most recent dates with race data
+ * @returns Array of race dates with horse counts
+ */
 async function getAvailableDates(): Promise<RaceDate[]> {
   if (!process.env.DATABASE_URL) {
     return [];
