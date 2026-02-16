@@ -25,7 +25,7 @@ export default function Home() {
       {/* Main Page Image */}
       <div className="mt-8 mb-8">
         <Image
-          src="/images/ttr-mainpage.png"
+          src="/images/ttr-main-page.png"
           alt="Trading the Races"
           width={1400}
           height={400}
