@@ -1,5 +1,7 @@
 import { Client } from 'pg';
 import { format, parseISO, isValid } from 'date-fns';
+import Link from 'next/link';
+import { FiArrowLeft } from 'react-icons/fi';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 300; // Revalidate every 5 minutes
@@ -125,6 +127,13 @@ export default async function TTRAUNZRatingsPage({ params }: PageProps) {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
+          <Link 
+            href="/ttr-au-nz-ratings"
+            className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold mb-4 transition-colors"
+          >
+            <FiArrowLeft size={20} />
+            <span>Back to AU/NZ Ratings</span>
+          </Link>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
             TTR AU/NZ Ratings
           </h1>
