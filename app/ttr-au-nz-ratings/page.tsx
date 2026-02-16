@@ -27,6 +27,15 @@ function formatDateSafely(dateString: string, formatString: string): string {
   }
 }
 
+/**
+ * Get the current date in Sydney timezone as YYYY-MM-DD string
+ * @returns Today's date in Sydney timezone formatted as YYYY-MM-DD
+ */
+function getTodaySydney(): string {
+  const sydneyDate = toZonedTime(new Date(), 'Australia/Sydney');
+  return format(sydneyDate, 'yyyy-MM-dd');
+}
+
 async function getLatestRaceDate(): Promise<string | null> {
   if (!process.env.DATABASE_URL) {
     return null;
@@ -41,8 +50,7 @@ async function getLatestRaceDate(): Promise<string | null> {
     await client.connect();
     
     // Get current date in Sydney timezone
-    const sydneyDate = toZonedTime(new Date(), 'Australia/Sydney');
-    const todaySydney = format(sydneyDate, 'yyyy-MM-dd');
+    const todaySydney = getTodaySydney();
     
     const query = `
       SELECT race_date::text as date
@@ -75,8 +83,7 @@ async function getAvailableDates(): Promise<RaceDate[]> {
     await client.connect();
     
     // Get current date in Sydney timezone
-    const sydneyDate = toZonedTime(new Date(), 'Australia/Sydney');
-    const todaySydney = format(sydneyDate, 'yyyy-MM-dd');
+    const todaySydney = getTodaySydney();
     
     const query = `
       SELECT 
