@@ -109,6 +109,54 @@ export default async function TTRAUNZRatingsPage({ params }: PageProps) {
   }
 
   const ratings = await getRatingsForDate(date);
+  
+  // Format date for display
+  const formattedDate = format(parsedDate, 'EEEE, MMMM d, yyyy');
+
+  // Handle empty data case early - show friendly message without statistics
+  if (ratings.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-green-100">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-amber-600 to-green-700 text-white py-8 px-4 shadow-xl">
+          <div className="max-w-7xl mx-auto">
+            <Link
+              href="/ttr-au-nz-ratings"
+              className="inline-flex items-center gap-2 text-amber-200 hover:text-white transition-colors mb-4"
+            >
+              <FiArrowLeft size={20} />
+              <span>Back to AU/NZ Ratings</span>
+            </Link>
+            
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold mb-2">TTR AU/NZ Ratings</h1>
+                <p className="text-amber-200 text-lg">{formattedDate}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          {/* No Data Message */}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center">
+            <h3 className="text-xl font-semibold text-yellow-900 mb-3">No Ratings Found</h3>
+            <p className="text-yellow-800 mb-4">
+              No ratings data is available for {formattedDate}.
+            </p>
+            <Link
+              href="/ttr-au-nz-ratings"
+              className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-lg transition-colors"
+            >
+              <FiArrowLeft size={16} />
+              <span>View Available Dates</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const raceGroups = groupRatings(ratings);
 
   // Calculate statistics
@@ -120,9 +168,6 @@ export default async function TTRAUNZRatingsPage({ params }: PageProps) {
   const avgRating = ratingsWithValue.length > 0
     ? ratingsWithValue.reduce((sum, r) => sum + (r.rating || 0), 0) / ratingsWithValue.length
     : 0;
-
-  // Format date for display
-  const formattedDate = format(parsedDate, 'EEEE, MMMM d, yyyy');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-green-100">
@@ -171,16 +216,6 @@ export default async function TTRAUNZRatingsPage({ params }: PageProps) {
             </div>
           </div>
         </div>
-
-        {/* No Data Message */}
-        {ratings.length === 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-            <h3 className="text-lg font-semibold text-yellow-900 mb-2">No Ratings Found</h3>
-            <p className="text-yellow-800">
-              No ratings data is available for {formattedDate}.
-            </p>
-          </div>
-        )}
 
         {/* Race Groups - Display by Track */}
         {uniqueTracks.map((trackName) => {
