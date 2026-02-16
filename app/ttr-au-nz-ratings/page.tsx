@@ -40,7 +40,7 @@ async function getLatestRaceDate(): Promise<string | null> {
     await client.connect();
     const query = `
       SELECT race_date::text as date
-      FROM ttr_au_nz_ratings
+      FROM race_cards_ratings
       ORDER BY race_date DESC
       LIMIT 1
     `;
@@ -70,7 +70,7 @@ async function getAvailableDates(): Promise<RaceDate[]> {
       SELECT 
         race_date::text as date,
         COUNT(*) as count
-      FROM ttr_au_nz_ratings
+      FROM race_cards_ratings
       GROUP BY race_date
       ORDER BY race_date DESC
       LIMIT 10
