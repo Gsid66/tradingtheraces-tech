@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FiArrowRight, FiDownload, FiUpload } from 'react-icons/fi';
+import { FiArrowRight, FiDownload } from 'react-icons/fi';
 import { Client } from 'pg';
 import { format, parseISO } from 'date-fns';
 
@@ -85,24 +85,15 @@ export default async function TTRAUNZLandingPage() {
               <h1 className="text-3xl sm:text-4xl font-bold mb-2">TTR AU/NZ Ratings</h1>
               <p className="text-amber-100 text-lg">Australia & New Zealand Racing</p>
             </div>
-            <div className="flex gap-3">
-              {latestDate && (
-                <Link
-                  href={`/api/ttr-au-nz-ratings/download?date=${latestDate}`}
-                  className="inline-flex items-center gap-2 bg-white text-amber-700 px-6 py-3 rounded-lg font-semibold hover:bg-amber-50 transition-all shadow-lg hover:shadow-xl"
-                >
-                  <FiDownload size={20} />
-                  <span>Download Latest</span>
-                </Link>
-              )}
+            {latestDate && (
               <Link
-                href="/ttr-au-nz-ratings/upload"
-                className="inline-flex items-center gap-2 bg-green-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-800 transition-all shadow-lg hover:shadow-xl"
+                href={`/api/ttr-au-nz-ratings/download?date=${latestDate}`}
+                className="inline-flex items-center gap-2 bg-white text-amber-700 px-6 py-3 rounded-lg font-semibold hover:bg-amber-50 transition-all shadow-lg hover:shadow-xl"
               >
-                <FiUpload size={20} />
-                <span>Upload</span>
+                <FiDownload size={20} />
+                <span>Download Latest</span>
               </Link>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -112,17 +103,10 @@ export default async function TTRAUNZLandingPage() {
           // No Data State
           <div className="bg-white rounded-xl shadow-lg p-12 text-center">
             <div className="text-6xl mb-6">🏇</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">No Ratings Data Yet</h2>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
-              Upload your first AU/NZ ratings file to get started with comprehensive race analysis for Australian and New Zealand tracks.
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">No Ratings Data Available</h2>
+            <p className="text-gray-600 max-w-md mx-auto">
+              No AU/NZ ratings data is currently available. Please check back later for comprehensive race analysis for Australian and New Zealand tracks.
             </p>
-            <Link
-              href="/ttr-au-nz-ratings/upload"
-              className="inline-flex items-center gap-2 bg-amber-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-amber-700 transition-all shadow-lg hover:shadow-xl text-lg"
-            >
-              <FiUpload size={24} />
-              <span>Upload Your First File</span>
-            </Link>
           </div>
         ) : (
           <>
@@ -139,7 +123,14 @@ export default async function TTRAUNZLandingPage() {
                   Latest Date
                 </div>
                 <div className="text-2xl font-bold text-green-600">
-                  {latestDate ? format(parseISO(latestDate), 'MMM d, yyyy') : 'N/A'}
+                  {latestDate ? (() => {
+                    try {
+                      return format(parseISO(latestDate), 'MMM d, yyyy');
+                    } catch (error) {
+                      console.error('Error formatting latest date:', error);
+                      return latestDate;
+                    }
+                  })() : 'N/A'}
                 </div>
               </div>
               <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-blue-600">
@@ -158,9 +149,16 @@ export default async function TTRAUNZLandingPage() {
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Available Race Dates</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {availableDates.map((dateInfo) => {
-                  const dateObj = parseISO(dateInfo.date);
-                  const formattedDate = format(dateObj, 'EEEE, MMMM d, yyyy');
-                  const shortDate = format(dateObj, 'MMM d');
+                  let formattedDate = dateInfo.date;
+                  let shortDate = dateInfo.date;
+                  
+                  try {
+                    const dateObj = parseISO(dateInfo.date);
+                    formattedDate = format(dateObj, 'EEEE, MMMM d, yyyy');
+                    shortDate = format(dateObj, 'MMM d');
+                  } catch (error) {
+                    console.error('Error formatting date:', dateInfo.date, error);
+                  }
 
                   return (
                     <Link
