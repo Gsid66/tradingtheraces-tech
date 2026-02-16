@@ -6,10 +6,7 @@ import UpcomingRacesWrapper from '@/components/UpcomingRacesWrapper'
 export default function Home() {
   return (
     <div className="max-w-7xl mx-auto px-4">
-      {/* Navigation Cards */}
-      <NavigationCards />
-
-      {/* Trading Desk Login Banner */}
+      {/* Trading Desk Login Banner - Scrolling Marquee */}
       <div className="mt-8 mb-8">
         <div className="bg-gradient-to-r from-purple-700 to-purple-600 rounded-lg shadow-lg border-2 border-purple-400 overflow-hidden">
           <div className="py-4 px-6">
@@ -22,19 +19,19 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Navigation Cards */}
+      <NavigationCards />
+
       {/* Main Page Image */}
-      {/* Note: ttr-mainpage.png currently uses ttr-logo.png as placeholder */}
       <div className="mt-8 mb-8">
-        <div className="relative w-full rounded-lg overflow-hidden">
-          <Image
-            src="/images/ttr-mainpage.png"
-            alt="Trading the Races"
-            width={1400}
-            height={600}
-            className="w-full h-auto"
-            priority
-          />
-        </div>
+        <Image
+          src="/images/ttr-mainpage.png"
+          alt="Trading the Races"
+          width={1400}
+          height={400}
+          className="w-full h-auto rounded-lg"
+          priority
+        />
       </div>
 
       {/* Upcoming Races */}
