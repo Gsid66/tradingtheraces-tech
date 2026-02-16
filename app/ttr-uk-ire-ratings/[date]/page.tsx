@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { FiArrowLeft } from 'react-icons/fi';
 import { Client } from 'pg';
 import { format, parseISO, isValid } from 'date-fns';
 
@@ -91,18 +93,26 @@ function groupRatings(ratings: TTRRatingData[]): RaceGroup[] {
 }
 
 // Helper functions for safe number formatting
-function formatPrice(price: number | null | undefined): string {
-  if (typeof price !== 'number' || isNaN(price)) {
+function formatPrice(price: number | string | null | undefined): string {
+  if (price === null || price === undefined || price === '') {
     return '-';
   }
-  return price.toFixed(2);
+  const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+  if (typeof numPrice !== 'number' || isNaN(numPrice)) {
+    return '-';
+  }
+  return numPrice.toFixed(2);
 }
 
-function formatRating(rating: number | null | undefined): string {
-  if (typeof rating !== 'number' || isNaN(rating)) {
+function formatRating(rating: number | string | null | undefined): string {
+  if (rating === null || rating === undefined || rating === '') {
     return '-';
   }
-  return rating.toFixed(2);
+  const numRating = typeof rating === 'string' ? parseFloat(rating) : rating;
+  if (typeof numRating !== 'number' || isNaN(numRating)) {
+    return '-';
+  }
+  return numRating.toFixed(2);
 }
 
 export default async function TTRRatingsPage({ params }: PageProps) {
@@ -138,6 +148,15 @@ export default async function TTRRatingsPage({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
+        {/* Back Button */}
+        <Link
+          href="/ttr-uk-ire-ratings"
+          className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-800 transition-colors mb-4"
+        >
+          <FiArrowLeft size={20} />
+          <span>Back to UK/IRE Ratings</span>
+        </Link>
+
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
