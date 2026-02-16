@@ -13,12 +13,15 @@ interface RaceDate {
 
 /**
  * Safely format a date string with error handling
+ * @param dateString - The date string to format (e.g., "2026-02-15")
+ * @param formatString - The format string to use (e.g., "MMM d, yyyy")
+ * @returns Formatted date string, or the original string if parsing fails
  */
 function formatDateSafely(dateString: string, formatString: string): string {
   try {
     return format(parseISO(dateString), formatString);
   } catch (error) {
-    console.error('Error formatting date:', dateString, error);
+    console.error('[TTR AU/NZ Ratings] Error formatting date:', dateString, error);
     return dateString;
   }
 }
