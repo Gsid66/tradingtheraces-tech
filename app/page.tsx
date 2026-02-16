@@ -8,7 +8,7 @@ export default function Home() {
     <div className="max-w-7xl mx-auto px-4">
       {/* Trading Desk Login Banner - Scrolling Marquee */}
       <div className="mt-8 mb-8">
-        <div style={{ background: 'linear-gradient(135deg, #1a0033 0%, #000000 100%)' }} className="rounded-lg shadow-lg border-2 border-purple-400 overflow-hidden">
+        <div style={{ background: 'linear-gradient(135deg, #1a0033 0%, #000000 100%)' }} className="rounded-lg shadow-lg overflow-hidden">
           <div className="py-4 px-6">
             <div className="animate-marquee whitespace-nowrap">
               <span className="text-white text-xl font-bold">
