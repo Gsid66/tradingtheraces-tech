@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { FiArrowLeft } from 'react-icons/fi';
+import { format, parseISO, isValid } from 'date-fns';
 
 interface PageProps {
   params: Promise<{ date: string }>;
@@ -26,6 +27,12 @@ interface RaceData {
 
 export default async function TTRAUNZRatingsPage({ params }: PageProps) {
   const { date } = await params;
+  
+  // Parse and format the date
+  const parsedDate = parseISO(date);
+  const formattedDate = isValid(parsedDate) 
+    ? format(parsedDate, 'EEEE, MMMM d, yyyy')
+    : 'Saturday, February 15, 2026';
 
   const races: RaceData[] = [
     {
@@ -142,7 +149,7 @@ export default async function TTRAUNZRatingsPage({ params }: PageProps) {
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
               <h1 className="text-3xl sm:text-4xl font-bold mb-2">TTR AU/NZ Ratings</h1>
-              <p className="text-amber-200 text-lg">Saturday, February 15, 2026 • Australian Racing</p>
+              <p className="text-amber-200 text-lg">{formattedDate} • Australian Racing</p>
               <p className="text-amber-300 text-sm mt-1">Australia & New Zealand • 8 Races</p>
             </div>
           </div>
