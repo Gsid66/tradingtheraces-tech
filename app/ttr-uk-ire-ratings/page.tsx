@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { FiArrowRight, FiDownload } from 'react-icons/fi';
 import { Client } from 'pg';
 import { format, parseISO } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 300;
@@ -25,15 +24,6 @@ function formatDateSafely(dateString: string, formatString: string): string {
     console.error('[TTR UK/IRE Ratings] Error formatting date:', dateString, error);
     return dateString;
   }
-}
-
-/**
- * Get the current date in London timezone as YYYY-MM-DD string
- * @returns Today's date in London timezone formatted as YYYY-MM-DD
- */
-function getTodayLondon(): string {
-  const londonDate = toZonedTime(new Date(), 'Europe/London');
-  return format(londonDate, 'yyyy-MM-dd');
 }
 
 async function getLatestRaceDate(): Promise<string | null> {
@@ -210,7 +200,7 @@ export default async function TTRUKIRELandingPage() {
                           <div className="flex items-center gap-3">
                             <div className="text-3xl flex-shrink-0">🏇</div>
                             <div className="text-white text-sm">
-                              <span className="font-bold">View Ratings:</span> Comprehensive ratings for all tracks
+                              <span className="font-bold">View Ratings:</span> All races and horses for this date
                             </div>
                           </div>
                         </div>
