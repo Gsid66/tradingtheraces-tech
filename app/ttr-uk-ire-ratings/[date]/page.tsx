@@ -151,7 +151,7 @@ export default async function TTRRatingsPage({ params }: PageProps) {
         {/* Back Button */}
         <Link
           href="/ttr-uk-ire-ratings"
-          className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-800 transition-colors mb-4"
+          className="inline-flex items-center gap-2 text-red-600 hover:text-blue-600 transition-colors mb-4"
         >
           <FiArrowLeft size={20} />
           <span>Back to UK/IRE Ratings</span>
@@ -169,15 +169,15 @@ export default async function TTRRatingsPage({ params }: PageProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-sm text-gray-600 mb-1">Total Races</div>
-            <div className="text-3xl font-bold text-purple-600">{totalRaces}</div>
+            <div className="text-3xl font-bold text-red-600">{totalRaces}</div>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-sm text-gray-600 mb-1">Total Horses</div>
-            <div className="text-3xl font-bold text-purple-600">{totalHorses}</div>
+            <div className="text-3xl font-bold text-blue-600">{totalHorses}</div>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-sm text-gray-600 mb-1">Average Rating</div>
-            <div className="text-3xl font-bold text-purple-600">
+            <div className="text-3xl font-bold text-red-600">
               {avgRating > 0 ? avgRating.toFixed(2) : 'N/A'}
             </div>
           </div>
