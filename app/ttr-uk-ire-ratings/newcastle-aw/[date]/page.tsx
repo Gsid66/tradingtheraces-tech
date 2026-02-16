@@ -20,7 +20,6 @@ interface RaceData {
     price: string;
     label: string;
   }>;
-  analysis: string;
 }
 
 export default async function NewcastleAWPage({ params }: PageProps) {
@@ -36,7 +35,6 @@ export default async function NewcastleAWPage({ params }: PageProps) {
         { name: 'Digital Dawn', rating: 138, price: '$3.60', label: 'Form Horse' },
         { name: 'Tech Runner', rating: 135, price: '$4.20', label: 'Track Winner' },
       ],
-      analysis: `Masham Moor heads the TTR ratings at 142 in this competitive opener. The all-weather surface should suit perfectly, and recent runs suggest the horse is primed for a big effort. Digital Dawn brings solid recent form and handles the synthetic track well. This distance on the Tapeta requires both speed and stamina. Expect a strong pace from the outset, with the principals coming from midfield. Masham Moor's class advantage should prove decisive in the straight.`,
     },
     {
       number: 2,
@@ -47,7 +45,6 @@ export default async function NewcastleAWPage({ params }: PageProps) {
         { name: 'Extended Play', rating: 129, price: '$3.50', label: 'Stayer' },
         { name: 'Marathon Mood', rating: 126, price: '$4.80', label: 'Each-Way Value' },
       ],
-      analysis: `Billy Bathgate is the clear TTR selection with a rating of 134 in this extended trip handicap. The horse has shown a liking for marathon distances and the all-weather surface. Extended Play represents the main danger with proven stamina credentials. This race will be won by the horse that settles best and has energy reserves for the long straight. Tactical awareness from the jockey will be crucial. Billy Bathgate's experience at this trip gives him a clear edge.`,
     },
     {
       number: 3,
@@ -58,7 +55,6 @@ export default async function NewcastleAWPage({ params }: PageProps) {
         { name: 'Royal Entry', rating: 120, price: '$3.80', label: 'Consistent' },
         { name: 'Class Act', rating: 117, price: '$4.50', label: 'Improver' },
       ],
-      analysis: `Duchess dominates the TTR ratings at 124 in the first division of this split handicap. Her all-weather form figures are excellent, and she's proven at this track and trip. Royal Entry has been knocking on the door and represents a solid each-way alternative. The mid-distance on the all-weather often produces tight finishes. Positioning will be key entering the home turn. Duchess should have too much speed for these rivals once balanced in the straight.`,
     },
     {
       number: 4,
@@ -69,7 +65,6 @@ export default async function NewcastleAWPage({ params }: PageProps) {
         { name: 'Split Decision', rating: 112, price: '$3.90', label: 'Well In' },
         { name: 'Double Dash', rating: 109, price: '$5.20', label: 'Longshot' },
       ],
-      analysis: `Havachoc gets the nod from TTR with a rating of 115 in the second division. The draw looks favorable, and recent form suggests readiness to strike. Split Decision cannot be underestimated given his favorable weight allocation. This appears more open than the first division, with several lightly-raced types capable of improvement. The pace should be solid throughout. Havachoc's tactical speed from the gates could prove the difference in what may be a tactical affair.`,
     },
     {
       number: 5,
@@ -80,7 +75,6 @@ export default async function NewcastleAWPage({ params }: PageProps) {
         { name: 'Dance Floor', rating: 122, price: '$3.20', label: 'Speedster' },
         { name: 'Quick Step', rating: 119, price: '$4.60', label: 'Fresh' },
       ],
-      analysis: `Can Boogy is strongly fancied by TTR with a rating of 126 in this classified stakes. The horse has excelled over this trip on the all-weather and arrives in peak form. Dance Floor brings speed to the equation and could set the pace. The middle-distance sprint requires balanced pace judgment - go too fast early and fade, too slow and you're swamped late. Can Boogy's experience in these conditions should see him time his run to perfection. Expect him to be traveling best entering the final furlong.`,
     },
     {
       number: 6,
@@ -91,7 +85,6 @@ export default async function NewcastleAWPage({ params }: PageProps) {
         { name: 'Sprint Star', rating: 113, price: '$3.80', label: 'Gate Speed' },
         { name: 'Fast Track', rating: 110, price: '$5.00', label: 'Outsider' },
       ],
-      analysis: `Tasever leads the TTR ratings at 116 in this seven-furlong handicap. The trip suits perfectly, and the all-weather surface plays to strengths. Sprint Star has early pace and could look to control from the front. This distance often produces thrilling finishes at Newcastle, with those covering ground from off the pace often successful. The key is to have a clear run in the straight. Tasever's class and finishing kick should prevail in a driving finish.`,
     },
     {
       number: 7,
@@ -102,7 +95,6 @@ export default async function NewcastleAWPage({ params }: PageProps) {
         { name: 'Novice King', rating: 141, price: '$3.40', label: 'Unexposed' },
         { name: 'Learning Fast', rating: 137, price: '$4.80', label: 'Potential Star' },
       ],
-      analysis: `L L Koulsty is the standout TTR pick with an impressive rating of 147 in this restricted novice event. The form shown to date suggests significant untapped potential. Novice King also looks above average and could benefit from this experience. Restricted novice stakes often reveal future stars, and this looks a strong renewal. The all-weather surface helps inexperienced horses find their rhythm. L L Koulsty has the class to dominate and should quicken clear when asked in the final two furlongs.`,
     },
     {
       number: 8,
@@ -113,7 +105,6 @@ export default async function NewcastleAWPage({ params }: PageProps) {
         { name: 'Lightning Bolt', rating: 89, price: '$6.20', label: 'Speed Merchant' },
         { name: 'Flash Point', rating: 86, price: '$7.50', label: 'Consistent' },
       ],
-      analysis: `Em Jay Kay is marginally preferred by TTR with a rating of 92 in this competitive sprint finale. The five-furlong dash requires explosive speed from the stalls. Lightning Bolt is aptly named and will aim to lead throughout if possible. Sprint handicaps over this minimum trip are notoriously difficult to predict, with draw and early positioning crucial. Any interference early spells disaster. Em Jay Kay has shown the necessary gate speed and if he jumps cleanly, should have enough pace to hold off late challengers. Expect a thrilling finish to conclude the card.`,
     },
   ];
 
@@ -213,19 +204,6 @@ export default async function NewcastleAWPage({ params }: PageProps) {
                         </div>
                       </div>
                     ))}
-                  </div>
-                </div>
-
-                {/* Sherlock's Analysis */}
-                <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white">
-                  <div className="flex items-start gap-4">
-                    <div className="text-5xl flex-shrink-0">🔍</div>
-                    <div>
-                      <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                        🔍 Sherlock&apos;s Analysis
-                      </h3>
-                      <p className="text-blue-100 leading-relaxed">{race.analysis}</p>
-                    </div>
                   </div>
                 </div>
               </div>
