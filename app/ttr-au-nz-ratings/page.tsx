@@ -219,7 +219,7 @@ export default async function TTRAUNZLandingPage() {
                   </h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
                     TTR AU/NZ Ratings provide comprehensive racing analysis for Australian and New Zealand tracks. 
-                    Upload CSV files containing race data to access detailed ratings organized by track and race number.
+                    Access detailed ratings organized by track and race number for past race dates.
                   </p>
                 </div>
               </div>
