@@ -11,6 +11,18 @@ interface RaceDate {
   count: number;
 }
 
+/**
+ * Safely format a date string with error handling
+ */
+function formatDateSafely(dateString: string, formatString: string): string {
+  try {
+    return format(parseISO(dateString), formatString);
+  } catch (error) {
+    console.error('Error formatting date:', dateString, error);
+    return dateString;
+  }
+}
+
 async function getLatestRaceDate(): Promise<string | null> {
   if (!process.env.DATABASE_URL) {
     return null;
@@ -123,14 +135,7 @@ export default async function TTRAUNZLandingPage() {
                   Latest Date
                 </div>
                 <div className="text-2xl font-bold text-green-600">
-                  {latestDate ? (() => {
-                    try {
-                      return format(parseISO(latestDate), 'MMM d, yyyy');
-                    } catch (error) {
-                      console.error('Error formatting latest date:', error);
-                      return latestDate;
-                    }
-                  })() : 'N/A'}
+                  {latestDate ? formatDateSafely(latestDate, 'MMM d, yyyy') : 'N/A'}
                 </div>
               </div>
               <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-blue-600">
@@ -149,16 +154,8 @@ export default async function TTRAUNZLandingPage() {
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Available Race Dates</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {availableDates.map((dateInfo) => {
-                  let formattedDate = dateInfo.date;
-                  let shortDate = dateInfo.date;
-                  
-                  try {
-                    const dateObj = parseISO(dateInfo.date);
-                    formattedDate = format(dateObj, 'EEEE, MMMM d, yyyy');
-                    shortDate = format(dateObj, 'MMM d');
-                  } catch (error) {
-                    console.error('Error formatting date:', dateInfo.date, error);
-                  }
+                  const formattedDate = formatDateSafely(dateInfo.date, 'EEEE, MMMM d, yyyy');
+                  const shortDate = formatDateSafely(dateInfo.date, 'MMM d');
 
                   return (
                     <Link
