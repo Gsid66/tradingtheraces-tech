@@ -41,7 +41,6 @@ async function getLatestRaceDate(): Promise<string | null> {
     const query = `
       SELECT race_date::text as date
       FROM race_cards_ratings
-      WHERE race_date IS NOT NULL
       ORDER BY race_date DESC
       LIMIT 1
     `;

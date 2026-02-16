@@ -252,7 +252,7 @@ export default async function TTRAUNZRatingsPage({ params }: PageProps) {
                                 {horse.trainer_name || '-'}
                               </td>
                               <td className="px-4 py-3 text-sm text-right font-semibold text-amber-600">
-                                {horse.rating !== null ? horse.rating.toFixed(2) : '-'}
+                                {horse.rating !== null ? horse.rating.toFixed(0) : '-'}
                               </td>
                               <td className="px-4 py-3 text-sm text-right font-semibold text-gray-900">
                                 {horse.price !== null ? horse.price.toFixed(2) : '-'}
