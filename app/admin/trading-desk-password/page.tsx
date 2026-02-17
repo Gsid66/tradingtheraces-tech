@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function TradingDeskPasswordPage() {
@@ -9,7 +8,6 @@ export default function TradingDeskPasswordPage() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const generatePassword = () => {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
@@ -165,10 +163,10 @@ export default function TradingDeskPasswordPage() {
             <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <h3 className="font-semibold text-blue-900 mb-2">📝 Instructions:</h3>
               <ol className="list-decimal list-inside space-y-1 text-sm text-blue-800">
-                <li>Click "Generate" to create a secure random password</li>
+                <li>Click &quot;Generate&quot; to create a secure random password</li>
                 <li>Or type your own password (minimum 6 characters)</li>
-                <li>Click "Copy to Clipboard" to copy the password</li>
-                <li>Click "Update Password" to save the new user password</li>
+                <li>Click &quot;Copy to Clipboard&quot; to copy the password</li>
+                <li>Click &quot;Update Password&quot; to save the new user password</li>
                 <li>Share the password securely with authorized users</li>
               </ol>
             </div>

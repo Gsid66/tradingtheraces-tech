@@ -1,22 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-export default function AdminDashboardPage() {
-  const [username, setUsername] = useState('');
-  const router = useRouter();
+function getUsername() {
+  if (typeof document === 'undefined') return '';
+  const cookies = document.cookie.split(';');
+  const usernameCookie = cookies.find(c => c.trim().startsWith('admin_username='));
+  if (usernameCookie) {
+    return usernameCookie.split('=')[1];
+  }
+  return '';
+}
 
-  useEffect(() => {
-    // Get username from cookie (if available)
-    const cookies = document.cookie.split(';');
-    const usernameCookie = cookies.find(c => c.trim().startsWith('admin_username='));
-    if (usernameCookie) {
-      const cookieUsername = usernameCookie.split('=')[1];
-      setUsername(cookieUsername);
-    }
-  }, []);
+export default function AdminDashboardPage() {
+  const [username] = useState(getUsername);
+  const router = useRouter();
 
   const handleLogout = async () => {
     await fetch('/api/admin/logout', { method: 'POST' });
