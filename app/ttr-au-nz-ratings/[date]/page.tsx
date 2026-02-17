@@ -93,18 +93,26 @@ function groupRatings(ratings: TTRRatingData[]): RaceGroup[] {
 }
 
 // Helper functions for safe number formatting
-function formatPrice(price: number | null | undefined): string {
-  if (typeof price !== 'number' || isNaN(price)) {
+function formatPrice(price: number | string | null | undefined): string {
+  if (price === null || price === undefined || price === '') {
     return '-';
   }
-  return price.toFixed(2);
+  const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+  if (typeof numPrice !== 'number' || isNaN(numPrice)) {
+    return '-';
+  }
+  return numPrice.toFixed(2);
 }
 
-function formatRating(rating: number | null | undefined): string {
-  if (typeof rating !== 'number' || isNaN(rating)) {
+function formatRating(rating: number | string | null | undefined): string {
+  if (rating === null || rating === undefined || rating === '') {
     return '-';
   }
-  return rating.toFixed(0);
+  const numRating = typeof rating === 'string' ? parseFloat(rating) : rating;
+  if (typeof numRating !== 'number' || isNaN(numRating)) {
+    return '-';
+  }
+  return numRating.toFixed(0);
 }
 
 export default async function TTRAUNZRatingsPage({ params }: PageProps) {
