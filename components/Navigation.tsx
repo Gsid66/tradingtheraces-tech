@@ -25,6 +25,8 @@ export default function Navigation() {
     { href: '/ratings-odds-comparison', label: 'Ratings vs Odds' },
     { href: '/ttr-uk-ire-ratings/', label: 'TTR UK Ratings' },
     { href: '/calculator', label: 'Calculator' },
+    // TODO: Restrict admin link visibility to authenticated admins only
+    { href: '/admin/data-management', label: 'Admin' },
   ];
 
   const isActive = (href: string) => {
