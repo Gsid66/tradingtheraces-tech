@@ -189,7 +189,7 @@ export default async function TTRAUNZRatingsPage({ params }: PageProps) {
   const totalHorses = ratings.length;
   const ratingsWithValue = ratings.filter(r => r.rating !== null);
   const avgRating = ratingsWithValue.length > 0
-    ? ratingsWithValue.reduce((sum, r) => sum + (r.rating || 0), 0) / ratingsWithValue.length
+    ? ratingsWithValue.reduce((sum, r) => sum + (typeof r.rating === 'string' ? (parseFloat(r.rating) || 0) : r.rating || 0), 0) / ratingsWithValue.length
     : 0;
 
   return (
