@@ -51,14 +51,6 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 // 24 hours in seconds
     });
 
-    // Store username in a separate cookie for display purposes
-    response.cookies.set('admin_username', username, {
-      httpOnly: false, // Allow client-side access for display
-      secure: isProduction,
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 // 24 hours in seconds
-    });
-
     return response;
   } catch (error) {
     console.error('Error in admin auth:', error);

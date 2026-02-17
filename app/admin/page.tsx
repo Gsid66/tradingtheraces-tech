@@ -1,21 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-function getUsername() {
-  if (typeof document === 'undefined') return '';
-  const cookies = document.cookie.split(';');
-  const usernameCookie = cookies.find(c => c.trim().startsWith('admin_username='));
-  if (usernameCookie) {
-    return usernameCookie.split('=')[1];
-  }
-  return '';
-}
-
 export default function AdminDashboardPage() {
-  const [username] = useState(getUsername);
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -33,7 +21,7 @@ export default function AdminDashboardPage() {
             <div>
               <h1 className="text-3xl font-bold">Admin Dashboard</h1>
               <p className="text-slate-300 mt-2">
-                {username ? `Logged in as: ${username}` : 'Administrator'}
+                Administrator
               </p>
             </div>
             <button
