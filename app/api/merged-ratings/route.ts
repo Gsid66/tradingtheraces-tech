@@ -1,4 +1,4 @@
-import MergedRatingsClient from './MergedRatingsClient';
+import { NextResponse } from 'next/server';
 import { query } from '@/lib/database/client';
 import { getPuntingFormClient, type PFScratchingRaw } from '@/lib/integrations/punting-form/client';
 import { getTTRRatingsClient, type TTRRating } from '@/lib/integrations/ttr-ratings';
@@ -34,7 +34,7 @@ interface RVORating {
   saddle_cloth: number;
 }
 
-async function fetchMergedRatings(date: string): Promise<MergedRatingsData[]> {
+async function fetchMergedRatingsForDate(date: string): Promise<MergedRatingsData[]> {
   try {
     const pfClient = getPuntingFormClient();
     const ttrClient = getTTRRatingsClient();
@@ -193,10 +193,29 @@ async function fetchMergedRatings(date: string): Promise<MergedRatingsData[]> {
   }
 }
 
-export default async function MergedRatingsPage() {
-  // Calculate Sydney date server-side
-  const sydneyDate = formatInTimeZone(new Date(), 'Australia/Sydney', 'yyyy-MM-dd');
-  const data = await fetchMergedRatings(sydneyDate);
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const dateParam = searchParams.get('date');
 
-  return <MergedRatingsClient initialDate={sydneyDate} initialData={data} />;
+    // Default to Sydney timezone if no date provided
+    const date = dateParam || formatInTimeZone(new Date(), 'Australia/Sydney', 'yyyy-MM-dd');
+
+    console.log(`📅 Fetching merged ratings for date: ${date}`);
+
+    const data = await fetchMergedRatingsForDate(date);
+
+    return NextResponse.json({
+      success: true,
+      date,
+      count: data.length,
+      data
+    });
+  } catch (error: any) {
+    console.error('💥 Error in merged ratings API:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch merged ratings', message: error.message },
+      { status: 500 }
+    );
+  }
 }
