@@ -265,7 +265,7 @@ export default function MergedRatingsTable({ data }: Props) {
                     )}
                   </td>
                   <td className="px-3 py-2 text-center"> 
-                    {row.rvoPrice ? (
+                    {row.rvoPrice !== null ? (
                       <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${
                         row.isScratched ? 'bg-gray-300 text-gray-500' : 'bg-blue-600 text-white'
                       }`}> 
@@ -287,7 +287,7 @@ export default function MergedRatingsTable({ data }: Props) {
                     )}
                   </td>
                   <td className="px-3 py-2 text-center"> 
-                    {row.ttrPrice ? (
+                    {row.ttrPrice !== null ? (
                       <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${
                         row.isScratched ? 'bg-gray-300 text-gray-500' : 'bg-green-600 text-white'
                       }`}> 
@@ -298,7 +298,7 @@ export default function MergedRatingsTable({ data }: Props) {
                     )}
                   </td>
                   <td className="px-3 py-2 text-center"> 
-                    {row.tabWin ? (
+                    {row.tabWin !== null ? (
                       <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${
                         row.isScratched ? 'bg-gray-300 text-gray-500' : 'bg-orange-600 text-white'
                       }`}> 
@@ -309,7 +309,7 @@ export default function MergedRatingsTable({ data }: Props) {
                     )}
                   </td>
                   <td className="px-3 py-2 text-center"> 
-                    {row.tabPlace ? (
+                    {row.tabPlace !== null ? (
                       <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${
                         row.isScratched ? 'bg-gray-300 text-gray-500' : 'bg-orange-600 text-white'
                       }`}> 
