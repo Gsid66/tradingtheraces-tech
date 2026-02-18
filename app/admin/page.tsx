@@ -93,6 +93,21 @@ export default function AdminDashboardPage() {
             </div>
           </Link>
 
+          {/* Merged Ratings Password Manager Card */}
+          <Link
+            href="/admin/merged-ratings-password"
+            className="block bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-indigo-600"
+          >
+            <div className="text-4xl mb-4">📊</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">Merged Ratings Password</h3>
+            <p className="text-gray-600 mb-4">
+              Manage access to merged ratings analysis
+            </p>
+            <div className="text-indigo-600 font-medium text-sm">
+              Manage Password →
+            </div>
+          </Link>
+
           {/* UK Project Card (Placeholder) */}
           <div className="bg-white rounded-lg shadow p-6 border-l-4 border-gray-300 opacity-60">
             <div className="text-4xl mb-4">🇬🇧</div>
