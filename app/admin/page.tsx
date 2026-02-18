@@ -78,6 +78,21 @@ export default function AdminDashboardPage() {
             </div>
           </Link>
 
+          {/* Admin Credentials Card */}
+          <Link
+            href="/admin/credentials"
+            className="block bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-green-600"
+          >
+            <div className="text-4xl mb-4">🔑</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">Admin Credentials</h3>
+            <p className="text-gray-600 mb-4">
+              Manage admin username and password
+            </p>
+            <div className="text-green-600 font-medium text-sm">
+              Manage Credentials →
+            </div>
+          </Link>
+
           {/* UK Project Card (Placeholder) */}
           <div className="bg-white rounded-lg shadow p-6 border-l-4 border-gray-300 opacity-60">
             <div className="text-4xl mb-4">🇬🇧</div>
