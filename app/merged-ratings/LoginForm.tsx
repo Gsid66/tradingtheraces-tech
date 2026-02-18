@@ -28,7 +28,7 @@ export default function LoginForm() {
       } else {
         setError(data.message || 'Invalid password');
       }
-    } catch (error) {
+    } catch {
       setError('Connection error. Please try again.');
     } finally {
       setLoading(false);

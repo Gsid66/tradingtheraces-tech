@@ -1,8 +1,9 @@
 import MergedRatingsTable from './MergedRatingsTable';
 import { query } from '@/lib/database/client';
-import { getPuntingFormClient } from '@/lib/integrations/punting-form/client';
-import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
-import { getPostgresAPIClient } from '@/lib/integrations/postgres-api/client';
+import { getPuntingFormClient, type PFScratchingRaw } from '@/lib/integrations/punting-form/client';
+import { getTTRRatingsClient, type TTRRating } from '@/lib/integrations/ttr-ratings';
+import { getPostgresAPIClient, type TabRace, type TabRunner } from '@/lib/integrations/postgres-api/client';
+import { type PFMeeting } from '@/lib/integrations/punting-form/types';
 import { format } from 'date-fns';
 
 interface MergedRatingsData {
@@ -25,6 +26,13 @@ interface MergedRatingsData {
   scratchingTime?: string;
 }
 
+interface RVORating {
+  horse_name: string;
+  rating: number;
+  price: number;
+  saddle_cloth: number;
+}
+
 async function fetchMergedRatings(): Promise<MergedRatingsData[]> {
   try {
     const today = format(new Date(), 'yyyy-MM-dd');
@@ -37,8 +45,8 @@ async function fetchMergedRatings(): Promise<MergedRatingsData[]> {
     const meetings = meetingsResponse.payLoad || [];
 
     // Filter to AU/NZ only
-    const auNzMeetings = meetings.filter((m: any) => 
-      ['AUS', 'NZ'].includes(m.country || m.track?.country)
+    const auNzMeetings = meetings.filter((m: PFMeeting) => 
+      ['AUS', 'NZ'].includes(m.track.country)
     );
 
     console.log(`Found ${auNzMeetings.length} AU/NZ meetings for ${today}`);
@@ -56,8 +64,8 @@ async function fetchMergedRatings(): Promise<MergedRatingsData[]> {
     // Process each meeting
     for (const meeting of auNzMeetings) {
       const meetingId = meeting.meetingId;
-      const trackName = meeting.name || meeting.track?.name;
-      const country = meeting.country || meeting.track?.country;
+      const trackName = meeting.track.name;
+      const country = meeting.track.country;
 
       if (!trackName) continue;
 
@@ -67,7 +75,7 @@ async function fetchMergedRatings(): Promise<MergedRatingsData[]> {
         const races = racesResponse.payLoad || [];
 
         // Get TTR ratings for this meeting
-        let ttrRatings: any[] = [];
+        let ttrRatings: TTRRating[] = [];
         try {
           const ttrResponse = await ttrClient.getRatingsForMeeting(meetingId);
           ttrRatings = ttrResponse.data || [];
@@ -76,10 +84,10 @@ async function fetchMergedRatings(): Promise<MergedRatingsData[]> {
         }
 
         // Get TAB odds (try to fetch)
-        let tabRaces: any[] = [];
+        let tabRaces: TabRace[] = [];
         try {
           const location = country === 'NZ' ? 'NZ' : 'AU';
-          const tabResponse = await pgClient.getRacesByDate(today, location as any);
+          const tabResponse = await pgClient.getRacesByDate(today, location);
           tabRaces = tabResponse.data || [];
         } catch (err) {
           console.warn(`Could not fetch TAB odds for ${trackName}:`, err);
@@ -92,20 +100,20 @@ async function fetchMergedRatings(): Promise<MergedRatingsData[]> {
           const runners = race.runners || [];
 
           // Get RVO ratings from database
-          let rvoRatings: any[] = [];
+          let rvoRatings: RVORating[] = [];
           try {
             const rvoResult = await query(
               `SELECT * FROM ttr_au_nz_ratings 
                WHERE race_date = $1 AND track ILIKE $2 AND race_number = $3`,
               [today, `%${trackName}%`, raceNumber]
             );
-            rvoRatings = rvoResult.rows || [];
+            rvoRatings = rvoResult.rows as RVORating[] || [];
           } catch (err) {
             console.warn(`Could not fetch RVO ratings for ${trackName} R${raceNumber}:`, err);
           }
 
           // Find matching TAB race
-          const tabRace = tabRaces.find((tr: any) => 
+          const tabRace = tabRaces.find((tr: TabRace) => 
             tr.meeting_name?.toLowerCase().includes(trackName.toLowerCase()) &&
             tr.race_number === raceNumber
           );
@@ -118,27 +126,28 @@ async function fetchMergedRatings(): Promise<MergedRatingsData[]> {
             if (!horseName) continue;
 
             // Find scratching info
-            const scratching = scratchings.find((s: any) => 
-              s.formId === runner.formId ||
-              (s.horseName?.toLowerCase() === horseName.toLowerCase() && 
-               s.raceNumber === raceNumber)
+            const scratching = scratchings.find((s: PFScratchingRaw) => 
+              s.runnerId === String(runner.runnerId) ||
+              (s.track?.toLowerCase() === trackName.toLowerCase() && 
+               s.raceNo === raceNumber &&
+               s.tabNo === tabNo)
             );
 
             // Find RVO rating (fuzzy match by horse name)
-            const rvoRating = rvoRatings.find((r: any) => 
+            const rvoRating = rvoRatings.find((r: RVORating) => 
               r.horse_name.toLowerCase().trim() === horseName.toLowerCase().trim() ||
               r.saddle_cloth === tabNo
             );
 
             // Find TTR rating (match by race number and horse name)
-            const ttrRating = ttrRatings.find((t: any) => 
+            const ttrRating = ttrRatings.find((t: TTRRating) => 
               t.race_number === raceNumber &&
               (t.horse_name.toLowerCase().trim() === horseName.toLowerCase().trim() ||
                t.tab_number === tabNo)
             );
 
             // Find TAB odds
-            const tabRunner = tabRace?.runners?.find((tr: any) => 
+            const tabRunner = tabRace?.runners?.find((tr: TabRunner) => 
               tr.horse_name?.toLowerCase().trim() === horseName.toLowerCase().trim() ||
               tr.runner_number === tabNo
             );

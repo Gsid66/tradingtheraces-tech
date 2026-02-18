@@ -30,6 +30,20 @@ interface Props {
   data: MergedRatingsData[];
 }
 
+// Move SortIcon outside the component
+function SortIcon({ 
+  field, 
+  sortField, 
+  sortDirection 
+}: { 
+  field: SortField; 
+  sortField: SortField; 
+  sortDirection: SortDirection;
+}) {
+  if (sortField !== field) return <span className="text-gray-400">↕️</span>;
+  return sortDirection === 'asc' ? <span>↑</span> : <span>↓</span>;
+}
+
 export default function MergedRatingsTable({ data }: Props) {
   const [sortField, setSortField] = useState<SortField>('track');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -46,8 +60,8 @@ export default function MergedRatingsTable({ data }: Props) {
 
     // Sort data
     filtered.sort((a, b) => {
-      let aVal = a[sortField];
-      let bVal = b[sortField];
+      const aVal = a[sortField];
+      const bVal = b[sortField];
 
       // Handle null values
       if (aVal === null) return 1;
@@ -120,11 +134,6 @@ export default function MergedRatingsTable({ data }: Props) {
     return false;
   };
 
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return <span className="text-gray-400">↕️</span>;
-    return sortDirection === 'asc' ? <span>↑</span> : <span>↓</span>;
-  };
-
   return (
     <div className="bg-white rounded-lg shadow-lg">
       {/* Controls */}
@@ -163,39 +172,39 @@ export default function MergedRatingsTable({ data }: Props) {
           <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
             <tr>
               <th className="px-3 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-100" onClick={() => handleSort('date')}>
-                Date <SortIcon field="date" />
+                Date <SortIcon field="date" sortField={sortField} sortDirection={sortDirection} />
               </th>
               <th className="px-3 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-100" onClick={() => handleSort('track')}>
-                Track <SortIcon field="track" />
+                Track <SortIcon field="track" sortField={sortField} sortDirection={sortDirection} />
               </th>
               <th className="px-3 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-100" onClick={() => handleSort('raceNumber')}>
-                Race <SortIcon field="raceNumber" />
+                Race <SortIcon field="raceNumber" sortField={sortField} sortDirection={sortDirection} />
               </th>
               <th className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100" onClick={() => handleSort('saddleCloth')}>
-                SC <SortIcon field="saddleCloth" />
+                SC <SortIcon field="saddleCloth" sortField={sortField} sortDirection={sortDirection} />
               </th>
               <th className="px-3 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-100" onClick={() => handleSort('horseName')}>
-                Horse <SortIcon field="horseName" />
+                Horse <SortIcon field="horseName" sortField={sortField} sortDirection={sortDirection} />
               </th>
               <th className="px-3 py-3 text-left font-semibold text-gray-700">Jockey</th>
               <th className="px-3 py-3 text-left font-semibold text-gray-700">Trainer</th>
               <th className="px-3 py-3 text-center font-semibold text-blue-700 bg-blue-50 cursor-pointer hover:bg-blue-100" onClick={() => handleSort('rvoRating')}>
-                RVO Rating <SortIcon field="rvoRating" />
+                RVO Rating <SortIcon field="rvoRating" sortField={sortField} sortDirection={sortDirection} />
               </th>
               <th className="px-3 py-3 text-center font-semibold text-blue-700 bg-blue-50 cursor-pointer hover:bg-blue-100" onClick={() => handleSort('rvoPrice')}>
-                RVO Price <SortIcon field="rvoPrice" />
+                RVO Price <SortIcon field="rvoPrice" sortField={sortField} sortDirection={sortDirection} />
               </th>
               <th className="px-3 py-3 text-center font-semibold text-green-700 bg-green-50 cursor-pointer hover:bg-green-100" onClick={() => handleSort('ttrRating')}>
-                TTR Rating <SortIcon field="ttrRating" />
+                TTR Rating <SortIcon field="ttrRating" sortField={sortField} sortDirection={sortDirection} />
               </th>
               <th className="px-3 py-3 text-center font-semibold text-green-700 bg-green-50 cursor-pointer hover:bg-green-100" onClick={() => handleSort('ttrPrice')}>
-                TTR Price <SortIcon field="ttrPrice" />
+                TTR Price <SortIcon field="ttrPrice" sortField={sortField} sortDirection={sortDirection} />
               </th>
               <th className="px-3 py-3 text-center font-semibold text-orange-700 bg-orange-50 cursor-pointer hover:bg-orange-100" onClick={() => handleSort('tabWin')}>
-                TAB Win <SortIcon field="tabWin" />
+                TAB Win <SortIcon field="tabWin" sortField={sortField} sortDirection={sortDirection} />
               </th>
               <th className="px-3 py-3 text-center font-semibold text-orange-700 bg-orange-50 cursor-pointer hover:bg-orange-100" onClick={() => handleSort('tabPlace')}>
-                TAB Place <SortIcon field="tabPlace" />
+                TAB Place <SortIcon field="tabPlace" sortField={sortField} sortDirection={sortDirection} />
               </th>
               <th className="px-3 py-3 text-center font-semibold text-gray-700">Value</th>
             </tr>
