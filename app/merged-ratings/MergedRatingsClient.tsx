@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import MergedRatingsTable from './MergedRatingsTable';
 import { formatInTimeZone } from 'date-fns-tz';
+import { parse } from 'date-fns';
 
 interface MergedRatingsData {
   date: string;
@@ -33,22 +34,32 @@ export default function MergedRatingsClient({ initialDate, initialData }: Props)
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleDateChange = async (newDate: string) => {
     if (newDate === selectedDate) return;
 
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch(`/api/merged-ratings?date=${newDate}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch data: ${response.statusText}`);
+      }
+
       const result = await response.json();
 
       if (result.success) {
         setData(result.data);
         setSelectedDate(newDate);
       } else {
+        setError(result.error || 'Failed to fetch data');
         console.error('Failed to fetch data:', result.error);
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error fetching merged ratings';
+      setError(errorMessage);
       console.error('Error fetching merged ratings:', error);
     } finally {
       setLoading(false);
@@ -61,7 +72,8 @@ export default function MergedRatingsClient({ initialDate, initialData }: Props)
   };
 
   // Format the selected date for display
-  const formattedDate = new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-AU', {
+  const dateObj = parse(selectedDate, 'yyyy-MM-dd', new Date());
+  const formattedDate = dateObj.toLocaleDateString('en-AU', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -107,6 +119,13 @@ export default function MergedRatingsClient({ initialDate, initialData }: Props)
 
       {/* Main Content */}
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+            <p className="font-medium">Error loading data</p>
+            <p className="text-sm mt-1">{error}</p>
+          </div>
+        )}
+        
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="flex flex-col items-center gap-4">

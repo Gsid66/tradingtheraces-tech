@@ -211,10 +211,11 @@ export async function GET(request: Request) {
       count: data.length,
       data
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('💥 Error in merged ratings API:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to fetch merged ratings', message: error.message },
+      { error: 'Failed to fetch merged ratings', message },
       { status: 500 }
     );
   }
