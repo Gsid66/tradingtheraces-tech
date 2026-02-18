@@ -8,7 +8,7 @@ interface MergedRatingsData {
   track: string;
   raceNumber: number;
   raceName: string;
-  saddleCloth: number;
+  saddleCloth: number | null;
   horseName: string;
   jockey: string;
   trainer: string;
@@ -230,7 +230,7 @@ export default function MergedRatingsTable({ data }: Props) {
                     <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${
                       row.isScratched ? 'bg-gray-300 text-gray-500' : 'bg-purple-600 text-white'
                     }`}> 
-                      {row.saddleCloth}
+                      {row.saddleCloth ?? '-'}
                     </span>
                   </td>
                   <td className="px-3 py-2">

@@ -10,7 +10,7 @@ interface MergedRatingsData {
   track: string;
   raceNumber: number;
   raceName: string;
-  saddleCloth: number;
+  saddleCloth: number | null;
   horseName: string;
   jockey: string;
   trainer: string;

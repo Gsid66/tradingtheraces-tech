@@ -12,7 +12,7 @@ interface MergedRatingsData {
   track: string;
   raceNumber: number;
   raceName: string;
-  saddleCloth: number;
+  saddleCloth: number | null;
   horseName: string;
   jockey: string;
   trainer: string;
@@ -206,7 +206,7 @@ async function fetchMergedRatingsForDate(date: string): Promise<MergedRatingsDat
               track: trackName,
               raceNumber,
               raceName,
-              saddleCloth: tabNo,
+              saddleCloth: tabNo ?? null,
               horseName,
               jockey: runner.jockey?.fullName || '',
               trainer: runner.trainer?.fullName || '',
