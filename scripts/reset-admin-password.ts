@@ -79,7 +79,7 @@ async function resetAdminPassword() {
     console.log('\n⚠️  SECURITY WARNING:');
     console.log('   1. Save these credentials securely');
     console.log('   2. Clear your terminal history:');
-    console.log('      - Linux/Mac: history -c');
+    console.log('      - Linux/macOS: history -c');
     console.log('      - PowerShell: Clear-History');
     console.log('   3. Do not share these credentials over unsecure channels\n');
 

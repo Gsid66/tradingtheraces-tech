@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       username: finalUsername
     });
   } catch (error) {
-    console.error('Error updating credentials:', error);
+    console.error('Error updating credentials');
     return NextResponse.json(
       { success: false, message: 'Failed to update credentials' },
       { status: 500 }

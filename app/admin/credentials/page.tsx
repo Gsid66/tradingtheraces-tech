@@ -56,8 +56,10 @@ export default function AdminCredentialsPage() {
   const generatePassword = () => {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
     let password = '';
+    const array = new Uint32Array(16);
+    window.crypto.getRandomValues(array);
     for (let i = 0; i < 16; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
+      password += chars.charAt(array[i] % chars.length);
     }
     setNewPassword(password);
     setConfirmPassword(password);
@@ -378,7 +380,7 @@ export default function AdminCredentialsPage() {
           <ol className="list-decimal list-inside space-y-1 text-sm text-blue-800">
             <li>First, verify your current credentials in Step 1</li>
             <li>You can update username, password, or both in Step 2</li>
-            <li>Use the &quot;Generate&quot; button to create a strong password</li>
+            <li>Use the &quot;🎲 Generate&quot; button to create a strong password</li>
             <li>Password must be at least 6 characters long</li>
             <li>Make sure to save your new credentials securely</li>
             <li>You will need to log in again with new credentials if changed</li>
