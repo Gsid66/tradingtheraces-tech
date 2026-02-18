@@ -1,100 +1,94 @@
-'use client';
-
-import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname } from 'next/navigation';
-import { FiMenu, FiX } from 'react-icons/fi';
+import { FaDiscord, FaGlobeAsia, FaGlobeEurope, FaCodeBranch, FaChartBar, FaMagic } from 'react-icons/fa';
+import { GiHorseHead } from 'react-icons/gi';
 
-export default function Navigation() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const pathname = usePathname();
-
-  // Generate today's date in Australia/Sydney timezone (memoized)
-  const today = useMemo(() => {
-    return new Date().toLocaleDateString('en-CA', { 
-      timeZone: 'Australia/Sydney' 
-    });
-  }, []);
-
-  const navLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/form-guide', label: 'Form Guide' },
-    { href: '/results', label: 'Results' },
-    { href: '/trading-desk', label: 'Trading Desk' },
-    { href: '/ratings-odds-comparison', label: 'Ratings vs Odds' },
-    { href: '/calculator', label: 'Calculator' },
-  ];
-
-  const isActive = (href: string) => {
-    if (href === '/') {
-      return pathname === '/';
-    }
-    return pathname.startsWith(href);
-  };
-
+export default function NavigationCards() {
   return (
-    <nav className="sticky top-0 z-50 bg-purple-900 border-b-2 border-purple-500 shadow-lg">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo/Brand */}
-          <Link 
-            href="/" 
-            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-          >
-            <span className="text-xl font-bold text-white hidden sm:inline">Trading the Races</span>
-            <span className="text-xl font-bold text-white sm:hidden">TTR</span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-6">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                  isActive(link.href)
-                    ? 'text-purple-200 bg-purple-800'
-                    : 'text-purple-300 hover:text-white hover:bg-purple-800'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+    <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        {/* Live TTR Ratings Card - ACTIVE */}
+        <Link href="/form-guide">
+          <div className="bg-black/60 rounded-lg p-8 text-center hover:bg-black/80 hover:border-2 hover:border-purple-400 hover:shadow-lg hover:shadow-purple-500/50 transition-all cursor-pointer border-2 border-purple-500 shadow-lg shadow-purple-500/30">
+            <div className="text-white text-5xl mb-4" role="img" aria-label="Chart trending upward icon">📈</div>
+            <h2 className="text-white text-xl font-semibold mb-2">Live TTR Ratings</h2>
+            <p className="text-gray-300 text-sm">Real-time race ratings</p>
           </div>
+        </Link>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden text-white p-2 rounded-md hover:bg-purple-800 transition-colors"
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-          </button>
+        {/* UK Ratings Card - ACTIVE */}
+        <Link href="/ttr-uk-ire-ratings">
+          <div className="bg-black/60 rounded-lg p-8 text-center hover:bg-black/80 hover:border-2 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/50 transition-all cursor-pointer border-2 border-red-600 shadow-lg shadow-red-500/30">
+            <FaGlobeEurope className="text-white text-5xl mb-4 mx-auto" />
+            <h2 className="text-white text-xl font-semibold mb-2">UK Ratings</h2>
+            <p className="text-gray-300 text-sm">United Kingdom ratings</p>
+          </div>
+        </Link>
+
+        {/* Ireland Ratings Card - ACTIVE */}
+        <Link href="/ttr-uk-ire-ratings">
+          <div className="bg-black/60 rounded-lg p-8 text-center hover:bg-black/80 hover:border-2 hover:border-green-400 hover:shadow-lg hover:shadow-green-500/50 transition-all cursor-pointer border-2 border-green-500 shadow-lg shadow-green-500/30">
+            <GiHorseHead className="text-white text-5xl mb-4 mx-auto" />
+            <h2 className="text-white text-xl font-semibold mb-2">Ireland Ratings</h2>
+            <p className="text-gray-300 text-sm">Irish racing ratings</p>
+          </div>
+        </Link>
+
+        {/* AU/NZ Ratings Card - ACTIVE */}
+        <Link href="/ttr-au-nz-ratings">
+          <div className="bg-black/60 rounded-lg p-8 text-center hover:bg-black/80 hover:border-2 hover:border-amber-400 hover:shadow-lg hover:shadow-amber-500/50 transition-all cursor-pointer border-2 border-amber-500 shadow-lg shadow-amber-500/30">
+            <FaGlobeAsia className="text-white text-5xl mb-4 mx-auto" />
+            <h2 className="text-white text-xl font-semibold mb-2">AU/NZ Ratings</h2>
+            <p className="text-gray-300 text-sm">Australia & New Zealand</p>
+          </div>
+        </Link>
+
+        {/* Discord Card - ACTIVE */}
+        <a 
+          href="https://discord.gg/TawzRkQZgB" 
+          target="_blank" 
+          rel="noopener noreferrer"
+        >
+          <div className="bg-black/60 rounded-lg p-8 text-center hover:bg-black/80 hover:border-2 hover:border-purple-400 hover:shadow-lg hover:shadow-purple-500/50 transition-all cursor-pointer border-2 border-purple-500 shadow-lg shadow-purple-500/30">
+            <FaDiscord className="text-white text-5xl mb-4 mx-auto" />
+            <h2 className="text-white text-xl font-semibold mb-2">Join Our Discord</h2>
+            <p className="text-gray-300 text-sm">Community chat & support</p>
+          </div>
+        </a>
+
+        {/* Betting Calculator Card - ACTIVE */}
+        <Link href="/calculator">
+          <div className="bg-black/60 rounded-lg p-8 text-center hover:bg-black/80 hover:border-2 hover:border-purple-400 hover:shadow-lg hover:shadow-purple-500/50 transition-all cursor-pointer border-2 border-purple-500 shadow-lg shadow-purple-500/30">
+            <div className="text-white text-5xl mb-4" role="img" aria-label="Calculator icon">🧮</div>
+            <h2 className="text-white text-xl font-semibold mb-2">Betting Calculator</h2>
+            <p className="text-gray-300 text-sm">Calculate returns</p>
+          </div>
+        </Link>
+
+        {/* NEW CARD 1 - Merged Ratings */}
+        <Link href="/merged-ratings">
+          <div className="bg-black/60 rounded-lg p-8 text-center hover:bg-black/80 hover:border-2 hover:border-cyan-400 hover:shadow-lg hover:shadow-cyan-500/50 transition-all cursor-pointer border-2 border-cyan-500 shadow-lg shadow-cyan-500/30">
+            <FaCodeBranch className="text-white text-5xl mb-4 mx-auto" />
+            <h2 className="text-white text-xl font-semibold mb-2">Merged Ratings</h2>
+            <p className="text-gray-300 text-sm">RVO + TTR Analysis</p>
+          </div>
+        </Link>
+
+        {/* NEW CARD 2 - Advanced Analysis */}
+        <div className="bg-black/60 rounded-lg p-8 text-center border-2 border-pink-500 shadow-lg shadow-pink-500/30 opacity-60 cursor-not-allowed">
+          <FaChartBar className="text-white text-5xl mb-4 mx-auto" />
+          <h2 className="text-white text-xl font-semibold mb-2">Advanced Analysis</h2>
+          <p className="text-gray-300 text-sm">Decoding The Data (Coming Soon)</p>
         </div>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden pb-4">
-            <div className="flex flex-col gap-2">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                    isActive(link.href)
-                      ? 'text-purple-200 bg-purple-800'
-                      : 'text-purple-300 hover:text-white hover:bg-purple-800'
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* NEW CARD 3 - Sherlock Hooves AI */}
+        <div className="bg-black/60 rounded-lg p-8 text-center border-2 border-indigo-500 shadow-lg shadow-indigo-500/30 opacity-60 cursor-not-allowed">
+          <FaMagic className="text-white text-5xl mb-4 mx-auto" />
+          <h2 className="text-white text-xl font-semibold mb-2">Sherlock Hooves</h2>
+          <p className="text-gray-300 text-sm">AI Agent (Coming Soon)</p>
+        </div>
+
       </div>
-    </nav>
+    </div>
   );
 }
