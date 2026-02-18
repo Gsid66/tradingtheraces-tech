@@ -90,13 +90,13 @@ async function fetchMergedRatings(date: string): Promise<MergedRatingsData[]> {
         const racesResponse = await pfClient.getAllRacesForMeeting(meetingId);
         
         // Validate races response
-        if (!racesResponse || !Array.isArray(racesResponse.payLoad)) {
+        if (!racesResponse || !racesResponse.payLoad?.races) {
           console.error(`❌ Invalid races response for ${trackName}:`, racesResponse);
           continue;
         }
         
-        const races = Array.isArray(racesResponse.payLoad) ? racesResponse.payLoad : [];
-        console.log(`  ├─ Found ${races.length} races`);
+        const races = racesResponse.payLoad?.races || [];
+        console.log(`  ├─ Found ${races.length} races for ${trackName}`);
 
         // Get TTR ratings for this meeting
         let ttrRatings: TTRRating[] = [];
