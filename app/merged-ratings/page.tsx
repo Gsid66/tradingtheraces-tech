@@ -1,28 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { pfClient } from '../../api';
+import { useEffect, useState } from 'react';
+import pfClient from '../path/to/pfClient';
 
-const RatingsPage = () => {
+const MergedRatingsPage = () => {
     const [meetings, setMeetings] = useState([]);
-
     useEffect(() => {
         const fetchMeetings = async () => {
-            const today = new Date();
-            const response = await pfClient.getMeetingsByDate(new Date());
-            setMeetings(response);
+            // Updated line
+            const today = new Date();  // Assuming we want today's date
+            const fetchedMeetings = await pfClient.getMeetingsByDate(new Date());
+            setMeetings(fetchedMeetings);
         };
         fetchMeetings();
     }, []);
 
     return (
         <div>
-            <h1>Ratings Page</h1>
-            <ul>
-                {meetings.map(meeting => (
-                    <li key={meeting.id}>{meeting.title}</li>
-                ))}
-            </ul>
+            <h1>Merged Ratings</h1>
+            {meetings.map(meeting => (
+                <div key={meeting.id}>{meeting.title}</div>
+            ))}
         </div>
     );
 };
 
-export default RatingsPage;
+export default MergedRatingsPage;
