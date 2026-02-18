@@ -36,6 +36,10 @@ export default function MergedRatingsClient({ initialDate, initialData }: Props)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Debug: Log initial data on component mount (helps track data flow issues)
+  // TODO: Consider removing or replacing with proper logging utility in production
+  console.log('MergedRatingsClient mounted with data length:', initialData.length);
+
   const handleDateChange = async (newDate: string) => {
     if (newDate === selectedDate) return;
 
@@ -110,7 +114,7 @@ export default function MergedRatingsClient({ initialDate, initialData }: Props)
                 disabled={loading}
                 className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
               >
-                Today (Sydney)
+                Today (AEDT)
               </button>
             </div>
           </div>
@@ -131,6 +135,13 @@ export default function MergedRatingsClient({ initialDate, initialData }: Props)
             <div className="flex flex-col items-center gap-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
               <p className="text-gray-600 text-lg">Loading data...</p>
+            </div>
+          </div>
+        ) : data.length === 0 ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-6 py-4 rounded-lg">
+              <p className="font-medium text-lg mb-2">No races found for this date</p>
+              <p className="text-sm">Try selecting a different date to view available races.</p>
             </div>
           </div>
         ) : (
