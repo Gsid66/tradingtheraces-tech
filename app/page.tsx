@@ -6,7 +6,7 @@ import UpcomingRacesWrapper from '@/components/UpcomingRacesWrapper'
 export default function Home() {
   return (
     <div className="max-w-7xl mx-auto px-4">
-      {/* Trading Desk Login Banner - Scrolling Marquee */}
+      {/* Trading Desk Login Banner - Scrolling Marquee - MUST BE FIRST */}
       <div className="mt-8 mb-8">
         <div style={{ background: 'linear-gradient(135deg, #1a0033 0%, #000000 100%)' }} className="rounded-lg shadow-lg overflow-hidden">
           <div className="py-4 px-6">
@@ -19,7 +19,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Navigation Cards */}
+      {/* Navigation Cards - MUST BE SECOND */}
       <NavigationCards />
 
       {/* Main Page Image */}
@@ -44,7 +44,7 @@ export default function Home() {
         <UpcomingRacesWrapper />
       </div>
 
-      {/* Coming Soon Cards */}
+      {/* Coming Soon Cards - ONLY 3 AT BOTTOM */}
       <div className="coming-soon-grid mt-12">
         <div className="coming-soon-card">
           <div className="coming-soon-icon">
