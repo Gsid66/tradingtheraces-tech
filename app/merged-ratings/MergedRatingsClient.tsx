@@ -37,34 +37,48 @@ export default function MergedRatingsClient({ initialDate, initialData }: Props)
   const [error, setError] = useState<string | null>(null);
 
   // Debug: Log initial data on component mount (helps track data flow issues)
-  // TODO: Consider removing or replacing with proper logging utility in production
-  console.log('MergedRatingsClient mounted with data length:', initialData.length);
+  console.log('🎨 MergedRatingsClient mounted with data:', {
+    date: initialDate,
+    totalRunners: initialData.length,
+    uniqueTracks: [...new Set(initialData.map(d => d.track))].length,
+    uniqueRaces: [...new Set(initialData.map(d => `${d.track}-R${d.raceNumber}`))].length
+  });
 
   const handleDateChange = async (newDate: string) => {
     if (newDate === selectedDate) return;
 
+    console.log(`📅 Fetching data for date: ${newDate}`);
     setLoading(true);
     setError(null);
+    
     try {
       const response = await fetch(`/api/merged-ratings?date=${newDate}`);
+      console.log(`📡 API Response status: ${response.status}`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch data: ${response.statusText}`);
       }
 
       const result = await response.json();
+      console.log(`📦 API Response:`, {
+        success: result.success,
+        count: result.count,
+        date: result.date,
+        dataLength: result.data?.length
+      });
 
       if (result.success) {
+        console.log(`✅ Setting data with ${result.data.length} runners`);
         setData(result.data);
         setSelectedDate(newDate);
       } else {
         setError(result.error || 'Failed to fetch data');
-        console.error('Failed to fetch data:', result.error);
+        console.error('❌ API returned failure:', result.error);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error fetching merged ratings';
       setError(errorMessage);
-      console.error('Error fetching merged ratings:', error);
+      console.error('❌ Error fetching merged ratings:', error);
     } finally {
       setLoading(false);
     }

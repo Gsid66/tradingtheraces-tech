@@ -36,6 +36,8 @@ interface RVORating {
 
 async function fetchMergedRatingsForDate(date: string): Promise<MergedRatingsData[]> {
   try {
+    console.log(`📅 Starting data fetch for date: ${date}`);
+    
     const pfClient = getPuntingFormClient();
     const ttrClient = getTTRRatingsClient();
     const pgClient = getPostgresAPIClient();
@@ -45,6 +47,13 @@ async function fetchMergedRatingsForDate(date: string): Promise<MergedRatingsDat
 
     // Get meetings for the specified date
     const meetingsResponse = await pfClient.getMeetingsByDate(dateObj);
+    
+    // Validate meetings response
+    if (!meetingsResponse || !meetingsResponse.payLoad) {
+      console.error('❌ Invalid meetings response:', meetingsResponse);
+      return [];
+    }
+    
     const meetings = meetingsResponse.payLoad || [];
 
     // Filter to AU/NZ only
@@ -52,9 +61,11 @@ async function fetchMergedRatingsForDate(date: string): Promise<MergedRatingsDat
       ['AUS', 'NZ'].includes(m.track.country)
     );
 
-    console.log(`Found ${auNzMeetings.length} AU/NZ meetings for ${date}`);
+    console.log(`✅ Found ${auNzMeetings.length} AU/NZ meetings for ${date}`);
+    console.log(`📋 Meeting names: ${auNzMeetings.map(m => m.track.name).join(', ')}`);
 
     if (auNzMeetings.length === 0) {
+      console.log('⚠️ No AU/NZ meetings found for this date');
       return [];
     }
 
@@ -72,10 +83,20 @@ async function fetchMergedRatingsForDate(date: string): Promise<MergedRatingsDat
 
       if (!trackName) continue;
 
+      console.log(`\n🏇 Processing meeting: ${trackName} (ID: ${meetingId})`);
+
       try {
         // Get races for this meeting
         const racesResponse = await pfClient.getAllRacesForMeeting(meetingId);
+        
+        // Validate races response
+        if (!racesResponse || !Array.isArray(racesResponse.payLoad)) {
+          console.error(`❌ Invalid races response for ${trackName}:`, racesResponse);
+          continue;
+        }
+        
         const races = Array.isArray(racesResponse.payLoad) ? racesResponse.payLoad : [];
+        console.log(`  ├─ Found ${races.length} races`);
 
         // Get TTR ratings for this meeting
         let ttrRatings: TTRRating[] = [];
@@ -83,9 +104,15 @@ async function fetchMergedRatingsForDate(date: string): Promise<MergedRatingsDat
           if (ttrClient) {
             const ttrResponse = await ttrClient.getRatingsForMeeting(meetingId);
             ttrRatings = ttrResponse.data || [];
+            console.log(`  ├─ TTR ratings available: ${ttrRatings.length}`);
           }
         } catch (err) {
-          console.warn(`Could not fetch TTR ratings for ${trackName}:`, err);
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          console.error(`❌ Error fetching TTR ratings for ${trackName}:`, {
+            error: errorMsg,
+            meetingId,
+            trackName
+          });
         }
 
         // Get TAB odds (try to fetch)
@@ -95,9 +122,15 @@ async function fetchMergedRatingsForDate(date: string): Promise<MergedRatingsDat
           if (pgClient) {
             const tabResponse = await pgClient.getRacesByDate(date, location);
             tabRaces = tabResponse.data || [];
+            console.log(`  ├─ TAB races available: ${tabRaces.length}`);
           }
         } catch (err) {
-          console.warn(`Could not fetch TAB odds for ${trackName}:`, err);
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          console.error(`❌ Error fetching TAB odds for ${trackName}:`, {
+            error: errorMsg,
+            trackName,
+            location: country === 'NZ' ? 'NZ' : 'AU'
+          });
         }
 
         // Process each race
@@ -105,6 +138,9 @@ async function fetchMergedRatingsForDate(date: string): Promise<MergedRatingsDat
           const raceNumber = race.number;
           const raceName = race.name;
           const runners = race.runners || [];
+
+          console.log(`  │  ├─ Race ${raceNumber}: ${raceName}`);
+          console.log(`  │  ├─ Runners: ${runners.length}`);
 
           // Get RVO ratings from database
           let rvoRatings: RVORating[] = [];
@@ -115,8 +151,14 @@ async function fetchMergedRatingsForDate(date: string): Promise<MergedRatingsDat
               [date, trackName, `${trackName}%`, raceNumber]
             );
             rvoRatings = rvoResult.rows as RVORating[] || [];
+            console.log(`  │  ├─ RVO ratings: ${rvoRatings.length}`);
           } catch (err) {
-            console.warn(`Could not fetch RVO ratings for ${trackName} R${raceNumber}:`, err);
+            const errorMsg = err instanceof Error ? err.message : String(err);
+            console.error(`❌ Error fetching RVO ratings for ${trackName} R${raceNumber}:`, {
+              error: errorMsg,
+              trackName,
+              raceNumber
+            });
           }
 
           // Find matching TAB race
@@ -181,14 +223,27 @@ async function fetchMergedRatingsForDate(date: string): Promise<MergedRatingsDat
           }
         }
       } catch (err) {
-        console.error(`Error processing meeting ${trackName}:`, err);
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        console.error(`❌ Error processing meeting ${trackName}:`, {
+          error: errorMsg,
+          meetingId,
+          trackName
+        });
       }
     }
 
-    console.log(`Collected ${allData.length} total runners across all meetings`);
+    console.log(`\n✨ Data collection complete:`);
+    console.log(`   Total meetings processed: ${auNzMeetings.length}`);
+    console.log(`   Total runners collected: ${allData.length}`);
+    console.log(`   Meetings: ${[...new Set(allData.map(d => d.track))].join(', ')}`);
+    
     return allData;
   } catch (error) {
-    console.error('Error fetching merged ratings:', error);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error('❌ Fatal error fetching merged ratings:', {
+      error: errorMsg,
+      date
+    });
     return [];
   }
 }
