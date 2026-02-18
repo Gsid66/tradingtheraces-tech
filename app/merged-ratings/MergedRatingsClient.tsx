@@ -36,7 +36,8 @@ export default function MergedRatingsClient({ initialDate, initialData }: Props)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Debug: Log initial data on component mount
+  // Debug: Log initial data on component mount (helps track data flow issues)
+  // TODO: Consider removing or replacing with proper logging utility in production
   console.log('MergedRatingsClient mounted with data length:', initialData.length);
 
   const handleDateChange = async (newDate: string) => {
