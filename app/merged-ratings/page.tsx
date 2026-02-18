@@ -1,5 +1,7 @@
-// ... other code before line 44
+// Updated code in app/merged-ratings/page.tsx
 
-const meetings = await pfClient.getMeetingsByDate(new Date()); // Updated line
+// ... other code
 
-// ... other code after line 44
+const meetingsResponse = await pfClient.getMeetingsByDate(new Date()); // Updated to pass Date object instead of string
+
+// ... other code
