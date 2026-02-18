@@ -1,12 +1,24 @@
-// Sort function for merging ratings, handling possible undefined values
-const sortedMergedRatings = mergedRatings.sort((a, b) => {
-    const aVal = a.ratingValue; // Assuming ratingValue is the field to compare
-    const bVal = b.ratingValue;
+import React from 'react';
+// ... other imports
 
-    // Handle undefined cases
-    if (aVal === undefined && bVal === undefined) return 0;
-    if (aVal === undefined) return 1; // Or return -1 based on your sorting criteria
-    if (bVal === undefined) return -1; // Or return 1 based on your sorting criteria
+const MergedRatingsTable = ({ ratings }) => {
+    // ... other code
 
-    return aVal - bVal; // Change this based on how you need to compare
-});
+    const sortedRatings = ratings.sort((a, b) => {
+        const aVal = a?.rating ?? null;
+        const bVal = b?.rating ?? null;
+
+        if (aVal === null && bVal === null) return 0;
+        if (aVal === null || aVal === undefined) return 1;
+        if (bVal === null || bVal === undefined) return -1;
+        return aVal - bVal;
+    });
+
+    return (
+        <table>
+            {/* ... table content */}
+        </table>
+    );
+};
+
+export default MergedRatingsTable;
