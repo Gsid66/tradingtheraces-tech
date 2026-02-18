@@ -121,7 +121,7 @@ export default function MergedRatingsTable({ data }: Props) {
   };
 
   const hasValue = (row: MergedRatingsData): boolean => {
-    const threshold = 1.1; // 10% higher
+    const threshold = 1.1; // 1.1x multiplier (10% increase)
     
     if (row.rvoPrice && row.tabWin && row.rvoPrice > row.tabWin * threshold) {
       return true;
