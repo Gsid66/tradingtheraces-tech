@@ -1,7 +1,28 @@
-// Updated code in app/merged-ratings/page.tsx
+import React, { useState, useEffect } from 'react';
+import { pfClient } from '../../api';
 
-// ... other code
+const RatingsPage = () => {
+    const [meetings, setMeetings] = useState([]);
 
-const meetingsResponse = await pfClient.getMeetingsByDate(new Date()); // Updated to pass Date object instead of string
+    useEffect(() => {
+        const fetchMeetings = async () => {
+            const today = new Date();
+            const response = await pfClient.getMeetingsByDate(new Date());
+            setMeetings(response);
+        };
+        fetchMeetings();
+    }, []);
 
-// ... other code
+    return (
+        <div>
+            <h1>Ratings Page</h1>
+            <ul>
+                {meetings.map(meeting => (
+                    <li key={meeting.id}>{meeting.title}</li>
+                ))}
+            </ul>
+        </div>
+    );
+};
+
+export default RatingsPage;
