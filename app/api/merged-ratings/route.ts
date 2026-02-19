@@ -154,7 +154,7 @@ async function fetchMergedRatingsForDate(date: string): Promise<MergedRatingsDat
           let rvoRatings: RVORating[] = [];
           try {
             const rvoResult = await query(
-              `SELECT * FROM ttr_au_nz_ratings 
+              `SELECT * FROM race_cards_ratings 
                WHERE race_date = $1 AND (track = $2 OR track ILIKE $3) AND race_number = $4`,
               [date, trackName, `${trackName}%`, raceNumber]
             );
