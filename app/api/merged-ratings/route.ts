@@ -75,11 +75,35 @@ async function fetchMergedRatingsForDate(date: string): Promise<MergedRatingsDat
     const scratchingsResponse = await pfClient.getScratchings();
     const scratchings = scratchingsResponse.payLoad || [];
 
+    // Fetch all TAB races for AU and NZ upfront
+    let allTabRaces: TabRace[] = [];
+    if (pgClient) {
+      try {
+        const [tabResponseAU, tabResponseNZ] = await Promise.all([
+          pgClient.getRacesByDate(date, 'AU').catch((err: Error) => {
+            console.error('❌ Error fetching AU TAB races:', err.message);
+            return { data: [] as TabRace[] };
+          }),
+          pgClient.getRacesByDate(date, 'NZ').catch((err: Error) => {
+            console.error('❌ Error fetching NZ TAB races:', err.message);
+            return { data: [] as TabRace[] };
+          })
+        ]);
+        allTabRaces = [
+          ...(tabResponseAU.data || []),
+          ...(tabResponseNZ.data || [])
+        ];
+        console.log(`✅ TAB races fetched: AU=${tabResponseAU.data?.length || 0}, NZ=${tabResponseNZ.data?.length || 0}, Total=${allTabRaces.length}`);
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        console.error('❌ Error fetching TAB races:', errorMsg);
+      }
+    }
+
     // Process each meeting
     for (const meeting of auNzMeetings) {
       const meetingId = meeting.meetingId;
       const trackName = meeting.track.name;
-      const country = meeting.track.country;
 
       if (!trackName) continue;
 
@@ -115,24 +139,6 @@ async function fetchMergedRatingsForDate(date: string): Promise<MergedRatingsDat
           });
         }
 
-        // Get TAB odds (try to fetch)
-        let tabRaces: TabRace[] = [];
-        try {
-          const location = country === 'NZ' ? 'NZ' : 'AU';
-          if (pgClient) {
-            const tabResponse = await pgClient.getRacesByDate(date, location);
-            tabRaces = tabResponse.data || [];
-            console.log(`  ├─ TAB races available: ${tabRaces.length}`);
-          }
-        } catch (err) {
-          const errorMsg = err instanceof Error ? err.message : String(err);
-          console.error(`❌ Error fetching TAB odds for ${trackName}:`, {
-            error: errorMsg,
-            trackName,
-            location: country === 'NZ' ? 'NZ' : 'AU'
-          });
-        }
-
         // Process each race
         for (const race of races) {
           const raceNumber = race.number;
@@ -162,7 +168,7 @@ async function fetchMergedRatingsForDate(date: string): Promise<MergedRatingsDat
           }
 
           // Find matching TAB race
-          const tabRace = tabRaces.find((tr: TabRace) => 
+          const tabRace = allTabRaces.find((tr: TabRace) => 
             tr.meeting_name?.toLowerCase().includes(trackName.toLowerCase()) &&
             tr.race_number === raceNumber
           );
