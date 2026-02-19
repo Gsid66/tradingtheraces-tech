@@ -7,6 +7,8 @@ import { type PFMeeting } from '@/lib/integrations/punting-form/types';
 import { formatInTimeZone } from 'date-fns-tz';
 import { parse } from 'date-fns';
 
+export const dynamic = 'force-dynamic';
+
 interface MergedRatingsData {
   date: string;
   track: string;
