@@ -106,12 +106,12 @@ async function fetchMergedRatings(date: string): Promise<MergedRatingsData[]> {
         ]);
         
         allTabRaces = [
-          ...(tabResponseAU.data || []),
-          ...(tabResponseNZ.data || [])
+          ...(tabResponseAU.success && Array.isArray(tabResponseAU.data) ? tabResponseAU.data : []),
+          ...(tabResponseNZ.success && Array.isArray(tabResponseNZ.data) ? tabResponseNZ.data : [])
         ];
         
-        const auCount = tabResponseAU.data?.length || 0;
-        const nzCount = tabResponseNZ.data?.length || 0;
+        const auCount = tabResponseAU.success && Array.isArray(tabResponseAU.data) ? tabResponseAU.data.length : 0;
+        const nzCount = tabResponseNZ.success && Array.isArray(tabResponseNZ.data) ? tabResponseNZ.data.length : 0;
         
         console.log(`\n📊 TAB ODDS FETCH SUMMARY:`);
         console.log(`   AU: ${auCount} races`);
