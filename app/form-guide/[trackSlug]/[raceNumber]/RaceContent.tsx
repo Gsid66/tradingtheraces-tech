@@ -5,6 +5,7 @@ import type { PFRunner } from '@/lib/integrations/punting-form/client';
 import RaceTabs from './RaceTabs';
 import RunnerList from './RunnerList';
 import RatingsOddsView from './RatingsOddsView';
+import TradingDeskRaceView from './TradingDeskRaceView';
 
 // Extended runner interface with TAB and TTR data
 interface EnrichedRunner extends PFRunner {
@@ -56,6 +57,7 @@ export default function RaceContent({ runners }: Props) {
       {/* Content based on active tab */}
       {activeTab === 'form' && <RunnerList runners={runners} />}
       {activeTab === 'ratings-odds' && <RatingsOddsView runners={runners} />}
+      {activeTab === 'trading-desk' && <TradingDeskRaceView runners={runners} />}
     </>
   );
 }
