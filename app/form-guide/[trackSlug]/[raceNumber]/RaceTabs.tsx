@@ -6,7 +6,7 @@ const tabs = [
   { id: 'form', label: 'Form', available: true },
   { id: 'ratings-odds', label: 'Ratings/Odds', available: true },
   { id: 'analysis', label: 'Analysis', available: false },
-  { id: 'trading-desk', label: 'Trading Desk', available: false },
+  { id: 'trading-desk', label: 'Trading Desk', available: true },
   { id: 'sherlock-hooves', label: 'Sherlock Hooves AI', available: false },
 ];
 
