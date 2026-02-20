@@ -159,7 +159,17 @@ async function fetchMergedRatingsForDate(date: string): Promise<MergedRatingsDat
               [date, trackName, `${trackName}%`, raceNumber]
             );
             rvoRatings = rvoResult.rows as RVORating[] || [];
-            console.log(`  │  ├─ RVO ratings: ${rvoRatings.length}`);
+
+console.log(`🔍 RVO Query for ${trackName} R${raceNumber}:`, {
+  trackName,
+  raceNumber,
+  date,
+  rowsFound: rvoRatings.length,
+  sampleRow: rvoRatings[0] || 'NO DATA',
+  allColumnKeys: rvoRatings[0] ? Object.keys(rvoRatings[0]) : []
+});
+
+console.log(`  │  ├─ RVO ratings: ${rvoRatings.length}`);
           } catch (err) {
             const errorMsg = err instanceof Error ? err.message : String(err);
             console.error(`❌ Error fetching RVO ratings for ${trackName} R${raceNumber}:`, {
