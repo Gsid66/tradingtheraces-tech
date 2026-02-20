@@ -14,8 +14,8 @@ export interface TabRunner {
   jockey: string;
   trainer: string;
   weight: number;
-  tab_fixed_win_price: number | null;
-  tab_fixed_place_price: number | null;
+  tab_fixed_win_price: string | number | null;
+  tab_fixed_place_price: string | number | null;
   tab_fixed_win_timestamp: string | null;
   tab_fixed_place_timestamp: string | null;
 }

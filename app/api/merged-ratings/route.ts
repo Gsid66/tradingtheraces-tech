@@ -96,6 +96,17 @@ async function fetchMergedRatingsForDate(date: string): Promise<MergedRatingsDat
           ...(tabResponseNZ.data || [])
         ];
         console.log(`✅ TAB races fetched: AU=${tabResponseAU.data?.length || 0}, NZ=${tabResponseNZ.data?.length || 0}, Total=${allTabRaces.length}`);
+        console.log(`📊 TAB API Response Summary:`, {
+          totalRaces: allTabRaces.length,
+          auRaces: tabResponseAU.data?.length || 0,
+          nzRaces: tabResponseNZ.data?.length || 0,
+          sampleRace: allTabRaces[0] ? {
+            meeting_name: allTabRaces[0].meeting_name,
+            race_number: allTabRaces[0].race_number,
+            runners_count: allTabRaces[0].runners?.length || 0,
+            sampleRunner: allTabRaces[0].runners?.[0] || null
+          } : 'NO RACES'
+        });
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err);
         console.error('❌ Error fetching TAB races:', errorMsg);
@@ -179,11 +190,20 @@ console.log(`  │  ├─ RVO ratings: ${rvoRatings.length}`);
             });
           }
 
-          // Find matching TAB race
+          // Find matching TAB race - exact match first, then fuzzy
           const tabRace = allTabRaces.find((tr: TabRace) => 
-            tr.meeting_name?.toLowerCase().includes(trackName.toLowerCase()) &&
+            tr.meeting_name?.toLowerCase() === trackName.toLowerCase() &&
+            tr.race_number === raceNumber
+          ) || allTabRaces.find((tr: TabRace) => 
+            (tr.meeting_name?.toLowerCase().includes(trackName.toLowerCase()) ||
+             trackName.toLowerCase().includes(tr.meeting_name?.toLowerCase() || '')) &&
             tr.race_number === raceNumber
           );
+
+          if (!tabRace && allTabRaces.length > 0) {
+            console.log(`⚠️ No TAB race match for ${trackName} R${raceNumber}. Available meetings:`, 
+              [...new Set(allTabRaces.map(tr => tr.meeting_name))].join(', '));
+          }
 
           // Process each runner
           for (const runner of runners) {
@@ -219,6 +239,26 @@ console.log(`  │  ├─ RVO ratings: ${rvoRatings.length}`);
               tr.runner_number === tabNo
             );
 
+            console.log(`🐴 TAB Horse Matching for ${horseName}:`, {
+              trackName,
+              raceNumber,
+              horseName,
+              tabNo,
+              foundTabRace: !!tabRace,
+              tabRaceInfo: tabRace ? {
+                meeting: tabRace.meeting_name,
+                race: tabRace.race_number,
+                runners: tabRace.runners?.length || 0
+              } : 'NO RACE',
+              foundTabRunner: !!tabRunner,
+              tabPrices: tabRunner ? {
+                win: tabRunner.tab_fixed_win_price,
+                place: tabRunner.tab_fixed_place_price,
+                winType: typeof tabRunner.tab_fixed_win_price,
+                placeType: typeof tabRunner.tab_fixed_place_price
+              } : 'NO RUNNER'
+            });
+
             allData.push({
               date,
               track: trackName,
@@ -232,8 +272,8 @@ console.log(`  │  ├─ RVO ratings: ${rvoRatings.length}`);
               rvoPrice: rvoRating?.price ? parseFloat(String(rvoRating.price)) : null,
               ttrRating: ttrRating?.rating || null,
               ttrPrice: ttrRating?.price || null,
-              tabWin: tabRunner?.tab_fixed_win_price || null,
-              tabPlace: tabRunner?.tab_fixed_place_price || null,
+              tabWin: tabRunner?.tab_fixed_win_price ? parseFloat(String(tabRunner.tab_fixed_win_price)) : null,
+              tabPlace: tabRunner?.tab_fixed_place_price ? parseFloat(String(tabRunner.tab_fixed_place_price)) : null,
               isScratched: !!scratching,
               scratchingReason: scratching?.reason,
               scratchingTime: scratching?.timeStamp,
