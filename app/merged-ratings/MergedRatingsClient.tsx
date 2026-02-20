@@ -24,6 +24,9 @@ interface MergedRatingsData {
   isScratched: boolean;
   scratchingReason?: string;
   scratchingTime?: string;
+  finishingPosition: number | null;
+  startingPrice: number | null;
+  marginToWinner: string | null;
 }
 
 interface Props {

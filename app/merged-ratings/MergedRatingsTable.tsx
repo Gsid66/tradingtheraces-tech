@@ -21,6 +21,9 @@ interface MergedRatingsData {
   isScratched: boolean;
   scratchingReason?: string;
   scratchingTime?: string;
+  finishingPosition: number | null;
+  startingPrice: number | null;
+  marginToWinner: string | null;
 }
 
 type SortField = keyof MergedRatingsData;
@@ -83,7 +86,8 @@ export default function MergedRatingsTable({ data }: Props) {
     const nonScratchedData = data.filter(row => !row.isScratched);
     const headers = [
       'Date', 'Track', 'Race', 'Saddle Cloth', 'Horse Name', 'Jockey', 'Trainer',
-      'RVO Rating', 'RVO Price', 'TTR Rating', 'TTR Price', 'TAB Win', 'TAB Place'
+      'RVO Rating', 'RVO Price', 'TTR Rating', 'TTR Price', 'TAB Win', 'TAB Place',
+      'Finishing Position', 'Starting Price', 'Margin'
     ];
     
     const csvContent = [
@@ -101,7 +105,10 @@ export default function MergedRatingsTable({ data }: Props) {
         row.ttrRating ?? '-',
         row.ttrPrice ?? '-',
         row.tabWin ?? '-',
-        row.tabPlace ?? '-'
+        row.tabPlace ?? '-',
+        row.finishingPosition ?? '-',
+        row.startingPrice ?? '-',
+        row.marginToWinner ?? '-'
       ].join(','))
     ].join('\n');
 
@@ -198,13 +205,32 @@ export default function MergedRatingsTable({ data }: Props) {
               <th className="px-3 py-3 text-center font-semibold text-orange-700 bg-orange-50 cursor-pointer hover:bg-orange-100" onClick={() => handleSort('tabPlace')}> 
                 TAB Place <SortIcon field="tabPlace" sortField={sortField} sortDirection={sortDirection} />
               </th>
+              <th 
+                onClick={() => handleSort('finishingPosition')}
+                className="px-3 py-3 text-left text-xs font-medium text-purple-700 uppercase tracking-wider cursor-pointer hover:bg-purple-100 transition-colors"
+              >
+                <div className="flex items-center gap-1">
+                  Position <SortIcon field="finishingPosition" sortField={sortField} sortDirection={sortDirection} />
+                </div>
+              </th>
+              <th 
+                onClick={() => handleSort('startingPrice')}
+                className="px-3 py-3 text-left text-xs font-medium text-purple-700 uppercase tracking-wider cursor-pointer hover:bg-purple-100 transition-colors"
+              >
+                <div className="flex items-center gap-1">
+                  Actual SP <SortIcon field="startingPrice" sortField={sortField} sortDirection={sortDirection} />
+                </div>
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-purple-700 uppercase tracking-wider">
+                Margin
+              </th>
               <th className="px-3 py-3 text-center font-semibold text-gray-700">Value</th>
             </tr>
           </thead>
           <tbody>
             {sortedData.length === 0 ? (
               <tr>
-                <td colSpan={14} className="px-3 py-8 text-center text-gray-500">
+                <td colSpan={17} className="px-3 py-8 text-center text-gray-500">
                   No data available for today
                 </td>
               </tr>
@@ -322,6 +348,38 @@ export default function MergedRatingsTable({ data }: Props) {
                     ) : (
                       <span className="text-gray-400">-</span>
                     )}
+                  </td>
+                  {/* Finishing Position */}
+                  <td className="px-3 py-4 whitespace-nowrap text-sm">
+                    {row.finishingPosition ? (
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                        row.finishingPosition === 1 ? 'bg-yellow-100 text-yellow-800' :
+                        row.finishingPosition === 2 ? 'bg-gray-100 text-gray-800' :
+                        row.finishingPosition === 3 ? 'bg-orange-100 text-orange-800' :
+                        'bg-gray-50 text-gray-600'
+                      }`}>
+                        {row.finishingPosition === 1 ? '🥇' :
+                         row.finishingPosition === 2 ? '🥈' :
+                         row.finishingPosition === 3 ? '🥉' : ''}
+                        {' '}{row.finishingPosition}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
+                  {/* Starting Price */}
+                  <td className="px-3 py-4 whitespace-nowrap text-sm">
+                    {row.startingPrice ? (
+                      <span className="font-medium text-gray-900">
+                        ${row.startingPrice.toFixed(2)}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
+                  {/* Margin to Winner */}
+                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-600">
+                    {row.marginToWinner || '-'}
                   </td>
                   <td className="px-3 py-2 text-center"> 
                     {!row.isScratched && hasValue(row) && (
