@@ -81,6 +81,20 @@ function tracksMatch(track1: string, track2: string): boolean {
   return false;
 }
 
+// Coerce a TAB odds value (string | number | null) to number | null
+function toFixedOdds(value: string | number | null): number | null {
+  if (value === null) return null;
+  if (typeof value === 'number') return value;
+  const parsed = parseFloat(value);
+  if (isNaN(parsed)) {
+    if (process.env.NODE_ENV === 'development' && value !== '') {
+      console.warn(`⚠️ Could not coerce TAB odds value to number: "${value}"`);
+    }
+    return null;
+  }
+  return parsed;
+}
+
 // Fetch today's race cards from PFAI
 async function fetchTodayRaceCards(): Promise<RatingsOddsData[]> {
   try {
@@ -290,8 +304,8 @@ async function mergeTABOdds(raceCards: RatingsOddsData[]): Promise<RatingsOddsDa
           console.log(`   ✅ Matched: ${card.horse_name} -> Win: $${matchingRunner.tab_fixed_win_price}, Place: $${matchingRunner.tab_fixed_place_price}`);
           return {
             ...card,
-            tab_fixed_win: matchingRunner.tab_fixed_win_price,
-            tab_fixed_place: matchingRunner.tab_fixed_place_price
+            tab_fixed_win: toFixedOdds(matchingRunner.tab_fixed_win_price),
+            tab_fixed_place: toFixedOdds(matchingRunner.tab_fixed_place_price)
           };
         } else {
           console.log(`   ❌ No runner match found for: ${card.horse_name}`);
