@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import MergedRatingsTable from './MergedRatingsTable';
-import { formatInTimeZone } from 'date-fns-tz';
+import MergedRatingsTable from '../MergedRatingsTable';
 import { parse } from 'date-fns';
 
 interface MergedRatingsData {
@@ -27,77 +26,54 @@ interface MergedRatingsData {
 }
 
 interface Props {
+  availableDates: string[];
   initialDate: string;
   initialData: MergedRatingsData[];
 }
 
-export default function MergedRatingsClient({ initialDate, initialData }: Props) {
+export default function AllResultsClient({ availableDates, initialDate, initialData }: Props) {
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Debug: Log initial data on component mount (helps track data flow issues)
-  console.log('🎨 MergedRatingsClient mounted with data:', {
-    date: initialDate,
-    totalRunners: initialData.length,
-    uniqueTracks: [...new Set(initialData.map(d => d.track))].length,
-    uniqueRaces: [...new Set(initialData.map(d => `${d.track}-R${d.raceNumber}`))].length
-  });
-
   const handleDateChange = async (newDate: string) => {
     if (newDate === selectedDate) return;
 
-    console.log(`📅 Fetching data for date: ${newDate}`);
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch(`/api/merged-ratings?date=${newDate}`);
-      console.log(`📡 API Response status: ${response.status}`);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch data: ${response.statusText}`);
       }
 
       const result = await response.json();
-      console.log(`📦 API Response:`, {
-        success: result.success,
-        count: result.count,
-        date: result.date,
-        dataLength: result.data?.length
-      });
 
       if (result.success) {
-        console.log(`✅ Setting data with ${result.data.length} runners`);
         setData(result.data);
         setSelectedDate(newDate);
       } else {
         setError(result.error || 'Failed to fetch data');
-        console.error('❌ API returned failure:', result.error);
       }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error fetching merged ratings';
-      setError(errorMessage);
-      console.error('❌ Error fetching merged ratings:', error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error fetching merged ratings');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleTodayClick = () => {
-    const todaySydney = formatInTimeZone(new Date(), 'Australia/Sydney', 'yyyy-MM-dd');
-    handleDateChange(todaySydney);
-  };
-
-  // Format the selected date for display
-  const dateObj = parse(selectedDate, 'yyyy-MM-dd', new Date());
-  const formattedDate = dateObj.toLocaleDateString('en-AU', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const formattedDate = useMemo(() => {
+    if (!selectedDate) return '';
+    return parse(selectedDate, 'yyyy-MM-dd', new Date()).toLocaleDateString('en-AU', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  }, [selectedDate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50">
@@ -106,39 +82,47 @@ export default function MergedRatingsClient({ initialDate, initialData }: Props)
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold mb-2">Merged Ratings - RVO + TTR Analysis</h1>
-              <p className="text-purple-100 text-lg">
-                Australia & New Zealand races with combined ratings
-              </p>
-              <p className="text-purple-200 text-sm mt-1">
-                {formattedDate}
-              </p>
-              <div className="mt-3">
+              <div className="mb-2">
                 <Link
-                  href="/merged-ratings/all-results"
-                  className="inline-block px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors backdrop-blur-sm"
+                  href="/merged-ratings"
+                  className="text-purple-200 hover:text-white text-sm transition-colors"
                 >
-                  📋 All results (by date)
+                  ← Back to Merged Ratings
                 </Link>
               </div>
+              <h1 className="text-4xl font-bold mb-2">All Merged Ratings Results</h1>
+              <p className="text-purple-100 text-lg">
+                Historical results by date — Australia &amp; New Zealand
+              </p>
+              {formattedDate && (
+                <p className="text-purple-200 text-sm mt-1">{formattedDate}</p>
+              )}
             </div>
 
             {/* Date Selector */}
             <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => handleDateChange(e.target.value)}
-                disabled={loading}
-                className="px-4 py-2 rounded-lg text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-white disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-              <button
-                onClick={handleTodayClick}
-                disabled={loading}
-                className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
-              >
-                Today (AEDT)
-              </button>
+              {availableDates.length > 0 ? (
+                <select
+                  value={selectedDate}
+                  onChange={(e) => handleDateChange(e.target.value)}
+                  disabled={loading}
+                  className="px-4 py-2 rounded-lg text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-white disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {availableDates.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => handleDateChange(e.target.value)}
+                  disabled={loading}
+                  className="px-4 py-2 rounded-lg text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-white disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+              )}
             </div>
           </div>
         </div>
@@ -152,7 +136,7 @@ export default function MergedRatingsClient({ initialDate, initialData }: Props)
             <p className="text-sm mt-1">{error}</p>
           </div>
         )}
-        
+
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="flex flex-col items-center gap-4">
@@ -164,7 +148,7 @@ export default function MergedRatingsClient({ initialDate, initialData }: Props)
           <div className="flex items-center justify-center py-12">
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-6 py-4 rounded-lg">
               <p className="font-medium text-lg mb-2">No races found for this date</p>
-              <p className="text-sm">Try selecting a different date to view available races.</p>
+              <p className="text-sm">Select a different date from the dropdown to view available races.</p>
             </div>
           </div>
         ) : (
