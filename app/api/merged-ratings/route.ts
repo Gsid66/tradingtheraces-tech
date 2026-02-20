@@ -32,7 +32,7 @@ interface MergedRatingsData {
 interface RVORating {
   horse_name: string;
   rating: number;
-  price: number;
+  price: string | number;  // ✅ Accept both string and number
   saddle_cloth: number;
 }
 
@@ -229,7 +229,7 @@ console.log(`  │  ├─ RVO ratings: ${rvoRatings.length}`);
               jockey: runner.jockey?.fullName || '',
               trainer: runner.trainer?.fullName || '',
               rvoRating: rvoRating?.rating || null,
-              rvoPrice: rvoRating?.price || null,
+              rvoPrice: rvoRating?.price ? parseFloat(String(rvoRating.price)) : null,
               ttrRating: ttrRating?.rating || null,
               ttrPrice: ttrRating?.price || null,
               tabWin: tabRunner?.tab_fixed_win_price || null,
