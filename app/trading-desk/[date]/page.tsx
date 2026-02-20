@@ -275,11 +275,20 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
 
   // For each race, get top 4 by rating and add scratching info
   const top4PerRace = Object.values(raceGroups)
-    .flatMap(raceHorses => 
-      raceHorses
-        .sort((a, b) => b.rating - a.rating)
-        .slice(0, 4)
-    )
+  .flatMap((raceHorses) => {
+    const top4ByRating = [...raceHorses]
+      .sort((a, b) => b.rating - a.rating)
+      .slice(0, 4);
+
+    const safePrice = (p: unknown) => {
+      const n = typeof p === 'number' ? p : Number(p);
+      // Treat missing/invalid/zero/negative as "very large" so it sorts last
+      return Number.isFinite(n) && n > 0 ? n : Number.POSITIVE_INFINITY;
+    };
+
+    // Display order: smallest to largest price (within the top 4 rated)
+    return top4ByRating.sort((a, b) => safePrice(a.price) - safePrice(b.price));
+  })
     .map(horse => {
       // Add scratching info from dataWithScratchingInfo
       const scratchingInfo = dataWithScratchingInfo.find(d => 
