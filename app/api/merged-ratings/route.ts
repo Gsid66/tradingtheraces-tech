@@ -349,7 +349,7 @@ console.log(`  │  ├─ RVO ratings: ${rvoRatings.length}`);
         return {
           ...runner,
           finishingPosition: matchedResult?.finishing_position || null,
-          startingPrice: matchedResult?.starting_price || null,
+          startingPrice: matchedResult?.starting_price ? Number(matchedResult.starting_price) : null,
           marginToWinner: matchedResult?.margin_to_winner || null
         };
       });

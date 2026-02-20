@@ -299,7 +299,7 @@ export default function MergedRatingsTable({ data }: Props) {
                       <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${
                         row.isScratched ? 'bg-gray-300 text-gray-500' : 'bg-blue-600 text-white'
                       }`}> 
-                        ${row.rvoPrice.toFixed(2)}
+                        ${Number(row.rvoPrice).toFixed(2)}
                       </span>
                     ) : (
                       <span className="text-gray-400">-</span>
@@ -321,7 +321,7 @@ export default function MergedRatingsTable({ data }: Props) {
                       <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${
                         row.isScratched ? 'bg-gray-300 text-gray-500' : 'bg-green-600 text-white'
                       }`}> 
-                        ${row.ttrPrice.toFixed(2)}
+                        ${Number(row.ttrPrice).toFixed(2)}
                       </span>
                     ) : (
                       <span className="text-gray-400">-</span>
@@ -332,7 +332,7 @@ export default function MergedRatingsTable({ data }: Props) {
                       <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${
                         row.isScratched ? 'bg-gray-300 text-gray-500' : 'bg-orange-600 text-white'
                       }`}> 
-                        ${row.tabWin.toFixed(2)}
+                        ${Number(row.tabWin).toFixed(2)}
                       </span>
                     ) : (
                       <span className="text-gray-400">-</span>
@@ -343,7 +343,7 @@ export default function MergedRatingsTable({ data }: Props) {
                       <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${
                         row.isScratched ? 'bg-gray-300 text-gray-500' : 'bg-orange-600 text-white'
                       }`}> 
-                        ${row.tabPlace.toFixed(2)}
+                        ${Number(row.tabPlace).toFixed(2)}
                       </span>
                     ) : (
                       <span className="text-gray-400">-</span>
@@ -371,7 +371,7 @@ export default function MergedRatingsTable({ data }: Props) {
                   <td className="px-3 py-4 whitespace-nowrap text-sm">
                     {row.startingPrice ? (
                       <span className="font-medium text-gray-900">
-                        ${row.startingPrice.toFixed(2)}
+                        ${Number(row.startingPrice).toFixed(2)}
                       </span>
                     ) : (
                       <span className="text-gray-400">-</span>
