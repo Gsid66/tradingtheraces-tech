@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import NavigationLink from '@/components/NavigationLink';
 import MergedRatingsTable from '../MergedRatingsTable';
 import { parse } from 'date-fns';
 
@@ -86,12 +87,12 @@ export default function AllResultsClient({ availableDates, initialDate, initialD
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <div className="mb-2">
-                <Link
+                <NavigationLink
                   href="/merged-ratings"
                   className="text-purple-200 hover:text-white text-sm transition-colors"
                 >
                   ← Back to Merged Ratings
-                </Link>
+                </NavigationLink>
               </div>
               <h1 className="text-4xl font-bold mb-2">All Merged Ratings Results</h1>
               <p className="text-purple-100 text-lg">

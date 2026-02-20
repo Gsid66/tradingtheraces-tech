@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import NavigationLink from '@/components/NavigationLink';
 import MergedRatingsTable from './MergedRatingsTable';
 import { formatInTimeZone } from 'date-fns-tz';
 import { parse } from 'date-fns';
@@ -117,12 +118,12 @@ export default function MergedRatingsClient({ initialDate, initialData }: Props)
                 {formattedDate}
               </p>
               <div className="mt-3">
-                <Link
+                <NavigationLink
                   href="/merged-ratings/all-results"
                   className="inline-block px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors backdrop-blur-sm"
                 >
                   📋 All results (by date)
-                </Link>
+                </NavigationLink>
               </div>
             </div>
 
