@@ -4,10 +4,12 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { format } from 'date-fns';
+import { useLoading } from '@/app/providers/LoadingProvider';
 
 export default function DateNavigation() {
   const pathname = usePathname();
   const router = useRouter();
+  const { setLoading } = useLoading();
   const [showCustomDate, setShowCustomDate] = useState(false);
   const [customDate, setCustomDate] = useState('');
   
@@ -41,6 +43,7 @@ export default function DateNavigation() {
   const handleCustomDateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (customDate) {
+      setLoading(true);
       router.push(`/trading-desk/${customDate}`);
       setShowCustomDate(false);
       setCustomDate('');
@@ -52,6 +55,7 @@ export default function DateNavigation() {
       {/* Today Quick Button */}
       <Link
         href={`/trading-desk/${today}`}
+        onClick={() => setLoading(true)}
         className="block px-4 py-3 rounded-lg text-sm font-bold transition-colors bg-green-600 hover:bg-green-700 text-white text-center"
       >
         Today
@@ -109,6 +113,7 @@ export default function DateNavigation() {
             <Link
               key={date}
               href={`/trading-desk/${date}`}
+              onClick={() => setLoading(true)}
               className={`
                 block px-4 py-3 rounded-lg text-sm font-medium transition-colors relative
                 ${isActive 
