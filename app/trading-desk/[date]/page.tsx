@@ -373,7 +373,7 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
       {/* Top 4 Rated Horses Per Race */}
       {top4PerRace.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Top 4 Rated Horses Per Race</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Top 4 Rated Horses Per Race</h2>
           <Top4HorsesTable horses={top4PerRace} date={date} />
         </div>
       )}
@@ -381,7 +381,7 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
       {/* Top Value Plays */}
       {valuePlays.length > 0 && (
         <div className="mb-8" id="top-value-plays" tabIndex={-1}>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Top Value Plays</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Top Value Plays</h2>
           <DownloadableValuePlaysTable valuePlays={valuePlays} date={date} />
         </div>
       )}

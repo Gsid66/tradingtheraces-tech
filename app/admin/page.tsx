@@ -16,17 +16,17 @@ export default function AdminDashboardPage() {
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
       <div className="bg-slate-800 text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-              <p className="text-slate-300 mt-2">
+              <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
+              <p className="text-slate-300 mt-1 sm:mt-2 text-sm sm:text-base">
                 Administrator
               </p>
             </div>
             <button
               onClick={handleLogout}
-              className="px-6 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors font-medium"
+              className="px-4 sm:px-6 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors font-medium min-h-[44px] text-sm sm:text-base"
             >
               Logout
             </button>

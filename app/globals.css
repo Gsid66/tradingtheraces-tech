@@ -23,6 +23,7 @@ body {
   color: #ffffff;
   line-height: 1.6;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* ==================== QUICK LINKS NAVIGATION (DARK) ==================== */
@@ -42,6 +43,14 @@ body {
   padding: 0 2rem;
 }
 
+@media (max-width: 640px) {
+  .quick-links-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    padding: 0 0.5rem;
+  }
+}
+
 .quick-link-card {
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.85), rgba(10, 0, 20, 0.9));
   border: 2px solid var(--purple-main);
@@ -58,6 +67,26 @@ body {
   cursor: pointer;
   min-height: 140px;
   justify-content: center;
+}
+
+@media (max-width: 640px) {
+  .quick-link-card {
+    padding: 1rem 0.75rem;
+    min-height: 100px;
+  }
+
+  .quick-link-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .quick-link-card h3 {
+    font-size: 0.85rem;
+  }
+
+  .quick-link-card p {
+    font-size: 0.75rem;
+  }
 }
 
 .quick-link-card:hover {
@@ -121,6 +150,13 @@ body {
   border-radius: 15px;
   padding: 30px;
   box-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
+}
+
+@media (max-width: 640px) {
+  .content-box {
+    padding: 16px;
+    border-radius: 10px;
+  }
 }
 
 /* ==================== PAGE HEADER (DARK) ==================== */
@@ -246,6 +282,13 @@ body {
   padding: 25px;
   margin: 25px 0;
   transition: all 0.3s ease;
+}
+
+@media (max-width: 640px) {
+  .race-card {
+    padding: 15px;
+    margin: 15px 0;
+  }
 }
 
 .race-card:hover {
@@ -811,5 +854,69 @@ footer p {
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee {
     animation: none;
+  }
+}
+
+/* ==================== MOBILE / TOUCH IMPROVEMENTS ==================== */
+
+/* Touch-friendly button sizing */
+button,
+a[role="button"],
+.gold-button,
+input[type="submit"] {
+  min-height: 44px;
+}
+
+/* Horizontal table overflow with scroll hint */
+.table-scroll-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+
+/* Samsung Z Fold 4 cover screen (884px) */
+@media (max-width: 884px) {
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .page-header {
+    padding: 1.25rem;
+  }
+}
+
+/* Coming soon grid mobile fix */
+@media (max-width: 640px) {
+  .coming-soon-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 0 0.5rem;
+  }
+
+  .coming-soon-card {
+    min-height: 160px;
+    padding: 1.5rem 1rem;
+  }
+}
+
+/* Upcoming races mobile */
+@media (max-width: 640px) {
+  .upcoming-races-container {
+    padding: 0 0.5rem;
+  }
+
+  .upcoming-races-title {
+    font-size: 1.5rem;
+  }
+
+  .upcoming-race-card {
+    padding: 1rem;
+  }
+}
+
+/* Safe area for fold devices */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .fold-safe-area {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }

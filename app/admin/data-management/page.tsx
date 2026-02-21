@@ -16,17 +16,17 @@ export default function DataManagementPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-slate-800 text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold">Admin Data Management</h1>
-              <p className="text-slate-300 mt-2">
+              <h1 className="text-2xl sm:text-3xl font-bold">Admin Data Management</h1>
+              <p className="text-slate-300 mt-1 sm:mt-2 text-sm sm:text-base">
                 Upload and manage racing ratings data
               </p>
             </div>
             <Link
               href="/admin"
-              className="text-slate-300 hover:text-white transition-colors"
+              className="text-slate-300 hover:text-white transition-colors text-sm sm:text-base whitespace-nowrap min-h-[44px] flex items-center"
             >
               ← Back to Dashboard
             </Link>
