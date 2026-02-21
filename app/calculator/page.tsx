@@ -13,9 +13,9 @@ export default function BettingCalculator() {
   const [activeTab, setActiveTab] = useState<TabType>('back');
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto px-2 sm:px-4 py-6 sm:py-8">
       {/* Page Header */}
-      <div className="page-header mb-8">
+      <div className="page-header mb-6 sm:mb-8">
         <h1>Betting Calculator</h1>
         <p className="page-subtitle">
           Calculate your returns for Back Bets, Lay Bets, and Dutching
@@ -23,10 +23,10 @@ export default function BettingCalculator() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-2 mb-6 border-b-2 border-purple-500">
+      <div className="flex gap-1 sm:gap-2 mb-6 border-b-2 border-purple-500 overflow-x-auto">
         <button
           onClick={() => setActiveTab('back')}
-          className={`px-6 py-3 font-semibold transition-all ${
+          className={`px-4 sm:px-6 py-3 font-semibold transition-all whitespace-nowrap min-h-[44px] ${
             activeTab === 'back'
               ? 'bg-gradient-to-r from-purple-700 to-purple-600 text-white border-b-4 border-purple-400'
               : 'text-purple-300 hover:text-white hover:bg-purple-900/50'
@@ -36,7 +36,7 @@ export default function BettingCalculator() {
         </button>
         <button
           onClick={() => setActiveTab('lay')}
-          className={`px-6 py-3 font-semibold transition-all ${
+          className={`px-4 sm:px-6 py-3 font-semibold transition-all whitespace-nowrap min-h-[44px] ${
             activeTab === 'lay'
               ? 'bg-gradient-to-r from-purple-700 to-purple-600 text-white border-b-4 border-purple-400'
               : 'text-purple-300 hover:text-white hover:bg-purple-900/50'
@@ -46,7 +46,7 @@ export default function BettingCalculator() {
         </button>
         <button
           onClick={() => setActiveTab('dutching')}
-          className={`px-6 py-3 font-semibold transition-all ${
+          className={`px-4 sm:px-6 py-3 font-semibold transition-all whitespace-nowrap min-h-[44px] ${
             activeTab === 'dutching'
               ? 'bg-gradient-to-r from-purple-700 to-purple-600 text-white border-b-4 border-purple-400'
               : 'text-purple-300 hover:text-white hover:bg-purple-900/50'

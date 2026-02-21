@@ -43,10 +43,10 @@ function LoginForm() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
-      <div className="text-center mb-8">
+    <div className="bg-white rounded-lg shadow-2xl p-6 sm:p-8 w-full max-w-md mx-4 sm:mx-0">
+      <div className="text-center mb-6 sm:mb-8">
         <div className="text-4xl mb-4">🔐</div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Admin Portal</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Admin Portal</h1>
         <p className="text-gray-600">Trading the Races</p>
       </div>
 
@@ -60,7 +60,7 @@ function LoginForm() {
             id="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent text-gray-900"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent text-gray-900 min-h-[44px]"
             placeholder="Enter username"
             required
             disabled={loading}
@@ -76,7 +76,7 @@ function LoginForm() {
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent text-gray-900"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent text-gray-900 min-h-[44px]"
             placeholder="Enter password"
             required
             disabled={loading}
@@ -92,14 +92,14 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors disabled:bg-gray-400"
+          className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors disabled:bg-gray-400 min-h-[44px]"
         >
           {loading ? 'Authenticating...' : 'Login'}
         </button>
       </form>
 
       <div className="mt-6 text-center">
-        <Link href="/" className="text-sm text-purple-600 hover:text-purple-700">
+        <Link href="/" className="text-sm text-purple-600 hover:text-purple-700 min-h-[44px] inline-flex items-center">
           ← Back to Home
         </Link>
       </div>

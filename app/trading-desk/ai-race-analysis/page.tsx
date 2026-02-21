@@ -64,16 +64,16 @@ export default function AIRaceAnalysisPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <div className="flex items-center gap-4 mb-6 sm:mb-8">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-6 sm:mb-8">
         <Image 
           src="/images/sh-image-round.png"
           alt="Sherlock Hooves"
           width={120}
           height={120}
-          className="rounded-full border-4 border-purple-400 shadow-2xl"
+          className="rounded-full border-4 border-purple-400 shadow-2xl flex-shrink-0"
         />
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
+        <div className="text-center sm:text-left">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-2">
             Sherlock Hooves&apos; AI Race Analysis
           </h1>
           <p className="text-sm sm:text-base text-gray-600">

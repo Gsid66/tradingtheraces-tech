@@ -103,19 +103,19 @@ export default async function ResultsPage({
 
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="bg-gradient-to-r from-purple-900 to-purple-700 text-white py-6 px-4 shadow-lg">
+        <div className="bg-gradient-to-r from-purple-900 to-purple-700 text-white py-4 sm:py-6 px-4 shadow-lg">
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex items-center gap-4 mb-3 sm:mb-4">
               <Link 
                 href="/" 
-                className="inline-flex items-center gap-2 text-purple-200 hover:text-white transition-colors"
+                className="inline-flex items-center gap-2 text-purple-200 hover:text-white transition-colors min-h-[44px]"
               >
                 <FiArrowLeft size={20} />
                 <span>Back to Home</span>
               </Link>
             </div>
-            <h1 className="text-4xl font-bold mb-2">Race Results</h1>
-            <p className="text-purple-200">Australian & New Zealand Racing Results</p>
+            <h1 className="text-2xl sm:text-4xl font-bold mb-2">Race Results</h1>
+            <p className="text-purple-200 text-sm sm:text-base">Australian & New Zealand Racing Results</p>
           </div>
         </div>
         
@@ -136,19 +136,19 @@ export default async function ResultsPage({
     
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="bg-gradient-to-r from-purple-900 to-purple-700 text-white py-6 px-4 shadow-lg">
+        <div className="bg-gradient-to-r from-purple-900 to-purple-700 text-white py-4 sm:py-6 px-4 shadow-lg">
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex items-center gap-4 mb-3 sm:mb-4">
               <Link 
                 href="/" 
-                className="inline-flex items-center gap-2 text-purple-200 hover:text-white transition-colors"
+                className="inline-flex items-center gap-2 text-purple-200 hover:text-white transition-colors min-h-[44px]"
               >
                 <FiArrowLeft size={20} />
                 <span>Back to Home</span>
               </Link>
             </div>
-            <h1 className="text-4xl font-bold mb-2">Race Results</h1>
-            <p className="text-purple-200">Australian & New Zealand Racing Results</p>
+            <h1 className="text-2xl sm:text-4xl font-bold mb-2">Race Results</h1>
+            <p className="text-purple-200 text-sm sm:text-base">Australian & New Zealand Racing Results</p>
           </div>
         </div>
         
