@@ -1,5 +1,6 @@
 import { Client } from 'pg';
 import { format, parseISO, isValid } from 'date-fns';
+import { Suspense } from 'react';
 import { calculateValueScore } from '@/lib/trading-desk/valueCalculator';
 import { calculatePL } from '@/lib/trading-desk/plCalculator';
 import { getPuntingFormClient, PFScratching, PFCondition } from '@/lib/integrations/punting-form/client';
@@ -12,6 +13,7 @@ import DownloadableValuePlaysTable from './DownloadableValuePlaysTable';
 import TopRatedHorses from './TopRatedHorses';
 import Top4HorsesTable from './Top4HorsesTable';
 import ValuePlaysNavigationBanner from './ValuePlaysNavigationBanner';
+import DataLoadingWrapper from './DataLoadingWrapper';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 300; // Revalidate every 5 minutes for early morning odds
@@ -171,6 +173,23 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
     );
   }
 
+  const formattedDate = format(parsedDate, 'EEEE, MMMM d, yyyy');
+
+  return (
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">{formattedDate}</h1>
+        <p className="text-sm sm:text-base text-gray-600">Race day analysis and ratings</p>
+      </div>
+
+      <Suspense fallback={<DataLoadingWrapper />}>
+        <TradingDeskData date={date} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function TradingDeskData({ date }: { date: string }) {
   const data = await getDailyData(date);
 
   // Fetch scratchings from database (has complete horse names) and conditions from API
@@ -319,16 +338,8 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
     finishing_position: d.finishing_position
   })));
 
-  // Format date for display
-  const formattedDate = format(parsedDate, 'EEEE, MMMM d, yyyy');
-
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">{formattedDate}</h1>
-        <p className="text-sm sm:text-base text-gray-600">Race day analysis and ratings</p>
-      </div>
-
+    <>
       {/* Value Plays Navigation Banner */}
       <ValuePlaysNavigationBanner count={valuePlays.length} />
 
@@ -385,7 +396,6 @@ export default async function DailyTradingDeskPage({ params }: PageProps) {
           <DownloadableValuePlaysTable valuePlays={valuePlays} date={date} />
         </div>
       )}
-
-    </div>
+    </>
   );
 }
