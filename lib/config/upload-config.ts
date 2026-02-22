@@ -87,7 +87,7 @@ export const uploadConfigs: UploadConfig[] = [
     instructions: {
       title: 'CSV Format Requirements',
       columns: [
-        'Date: Format: "1/01/2025" (DD/MM/YYYY)',
+        'Date: Format: "DD/MM/YYYY" (e.g., "01/01/2025" or "1/1/2025")',
         'Track: Track name (e.g., "Ascot", "Randwick")',
         'Race: Race number (e.g., "1", "2")',
         'Distance: Distance with unit (e.g., "1000m", "1600m")',
