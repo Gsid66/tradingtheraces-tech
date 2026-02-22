@@ -8,6 +8,7 @@ export const maxDuration = 300; // 5 minutes
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const MAX_ERRORS = 50;
 const MAX_REPORTED_ERRORS = 20;
+const MAX_DISPLAYED_COLUMNS = 10;
 
 const REQUIRED_COLUMNS = [
   'Date', 'Track', 'Race', 'Horse',
@@ -78,12 +79,18 @@ function parseCSV(content: string): { rows: BFResultRow[]; errors: string[] } {
   const header = lines[0].split('\t');
   const colIndex: Record<string, number> = {};
   header.forEach((col, i) => {
-    colIndex[col.trim()] = i;
+    const normalized = col.trim().toLowerCase();
+    colIndex[normalized] = i;
   });
 
   for (const required of REQUIRED_COLUMNS) {
-    if (colIndex[required] === undefined) {
-      throw new Error(`Missing required column: ${required}. Ensure your file is tab-delimited (TSV), not comma-separated (CSV).`);
+    const normalizedRequired = required.toLowerCase();
+    if (colIndex[normalizedRequired] === undefined) {
+      const foundColumns = header.slice(0, MAX_DISPLAYED_COLUMNS).map(c => `"${c.trim()}"`).join(', ');
+      throw new Error(
+        `Missing required column: ${required}. Found columns: ${foundColumns}${header.length > MAX_DISPLAYED_COLUMNS ? '...' : ''}. ` +
+        `Ensure your file is tab-delimited (TSV), not comma-separated (CSV).`
+      );
     }
   }
 
@@ -94,21 +101,21 @@ function parseCSV(content: string): { rows: BFResultRow[]; errors: string[] } {
     const cols = line.split('\t');
 
     try {
-      const dateRaw = cols[colIndex['Date']]?.trim();
+      const dateRaw = cols[colIndex['date']]?.trim();
       if (!dateRaw) {
         errors.push(`Row ${i + 1}: Missing Date`);
         if (errors.length > MAX_ERRORS) break;
         continue;
       }
 
-      const horse = cols[colIndex['Horse']]?.trim();
+      const horse = cols[colIndex['horse']]?.trim();
       if (!horse) {
         errors.push(`Row ${i + 1}: Missing Horse`);
         if (errors.length > MAX_ERRORS) break;
         continue;
       }
 
-      const raceRaw = cols[colIndex['Race']]?.trim();
+      const raceRaw = cols[colIndex['race']]?.trim();
       const race = parseInt(raceRaw, 10);
       if (isNaN(race)) {
         errors.push(`Row ${i + 1}: Invalid Race value: ${raceRaw}`);
@@ -118,24 +125,24 @@ function parseCSV(content: string): { rows: BFResultRow[]; errors: string[] } {
 
       rows.push({
         date: parseDate(dateRaw),
-        track: cols[colIndex['Track']]?.trim() || '',
+        track: cols[colIndex['track']]?.trim() || '',
         race,
-        distance: cols[colIndex['Distance']]?.trim() || null,
-        class: cols[colIndex['Class']]?.trim() || null,
-        market: parseBigInt(cols[colIndex['Market']] || ''),
-        selection: parseBigInt(cols[colIndex['Selection']] || ''),
-        number: parseIntOrNull(cols[colIndex['Number']] || ''),
+        distance: cols[colIndex['distance']]?.trim() || null,
+        class: cols[colIndex['class']]?.trim() || null,
+        market: parseBigInt(cols[colIndex['market']] || ''),
+        selection: parseBigInt(cols[colIndex['selection']] || ''),
+        number: parseIntOrNull(cols[colIndex['number']] || ''),
         horse,
-        race_speed: cols[colIndex['Race_Speed']]?.trim() || null,
-        speed_cat: cols[colIndex['Speed_Cat']]?.trim() || null,
-        early_speed: parseNum(cols[colIndex['Early_Speed']] || ''),
-        late_speed: parseIntOrNull(cols[colIndex['Late_Speed']] || ''),
-        rp: parseNum(cols[colIndex['RP']] || ''),
-        win_result: parseIntOrNull(cols[colIndex['WIN_RESULT']] || ''),
-        win_bsp: parseNum(cols[colIndex['WIN_BSP']] || ''),
-        place_result: parseIntOrNull(cols[colIndex['PLACE_RESULT']] || ''),
-        place_bsp: parseNum(cols[colIndex['PLACE_BSP']] || ''),
-        value: parseNum(cols[colIndex['Value']] || ''),
+        race_speed: cols[colIndex['race_speed']]?.trim() || null,
+        speed_cat: cols[colIndex['speed_cat']]?.trim() || null,
+        early_speed: parseNum(cols[colIndex['early_speed']] || ''),
+        late_speed: parseIntOrNull(cols[colIndex['late_speed']] || ''),
+        rp: parseNum(cols[colIndex['rp']] || ''),
+        win_result: parseIntOrNull(cols[colIndex['win_result']] || ''),
+        win_bsp: parseNum(cols[colIndex['win_bsp']] || ''),
+        place_result: parseIntOrNull(cols[colIndex['place_result']] || ''),
+        place_bsp: parseNum(cols[colIndex['place_bsp']] || ''),
+        value: parseNum(cols[colIndex['value']] || ''),
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
