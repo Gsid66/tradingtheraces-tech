@@ -42,7 +42,7 @@ function parseDate(raw: string): string {
     const [day, month, year] = parts;
     return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   }
-  throw new Error(`Invalid date format: ${raw}`);
+  throw new Error(`Invalid date format: ${raw}. Expected DD/MM/YYYY (e.g., "01/01/2025" or "1/1/2025")`);
 }
 
 function parseNum(val: string): number | null {
