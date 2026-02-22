@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Pool } from 'pg';
+import { Readable } from 'stream';
+import { parse } from 'csv-parse';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes
@@ -60,78 +62,57 @@ function parseBigInt(val: string): bigint | null {
   }
 }
 
-function parseCSV(content: string): { rows: BFResultRow[]; errors: string[] } {
-  const lines = content.split('\n').map((l) => l.trimEnd());
-  const errors: string[] = [];
-  const rows: BFResultRow[] = [];
-
-  if (lines.length === 0) throw new Error('File is empty');
-
-  // Auto-detect delimiter: use tab if present in header, otherwise comma
-  const firstLine = lines[0];
-  const delimiter = firstLine.includes('\t') ? '\t' : ',';
-
-  // Normalize column names to lowercase for case-insensitive matching
-  const header = firstLine.split(delimiter);
-  const colIndex: Record<string, number> = {};
-  header.forEach((col, i) => {
-    colIndex[col.trim().toLowerCase()] = i;
-  });
-
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    if (!line.trim()) continue;
-    const cols = line.split(delimiter);
-
-    try {
-      const dateRaw = cols[colIndex['date']]?.trim();
-      if (!dateRaw) {
-        errors.push(`Row ${i + 1}: Missing Date`);
-        continue;
-      }
-
-      const horse = cols[colIndex['horse']]?.trim();
-      if (!horse) {
-        errors.push(`Row ${i + 1}: Missing Horse`);
-        continue;
-      }
-
-      const raceRaw = cols[colIndex['race']]?.trim();
-      const race = parseInt(raceRaw, 10);
-      if (isNaN(race)) {
-        errors.push(`Row ${i + 1}: Invalid Race: ${raceRaw}`);
-        continue;
-      }
-
-      rows.push({
-        date: parseDate(dateRaw),
-        track: cols[colIndex['track']]?.trim() || '',
-        race,
-        distance: cols[colIndex['distance']]?.trim() || null,
-        class: cols[colIndex['class']]?.trim() || null,
-        market: parseBigInt(cols[colIndex['market']] || ''),
-        selection: parseBigInt(cols[colIndex['selection']] || ''),
-        number: parseIntOrNull(cols[colIndex['number']] || ''),
-        horse,
-        race_speed: cols[colIndex['race_speed']]?.trim() || null,
-        speed_cat: cols[colIndex['speed_cat']]?.trim() || null,
-        early_speed: parseNum(cols[colIndex['early_speed']] || ''),
-        late_speed: parseIntOrNull(cols[colIndex['late_speed']] || ''),
-        rp: parseNum(cols[colIndex['rp']] || ''),
-        win_result: parseIntOrNull(cols[colIndex['win_result']] || ''),
-        win_bsp: parseNum(cols[colIndex['win_bsp']] || ''),
-        place_result: parseIntOrNull(cols[colIndex['place_result']] || ''),
-        place_bsp: parseNum(cols[colIndex['place_bsp']] || ''),
-        value: parseNum(cols[colIndex['value']] || ''),
-      });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      errors.push(`Row ${i + 1}: ${message}`);
-      if (errors.length > MAX_ERRORS) break;
+function parseRow(
+  record: Record<string, string>,
+  rowNum: number,
+  errors: string[]
+): BFResultRow | null {
+  try {
+    const dateRaw = record['date']?.trim();
+    if (!dateRaw) {
+      errors.push(`Row ${rowNum}: Missing Date`);
+      return null;
     }
-  }
 
-  return { rows, errors };
+    const horse = record['horse']?.trim();
+    if (!horse) {
+      errors.push(`Row ${rowNum}: Missing Horse`);
+      return null;
+    }
+
+    const raceRaw = record['race']?.trim();
+    const race = parseInt(raceRaw, 10);
+    if (isNaN(race)) {
+      errors.push(`Row ${rowNum}: Invalid Race: ${raceRaw}`);
+      return null;
+    }
+
+    return {
+      date: parseDate(dateRaw),
+      track: record['track']?.trim() || '',
+      race,
+      distance: record['distance']?.trim() || null,
+      class: record['class']?.trim() || null,
+      market: parseBigInt(record['market'] || ''),
+      selection: parseBigInt(record['selection'] || ''),
+      number: parseIntOrNull(record['number'] || ''),
+      horse,
+      race_speed: record['race_speed']?.trim() || null,
+      speed_cat: record['speed_cat']?.trim() || null,
+      early_speed: parseNum(record['early_speed'] || ''),
+      late_speed: parseIntOrNull(record['late_speed'] || ''),
+      rp: parseNum(record['rp'] || ''),
+      win_result: parseIntOrNull(record['win_result'] || ''),
+      win_bsp: parseNum(record['win_bsp'] || ''),
+      place_result: parseIntOrNull(record['place_result'] || ''),
+      place_bsp: parseNum(record['place_bsp'] || ''),
+      value: parseNum(record['value'] || ''),
+    };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    errors.push(`Row ${rowNum}: ${message}`);
+    return null;
+  }
 }
 
 export async function POST(request: Request) {
@@ -170,36 +151,40 @@ export async function POST(request: Request) {
       );
     }
 
-    const csvContent = await file.text();
+    // Detect delimiter from first 4KB of file to avoid reading entire file
+    const sniffBuffer = Buffer.from(await file.slice(0, 4096).arrayBuffer());
+    const sniffStr = sniffBuffer.toString('utf8');
+    const firstNewline = sniffStr.indexOf('\n');
+    const headerLine = firstNewline >= 0 ? sniffStr.slice(0, firstNewline) : sniffStr;
+    const delimiter = headerLine.includes('\t') ? '\t' : ',';
 
-    let rows: BFResultRow[];
-    let parseErrors: string[];
-    try {
-      ({ rows, errors: parseErrors } = parseCSV(csvContent));
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      return NextResponse.json(
-        { success: false, message: `Failed to parse CSV: ${message}` },
-        { status: 400 }
-      );
-    }
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const stream = Readable.from(buffer);
 
-    if (rows.length === 0) {
-      return NextResponse.json(
-        { success: false, message: 'No valid rows found in file', errors: parseErrors },
-        { status: 400 }
-      );
-    }
+    const parser = stream.pipe(
+      parse({
+        delimiter,
+        columns: (header: string[]) => header.map((col) => col.trim().toLowerCase()),
+        skip_empty_lines: true,
+        relax_column_count: true,
+        trim: false,
+      })
+    );
+
+    const parseErrors: string[] = [];
+    let rowNum = 1; // Tracks file row number; header is row 1, first data row = 2
+
+    let imported = 0;
+    let updated = 0;
+    let skipped = 0;
+    let totalProcessed = 0;
+    const dbErrors: string[] = [];
 
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL,
       ssl: { rejectUnauthorized: false },
     });
-
-    let imported = 0;
-    let updated = 0;
-    let skipped = 0;
-    const dbErrors: string[] = [];
 
     try {
       const client = await pool.connect();
@@ -207,9 +192,10 @@ export async function POST(request: Request) {
         await client.query('BEGIN');
 
         const COLS = 19;
-        for (let i = 0; i < rows.length; i += BATCH_SIZE) {
-          if (dbErrors.length > MAX_ERRORS) break;
-          const batch = rows.slice(i, i + BATCH_SIZE);
+        let batch: BFResultRow[] = [];
+
+        const flushBatch = async (batchStartFileRow: number) => {
+          if (batch.length === 0) return;
           const values: unknown[] = [];
           const placeholders: string[] = [];
 
@@ -253,13 +239,39 @@ export async function POST(request: Request) {
             }
           } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Unknown error';
-            // i is 0-based array index; +2 accounts for the header row and 1-based file row numbering
-            dbErrors.push(`Batch starting at file row ${i + 2}: ${message}`);
+            dbErrors.push(`Batch starting at file row ${batchStartFileRow}: ${message}`);
             skipped += batch.length;
+          }
+          batch = [];
+        };
+
+        let batchStartFileRow = 2; // first data row is file row 2 (after header)
+        for await (const record of parser) {
+          rowNum++;
+          if (parseErrors.length > MAX_ERRORS) continue;
+          const row = parseRow(record as Record<string, string>, rowNum, parseErrors);
+          if (row) {
+            if (batch.length === 0) batchStartFileRow = rowNum;
+            batch.push(row);
+            totalProcessed++;
+            if (batch.length >= BATCH_SIZE && dbErrors.length <= MAX_ERRORS) {
+              await flushBatch(batchStartFileRow);
+            }
           }
         }
 
-        await client.query('COMMIT');
+        // Flush remaining rows
+        if (dbErrors.length <= MAX_ERRORS) {
+          await flushBatch(batchStartFileRow);
+        } else {
+          skipped += batch.length;
+        }
+
+        if (totalProcessed === 0 && parseErrors.length === 0) {
+          await client.query('ROLLBACK');
+        } else {
+          await client.query('COMMIT');
+        }
       } catch (err) {
         await client.query('ROLLBACK');
         throw err;
@@ -274,6 +286,13 @@ export async function POST(request: Request) {
     const executionTime = Date.now() - startTime;
     const recordsImported = imported + updated;
 
+    if (totalProcessed === 0 && parseErrors.length === 0) {
+      return NextResponse.json(
+        { success: false, message: 'No valid rows found in file', errors: allErrors },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json({
       success: dbErrors.length === 0,
       message:
@@ -281,7 +300,7 @@ export async function POST(request: Request) {
           ? `Successfully imported ${recordsImported} records (${imported} new, ${updated} updated)`
           : `Imported ${recordsImported} records with ${dbErrors.length} errors`,
       recordsImported,
-      recordsProcessed: rows.length,
+      recordsProcessed: totalProcessed,
       recordsSkipped: skipped,
       executionTime,
       errors: allErrors.length > 0 ? allErrors.slice(0, 10) : undefined,
