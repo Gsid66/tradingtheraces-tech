@@ -15,6 +15,9 @@ interface UploadResult {
   errors?: string[];
 }
 
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const UPLOAD_TIMEOUT_MS = 300000; // 5 minutes
+
 export default function UploadPage() {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
@@ -25,6 +28,12 @@ export default function UploadPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
+      const fileName = selectedFile.name.toLowerCase();
+      if (!fileName.endsWith('.csv') && !fileName.endsWith('.txt')) {
+        setError('Invalid file type. Please select a CSV or TXT file.');
+        setFile(null);
+        return;
+      }
       setFile(selectedFile);
       setResult(null); // Clear previous result
       setError(null); // Clear previous error
@@ -37,6 +46,11 @@ export default function UploadPage() {
       return;
     }
 
+    if (file.size > MAX_FILE_SIZE) {
+      setError(`File is too large (${(file.size / 1024 / 1024).toFixed(2)}MB). Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB`);
+      return;
+    }
+
     setUploading(true);
     setResult(null);
     setError(null);
@@ -45,10 +59,21 @@ export default function UploadPage() {
       const formData = new FormData();
       formData.append('file', file);
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
+
       const response = await fetch('/api/ttr-uk-ire-ratings/upload', {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Upload failed (${response.status}): ${errorText}`);
+      }
 
       const data: UploadResult = await response.json();
       setResult(data);
@@ -61,10 +86,29 @@ export default function UploadPage() {
       }
     } catch (error) {
       console.error('Upload error:', error);
-      setResult({
-        success: false,
-        message: 'Failed to upload file. Please try again.',
-      });
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          setResult({
+            success: false,
+            message: 'Upload timed out after 5 minutes. Please try again with a smaller file or check your connection.',
+          });
+        } else if (error.message.includes('Failed to fetch')) {
+          setResult({
+            success: false,
+            message: 'Network error: Unable to connect to the server. Please check your internet connection.',
+          });
+        } else {
+          setResult({
+            success: false,
+            message: error.message || 'Failed to upload file. Please try again.',
+          });
+        }
+      } else {
+        setResult({
+          success: false,
+          message: 'Failed to upload file. Please try again.',
+        });
+      }
     } finally {
       setUploading(false);
     }
