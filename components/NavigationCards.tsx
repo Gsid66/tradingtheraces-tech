@@ -74,12 +74,14 @@ export default function NavigationCards() {
           </div>
         </NavigationLink>
 
-        {/* NEW CARD 2 - Advanced Analysis */}
-        <div className="bg-black/60 rounded-lg p-5 sm:p-8 text-center border-2 border-pink-500 shadow-lg shadow-pink-500/30 opacity-60 cursor-not-allowed">
-          <FaChartBar className="text-white text-5xl mb-4 mx-auto" />
-          <h2 className="text-white text-xl font-semibold mb-2">Advanced Analysis</h2>
-          <p className="text-gray-300 text-sm">Decoding The Data (Coming Soon)</p>
-        </div>
+        {/* NEW CARD 2 - Advanced Analysis AU */}
+        <NavigationLink href="/bf-au-results">
+          <div className="bg-black/60 rounded-lg p-5 sm:p-8 text-center hover:bg-black/80 hover:border-2 hover:border-pink-400 hover:shadow-lg hover:shadow-pink-500/50 transition-all cursor-pointer border-2 border-pink-500 shadow-lg shadow-pink-500/30">
+            <FaChartBar className="text-white text-5xl mb-4 mx-auto" />
+            <h2 className="text-white text-xl font-semibold mb-2">Advanced Analysis AU</h2>
+            <p className="text-gray-300 text-sm">Decoding The Data</p>
+          </div>
+        </NavigationLink>
 
         {/* NEW CARD 3 - Sherlock Hooves AI */}
         <div className="bg-black/60 rounded-lg p-5 sm:p-8 text-center border-2 border-indigo-500 shadow-lg shadow-indigo-500/30 opacity-60 cursor-not-allowed">
