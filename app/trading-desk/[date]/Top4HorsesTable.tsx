@@ -160,7 +160,7 @@ export default function Top4HorsesTable({ horses, date }: Top4HorsesTableProps) 
         </p>
         <button
           onClick={downloadCSV}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow transition-colors duration-200 flex items-center gap-2"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow transition-colors duration-200 flex items-center gap-2 min-h-[44px]"
         >
           <svg 
             className="w-5 h-5" 
@@ -180,99 +180,155 @@ export default function Top4HorsesTable({ horses, date }: Top4HorsesTableProps) 
         </button>
       </div>
 
-      {/* Top Scrollbar */}
-      <div 
-        ref={topScrollRef}
-        className="overflow-x-auto mb-1"
-        style={{ 
-          overflowY: 'hidden',
-          height: '20px'
-        }}
-      >
-        <div style={{ height: '1px' }}></div>
-      </div>
-
-      {/* Table with Bottom Scrollbar */}
-      <div className="bg-white rounded-lg shadow overflow-x-auto" ref={bottomScrollRef}>
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50 sticky top-0 z-10">
-            <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Track</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Race</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Horse</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Rating</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Price</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Value Score</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Actual SP</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Result</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {sortedRaceKeys.map((raceKey, groupIndex) => {
-              const raceHorses = raceGroups[raceKey];
-              // Alternate background colors for race groups
-              const isEvenGroup = groupIndex % 2 === 0;
-              const groupBgClass = isEvenGroup ? 'bg-white' : 'bg-gray-50';
-              
-              return raceHorses.map((horse, horseIndex) => {
-                const isLastInGroup = horseIndex === raceHorses.length - 1;
-                const borderClass = isLastInGroup ? 'border-b-2 border-gray-300' : '';
-                
-                return (
-                  <tr 
-                    key={horse.id} 
-                    className={`hover:bg-gray-100 ${horse.isScratched ? 'bg-red-50' : groupBgClass} ${borderClass}`}
-                  >
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{horse.track_name}</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">R{horse.race_number}</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm">
-                      <div className={horse.isScratched ? 'line-through text-gray-500 font-medium' : 'font-medium text-gray-900'}>
+      {/* Mobile Card View (< 768px) */}
+      <div className="md:hidden space-y-4">
+        {sortedRaceKeys.map((raceKey) => {
+          const raceHorses = raceGroups[raceKey];
+          return (
+            <div key={raceKey} className="bg-white rounded-lg shadow overflow-hidden">
+              <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span className="font-semibold text-gray-800 text-sm">{raceKey}</span>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {raceHorses.map((horse) => (
+                  <div key={horse.id} className={`p-3 ${horse.isScratched ? 'bg-red-50' : ''}`}>
+                    <div className="flex justify-between items-start mb-1">
+                      <div className={horse.isScratched ? 'line-through text-gray-500 font-medium text-sm' : 'font-medium text-gray-900 text-sm'}>
                         {horse.horse_name}
                       </div>
-                      {horse.isScratched && (
-                        <div className="mt-1">
-                          <ScratchingsBadge 
-                            isScratched={true}
-                            scratchingReason={horse.scratchingReason}
-                            scratchingTime={horse.scratchingTime}
-                          />
-                        </div>
-                      )}
-                    </td>
-                    <td className={`px-4 py-2 whitespace-nowrap text-sm ${horse.isScratched ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
-                      {horse.rating ? Number(horse.rating).toFixed(1) : '-'}
-                    </td>
-                    <td className={`px-4 py-2 whitespace-nowrap text-sm ${horse.isScratched ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
-                      {horse.price ? `$${Number(horse.price).toFixed(2)}` : '-'}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                      <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
                         horse.isScratched ? 'bg-gray-300 text-gray-600' :
                         horse.valueScore > 25 ? 'bg-green-100 text-green-800' :
                         horse.valueScore >= 15 ? 'bg-yellow-100 text-yellow-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
-                        {horse.valueScore.toFixed(1)}
+                        VS: {horse.valueScore.toFixed(1)}
                       </span>
-                    </td>
-                    <td className={`px-4 py-2 whitespace-nowrap text-sm ${horse.isScratched ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
-                      {horse.actual_sp ? `$${Number(horse.actual_sp).toFixed(2)}` : '-'}
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm">
-                      {horse.finishing_position ? (
-                        <span className={`font-medium ${horse.finishing_position === 1 ? 'text-green-600' : 'text-gray-600'}`}>
-                          {horse.finishing_position === 1 ? '🏆 1st' : `${horse.finishing_position}${getOrdinalSuffix(horse.finishing_position)}`}
+                    </div>
+                    {horse.isScratched && (
+                      <div className="mb-1">
+                        <ScratchingsBadge 
+                          isScratched={true}
+                          scratchingReason={horse.scratchingReason}
+                          scratchingTime={horse.scratchingTime}
+                        />
+                      </div>
+                    )}
+                    <div className="grid grid-cols-3 gap-1 text-xs text-gray-600">
+                      <div><span className="text-gray-400">Rating:</span> <span className={horse.isScratched ? 'line-through' : ''}>{horse.rating ? Number(horse.rating).toFixed(1) : '-'}</span></div>
+                      <div><span className="text-gray-400">Price:</span> <span className={horse.isScratched ? 'line-through' : ''}>{horse.price ? `$${Number(horse.price).toFixed(2)}` : '-'}</span></div>
+                      <div>
+                        {horse.finishing_position ? (
+                          <span className={`font-medium ${horse.finishing_position === 1 ? 'text-green-600' : 'text-gray-600'}`}>
+                            {horse.finishing_position === 1 ? '🏆 1st' : `${horse.finishing_position}${getOrdinalSuffix(horse.finishing_position)}`}
+                          </span>
+                        ) : <span className="text-gray-400">-</span>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop Table View (>= 768px) */}
+      <div className="hidden md:block">
+        {/* Top Scrollbar */}
+        <div 
+          ref={topScrollRef}
+          className="overflow-x-auto mb-1"
+          style={{ 
+            overflowY: 'hidden',
+            height: '20px'
+          }}
+        >
+          <div style={{ height: '1px' }}></div>
+        </div>
+
+        {/* Table with Bottom Scrollbar */}
+        <div className="bg-white rounded-lg shadow overflow-x-auto" ref={bottomScrollRef}>
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50 sticky top-0 z-10">
+              <tr>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Track</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Race</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Horse</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Rating</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Price</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Value Score</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Actual SP</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Result</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {sortedRaceKeys.map((raceKey, groupIndex) => {
+                const raceHorses = raceGroups[raceKey];
+                // Alternate background colors for race groups
+                const isEvenGroup = groupIndex % 2 === 0;
+                const groupBgClass = isEvenGroup ? 'bg-white' : 'bg-gray-50';
+                
+                return raceHorses.map((horse, horseIndex) => {
+                  const isLastInGroup = horseIndex === raceHorses.length - 1;
+                  const borderClass = isLastInGroup ? 'border-b-2 border-gray-300' : '';
+                  
+                  return (
+                    <tr 
+                      key={horse.id} 
+                      className={`hover:bg-gray-100 ${horse.isScratched ? 'bg-red-50' : groupBgClass} ${borderClass}`}
+                    >
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{horse.track_name}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">R{horse.race_number}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm">
+                        <div className={horse.isScratched ? 'line-through text-gray-500 font-medium' : 'font-medium text-gray-900'}>
+                          {horse.horse_name}
+                        </div>
+                        {horse.isScratched && (
+                          <div className="mt-1">
+                            <ScratchingsBadge 
+                              isScratched={true}
+                              scratchingReason={horse.scratchingReason}
+                              scratchingTime={horse.scratchingTime}
+                            />
+                          </div>
+                        )}
+                      </td>
+                      <td className={`px-4 py-2 whitespace-nowrap text-sm ${horse.isScratched ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                        {horse.rating ? Number(horse.rating).toFixed(1) : '-'}
+                      </td>
+                      <td className={`px-4 py-2 whitespace-nowrap text-sm ${horse.isScratched ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                        {horse.price ? `$${Number(horse.price).toFixed(2)}` : '-'}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          horse.isScratched ? 'bg-gray-300 text-gray-600' :
+                          horse.valueScore > 25 ? 'bg-green-100 text-green-800' :
+                          horse.valueScore >= 15 ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {horse.valueScore.toFixed(1)}
                         </span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              });
-            })}
-          </tbody>
-        </table>
+                      </td>
+                      <td className={`px-4 py-2 whitespace-nowrap text-sm ${horse.isScratched ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                        {horse.actual_sp ? `$${Number(horse.actual_sp).toFixed(2)}` : '-'}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm">
+                        {horse.finishing_position ? (
+                          <span className={`font-medium ${horse.finishing_position === 1 ? 'text-green-600' : 'text-gray-600'}`}>
+                            {horse.finishing_position === 1 ? '🏆 1st' : `${horse.finishing_position}${getOrdinalSuffix(horse.finishing_position)}`}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                });
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

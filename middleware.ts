@@ -20,5 +20,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/merged-ratings/:path*'],
+  matcher: ['/admin/:path*', '/merged-ratings/:path*', '/betfair-analysis/:path*'],
 };

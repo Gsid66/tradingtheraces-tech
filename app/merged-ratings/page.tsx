@@ -23,6 +23,9 @@ interface MergedRatingsData {
   isScratched: boolean;
   scratchingReason?: string;
   scratchingTime?: string;
+  finishingPosition: number | null;
+  startingPrice: number | null;
+  marginToWinner: string | null;
 }
 
 async function fetchMergedRatings(date: string): Promise<MergedRatingsData[]> {

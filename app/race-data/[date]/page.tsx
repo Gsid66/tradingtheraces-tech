@@ -1,5 +1,6 @@
 import { Client } from 'pg';
 import { format, parseISO, isValid } from 'date-fns';
+import { Suspense } from 'react';
 import { calculateValueScore } from '@/lib/trading-desk/valueCalculator';
 import { getPuntingFormClient, PFScratching, PFCondition } from '@/lib/integrations/punting-form/client';
 import { getTTRRatingsClient } from '@/lib/integrations/ttr-ratings';
@@ -7,6 +8,7 @@ import { tracksMatch } from '@/lib/utils/scratchings-matcher';
 import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 import { getScratchingsFromDB } from '@/lib/data/scratchings';
 import FilterableRaceTable from './FilterableRaceTable';
+import DataLoadingWrapper from '@/app/trading-desk/[date]/DataLoadingWrapper';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 300; // Revalidate every 5 minutes for early morning odds
@@ -166,6 +168,23 @@ export default async function RaceViewerPage({ params }: PageProps) {
     );
   }
 
+  const formattedDate = format(parsedDate, 'EEEE, MMMM d, yyyy');
+
+  return (
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Race Viewer</h1>
+        <p className="text-sm sm:text-base text-gray-600">{formattedDate}</p>
+      </div>
+
+      <Suspense fallback={<DataLoadingWrapper />}>
+        <RaceViewerData date={date} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function RaceViewerData({ date }: { date: string }) {
   const data = await getDailyData(date);
 
   // Fetch scratchings from database (has complete horse names) and conditions from API
@@ -229,16 +248,8 @@ export default async function RaceViewerPage({ params }: PageProps) {
   const scratchedCount = dataWithScratchings.filter(d => d.isScratched).length;
   const valueOpportunities = dataWithValueScores.filter(d => d.valueScore > 25).length;
 
-  // Format date for display
-  const formattedDate = format(parsedDate, 'EEEE, MMMM d, yyyy');
-
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Race Viewer</h1>
-        <p className="text-sm sm:text-base text-gray-600">{formattedDate}</p>
-      </div>
-
+    <>
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-4">
@@ -277,6 +288,6 @@ export default async function RaceViewerPage({ params }: PageProps) {
       ) : (
         <FilterableRaceTable data={dataWithValueScores} />
       )}
-    </div>
+    </>
   );
 }

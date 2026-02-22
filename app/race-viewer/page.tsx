@@ -240,13 +240,13 @@ export default async function RaceViewerPage({ searchParams }: PageProps) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-900 to-purple-700 text-white py-12 px-4">
+      <div className="bg-gradient-to-r from-purple-900 to-purple-700 text-white py-8 sm:py-12 px-4">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">🏇 TTR Race Database</h1>
-          <p className="text-purple-200 text-lg">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-4">🏇 TTR Race Database</h1>
+          <p className="text-purple-200 text-base sm:text-lg">
             Historical Racing Data • TTR Ratings • Prices • Results
           </p>
-          <p className="text-purple-300 text-sm mt-2">
+          <p className="text-purple-300 text-xs sm:text-sm mt-2">
             Browse past race data with advanced filtering options
           </p>
         </div>

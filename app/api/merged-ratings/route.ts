@@ -6,6 +6,7 @@ import { getPostgresAPIClient, type TabRace, type TabRunner } from '@/lib/integr
 import { type PFMeeting } from '@/lib/integrations/punting-form/types';
 import { formatInTimeZone } from 'date-fns-tz';
 import { parse } from 'date-fns';
+import { horseNamesMatch } from '@/lib/utils/horse-name-matcher';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,9 @@ interface MergedRatingsData {
   isScratched: boolean;
   scratchingReason?: string;
   scratchingTime?: string;
+  finishingPosition: number | null;
+  startingPrice: number | null;
+  marginToWinner: string | null;
 }
 
 interface RVORating {
@@ -34,6 +38,17 @@ interface RVORating {
   rating: number;
   price: string | number;  // ✅ Accept both string and number
   saddle_cloth: number;
+}
+
+interface RaceResultRow {
+  race_id: number;
+  horse_name: string;
+  finishing_position: number | null;
+  starting_price: number | null;
+  margin_to_winner: string | null;
+  tab_number: number | null;
+  race_number: number;
+  track_name: string;
 }
 
 async function fetchMergedRatingsForDate(date: string): Promise<MergedRatingsData[]> {
@@ -277,6 +292,9 @@ console.log(`  │  ├─ RVO ratings: ${rvoRatings.length}`);
               isScratched: !!scratching,
               scratchingReason: scratching?.reason,
               scratchingTime: scratching?.timeStamp,
+              finishingPosition: null,
+              startingPrice: null,
+              marginToWinner: null,
             });
           }
         }
@@ -295,7 +313,55 @@ console.log(`  │  ├─ RVO ratings: ${rvoRatings.length}`);
     console.log(`   Total runners collected: ${allData.length}`);
     console.log(`   Meetings: ${[...new Set(allData.map(d => d.track))].join(', ')}`);
     
-    return allData;
+    // After collecting all data, fetch race results from database
+    console.log(`\n🏁 Fetching race results for ${date}...`);
+    try {
+      const resultsQuery = `
+        SELECT 
+          r.race_id,
+          r.horse_name,
+          r.finishing_position,
+          r.starting_price,
+          r.margin_to_winner,
+          r.tab_number,
+          ra.race_number,
+          m.track_name
+        FROM pf_results r
+        INNER JOIN pf_races ra ON r.race_id = ra.race_id
+        INNER JOIN pf_meetings m ON ra.meeting_id = m.meeting_id
+        WHERE m.meeting_date = $1
+          AND m.country IN ('AUS', 'NZ')
+      `;
+      
+      const resultsResult = await query(resultsQuery, [date]);
+      const results: RaceResultRow[] = resultsResult.rows;
+      
+      console.log(`✅ Found ${results.length} race results for ${date}`);
+      
+      // Match results with allData using fuzzy horse name matching
+      const enrichedData = allData.map(runner => {
+        const matchedResult = results.find((result: RaceResultRow) =>
+          result.track_name?.toLowerCase() === runner.track.toLowerCase() &&
+          result.race_number === runner.raceNumber &&
+          horseNamesMatch(result.horse_name, runner.horseName)
+        );
+        
+        return {
+          ...runner,
+          finishingPosition: matchedResult?.finishing_position || null,
+          startingPrice: matchedResult?.starting_price ? Number(matchedResult.starting_price) : null,
+          marginToWinner: matchedResult?.margin_to_winner || null
+        };
+      });
+      
+      console.log(`✅ Matched ${enrichedData.filter(d => d.finishingPosition).length} runners with results`);
+      
+      return enrichedData;
+    } catch (err) {
+      console.error('❌ Error fetching race results:', err);
+      // Return data without results if query fails
+      return allData;
+    }
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     console.error('❌ Fatal error fetching merged ratings:', {

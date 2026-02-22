@@ -12,7 +12,10 @@
     "sync:scratchings": "tsx scripts/sync-scratchings.ts",
     "sync:conditions": "tsx scripts/sync-conditions.ts",
     "sync:conditions:watch": "tsx watch scripts/sync-conditions.ts",
-    "db:migrate:scratchings": "psql $DATABASE_URL -f migrations/007_create_scratchings_table.sql"
+    "db:migrate:scratchings": "psql $DATABASE_URL -f migrations/007_create_scratchings_table.sql",
+    "create:bf-table": "tsx scripts/create-bf-results-au-table.ts",
+    "import:bf-results": "tsx scripts/import-bf-results-au.ts",
+    "check:bf-table": "tsx scripts/check-bf-results-au-table.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

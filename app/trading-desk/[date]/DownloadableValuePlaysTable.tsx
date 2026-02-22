@@ -143,7 +143,7 @@ export default function DownloadableValuePlaysTable({ valuePlays, date }: Downlo
       <div className="mb-4 flex justify-end">
         <button
           onClick={downloadCSV}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow transition-colors duration-200 flex items-center gap-2"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow transition-colors duration-200 flex items-center gap-2 min-h-[44px]"
         >
           <svg 
             className="w-5 h-5" 
@@ -163,71 +163,112 @@ export default function DownloadableValuePlaysTable({ valuePlays, date }: Downlo
         </button>
       </div>
 
-      {/* Top Scrollbar */}
-      <div 
-        ref={topScrollRef}
-        className="overflow-x-auto mb-1"
-        style={{ 
-          overflowY: 'hidden',
-          height: '20px'
-        }}
-      >
-        <div style={{ height: '1px' }}></div>
+      {/* Mobile Card View (< 768px) */}
+      <div className="md:hidden space-y-3">
+        {valuePlays.map((play) => {
+          const bgColor = getValueBackgroundColor(play.valueScore);
+          return (
+            <div key={play.id} className={`rounded-lg shadow p-4 ${bgColor || 'bg-white'}`}>
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <span className="font-semibold text-gray-900">{play.horse_name}</span>
+                  <div className="text-xs text-gray-500">{play.track_name} · R{play.race_number}</div>
+                </div>
+                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                  play.valueScore > 25 ? 'bg-green-100 text-green-800' :
+                  play.valueScore >= 15 ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  VS: {play.valueScore.toFixed(1)}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-xs text-gray-700">
+                <div><span className="text-gray-500">Rating:</span> {play.rating ? Number(play.rating).toFixed(1) : '-'}</div>
+                <div><span className="text-gray-500">Price:</span> {play.price ? `$${Number(play.price).toFixed(2)}` : '-'}</div>
+                <div><span className="text-gray-500">SP:</span> {play.actual_sp ? `$${Number(play.actual_sp).toFixed(2)}` : '-'}</div>
+                <div className="col-span-3"><span className="text-gray-500">Jockey:</span> {play.jockey || '-'}</div>
+                <div className="col-span-3"><span className="text-gray-500">Trainer:</span> {play.trainer || '-'}</div>
+                {play.finishing_position && (
+                  <div className="col-span-3">
+                    <span className={`font-medium ${play.finishing_position === 1 ? 'text-green-600' : 'text-gray-600'}`}>
+                      {play.finishing_position === 1 ? '🏆 1st' : `${play.finishing_position}${getOrdinalSuffix(play.finishing_position)}`}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Table with Bottom Scrollbar */}
-      <div className="bg-white rounded-lg shadow overflow-x-auto" ref={bottomScrollRef}>
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50 sticky top-0 z-10">
-            <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Track</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Race</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Horse</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Rating</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Price</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Value Score</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Jockey</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Trainer</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Actual SP</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Result</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {valuePlays.map((play) => {
-              const bgColor = getValueBackgroundColor(play.valueScore);
-              return (
-                <tr key={play.id} className={`hover:bg-gray-100 ${bgColor}`}>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{play.track_name}</td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">R{play.race_number}</td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{play.horse_name}</td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{play.rating ? Number(play.rating).toFixed(1) : '-'}</td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{play.price ? `$${Number(play.price).toFixed(2)}` : '-'}</td>
-                  <td className="px-4 py-2 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      play.valueScore > 25 ? 'bg-green-100 text-green-800' :
-                      play.valueScore >= 15 ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {play.valueScore.toFixed(1)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{play.jockey || '-'}</td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{play.trainer || '-'}</td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{play.actual_sp ? `$${Number(play.actual_sp).toFixed(2)}` : '-'}</td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm">
-                    {play.finishing_position ? (
-                      <span className={`font-medium ${play.finishing_position === 1 ? 'text-green-600' : 'text-gray-600'}`}>
-                        {play.finishing_position === 1 ? '🏆 1st' : `${play.finishing_position}${getOrdinalSuffix(play.finishing_position)}`}
+      {/* Desktop Table View (>= 768px) */}
+      <div className="hidden md:block">
+        {/* Top Scrollbar */}
+        <div 
+          ref={topScrollRef}
+          className="overflow-x-auto mb-1"
+          style={{ 
+            overflowY: 'hidden',
+            height: '20px'
+          }}
+        >
+          <div style={{ height: '1px' }}></div>
+        </div>
+
+        {/* Table with Bottom Scrollbar */}
+        <div className="bg-white rounded-lg shadow overflow-x-auto" ref={bottomScrollRef}>
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50 sticky top-0 z-10">
+              <tr>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Track</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Race</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Horse</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Rating</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Price</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Value Score</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Jockey</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Trainer</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Actual SP</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Result</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {valuePlays.map((play) => {
+                const bgColor = getValueBackgroundColor(play.valueScore);
+                return (
+                  <tr key={play.id} className={`hover:bg-gray-100 ${bgColor}`}>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{play.track_name}</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">R{play.race_number}</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{play.horse_name}</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{play.rating ? Number(play.rating).toFixed(1) : '-'}</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{play.price ? `$${Number(play.price).toFixed(2)}` : '-'}</td>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        play.valueScore > 25 ? 'bg-green-100 text-green-800' :
+                        play.valueScore >= 15 ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {play.valueScore.toFixed(1)}
                       </span>
-                    ) : (
-                      <span className="text-gray-400">-</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{play.jockey || '-'}</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{play.trainer || '-'}</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{play.actual_sp ? `$${Number(play.actual_sp).toFixed(2)}` : '-'}</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm">
+                      {play.finishing_position ? (
+                        <span className={`font-medium ${play.finishing_position === 1 ? 'text-green-600' : 'text-gray-600'}`}>
+                          {play.finishing_position === 1 ? '🏆 1st' : `${play.finishing_position}${getOrdinalSuffix(play.finishing_position)}`}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
