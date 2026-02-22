@@ -83,7 +83,7 @@ function parseCSV(content: string): { rows: BFResultRow[]; errors: string[] } {
 
   for (const required of REQUIRED_COLUMNS) {
     if (colIndex[required] === undefined) {
-      throw new Error(`Missing required column: ${required}`);
+      throw new Error(`Missing required column: ${required}. Ensure your file is tab-delimited (TSV), not comma-separated (CSV).`);
     }
   }
 
