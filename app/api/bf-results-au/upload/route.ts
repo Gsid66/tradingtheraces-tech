@@ -6,6 +6,7 @@ export const maxDuration = 300; // 5 minutes
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const MAX_ERRORS = 50;
+const BATCH_SIZE = 500;
 
 interface BFResultRow {
   date: string;
@@ -205,14 +206,35 @@ export async function POST(request: Request) {
       try {
         await client.query('BEGIN');
 
-        for (const row of rows) {
+        const COLS = 19;
+        for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+          if (dbErrors.length > MAX_ERRORS) break;
+          const batch = rows.slice(i, i + BATCH_SIZE);
+          const values: unknown[] = [];
+          const placeholders: string[] = [];
+
+          for (let j = 0; j < batch.length; j++) {
+            const row = batch[j];
+            const base = j * COLS + 1;
+            placeholders.push(
+              `(${Array.from({ length: COLS }, (_, k) => `$${base + k}`).join(',')})`
+            );
+            values.push(
+              row.date, row.track, row.race, row.distance, row.class,
+              row.market?.toString() ?? null, row.selection?.toString() ?? null,
+              row.number, row.horse,
+              row.race_speed, row.speed_cat, row.early_speed, row.late_speed, row.rp,
+              row.win_result, row.win_bsp, row.place_result, row.place_bsp, row.value,
+            );
+          }
+
           try {
             const result = await client.query(
               `INSERT INTO bf_results_au (
                 date, track, race, distance, class, market, selection, number, horse,
                 race_speed, speed_cat, early_speed, late_speed, rp,
                 win_result, win_bsp, place_result, place_bsp, value
-              ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+              ) VALUES ${placeholders.join(',')}
               ON CONFLICT ON CONSTRAINT idx_bf_results_au_unique
               DO UPDATE SET
                 distance=EXCLUDED.distance, class=EXCLUDED.class,
@@ -224,23 +246,16 @@ export async function POST(request: Request) {
                 place_result=EXCLUDED.place_result, place_bsp=EXCLUDED.place_bsp,
                 value=EXCLUDED.value, updated_at=NOW()
               RETURNING id, (xmax = 0) AS inserted`,
-              [
-                row.date, row.track, row.race, row.distance, row.class,
-                row.market?.toString() ?? null, row.selection?.toString() ?? null,
-                row.number, row.horse,
-                row.race_speed, row.speed_cat, row.early_speed, row.late_speed, row.rp,
-                row.win_result, row.win_bsp, row.place_result, row.place_bsp, row.value,
-              ]
+              values
             );
-            if (result.rowCount && result.rowCount > 0) {
-              if (result.rows[0].inserted) { imported++; } else { updated++; }
-            } else {
-              skipped++;
+            for (const r of result.rows) {
+              if (r.inserted) { imported++; } else { updated++; }
             }
           } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Unknown error';
-            dbErrors.push(`${row.date} ${row.track} R${row.race}: ${message}`);
-            if (dbErrors.length > MAX_ERRORS) break;
+            // i is 0-based array index; +2 accounts for the header row and 1-based file row numbering
+            dbErrors.push(`Batch starting at file row ${i + 2}: ${message}`);
+            skipped += batch.length;
           }
         }
 
