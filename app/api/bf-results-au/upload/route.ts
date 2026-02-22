@@ -276,6 +276,7 @@ export async function POST(request: Request) {
     }
 
     const content = await file.text();
+    const totalLines = content.split('\n').length;
 
     let rows: BFResultRow[];
     let parseErrors: string[];
@@ -290,6 +291,14 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    console.log('📊 CSV Parse Results:', {
+      totalLines,
+      parsedRows: rows.length,
+      parseErrors: parseErrors.length,
+      firstError: parseErrors[0] || null,
+      sampleRow: rows[0] || null,
+    });
 
     if (rows.length === 0) {
       return NextResponse.json(
@@ -307,6 +316,14 @@ export async function POST(request: Request) {
       const result = await importResults(pool, rows);
       const executionTime = Date.now() - startTime;
       const allErrors = [...parseErrors, ...result.errors];
+
+      console.log('💾 Database Import Results:', {
+        imported: result.imported,
+        updated: result.updated,
+        skipped: result.skipped,
+        errors: result.errors.length,
+        firstDbError: result.errors[0] || null,
+      });
 
       return NextResponse.json({
         success: allErrors.length === 0,
