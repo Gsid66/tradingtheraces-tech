@@ -108,7 +108,8 @@ export const uploadConfigs: UploadConfig[] = [
         'Value: Value metric (decimal)',
       ],
       notes: [
-        'Data must be tab-delimited (TSV format)',
+        'Supports comma-separated (CSV) and tab-delimited (TSV) files',
+        'Column names are matched case-insensitively',
         'All numeric fields support decimals',
         'Market and Selection IDs are from Betfair',
         'Historical data and new data can be uploaded anytime',
