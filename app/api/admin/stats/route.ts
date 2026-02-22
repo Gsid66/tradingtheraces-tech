@@ -20,6 +20,7 @@ export async function GET() {
     const tables = [
       { name: 'race_cards_ratings', display: 'TTR AU/NZ Ratings' },
       { name: 'ttr_uk_ire_ratings', display: 'TTR UK/Ireland Ratings' },
+      { name: 'bf_results_au', display: 'Betfair Results - AU' },
     ];
     
     const stats: TableStats[] = [];
@@ -34,16 +35,16 @@ export async function GET() {
         const recordCount = parseInt(countResult.rows[0]?.count || '0', 10);
         
         // Try to get the most recent upload date
-        // Assuming tables have a created_at or updated_at column
+        // Try updated_at first, then created_at
         let lastUpload: string | undefined;
         try {
           const dateResult = await db.query(
-            `SELECT MAX(created_at) as last_upload FROM ${table.name}`
+            `SELECT GREATEST(MAX(updated_at), MAX(created_at)) as last_upload FROM ${table.name}`
           );
           lastUpload = dateResult.rows[0]?.last_upload || undefined;
         } catch (err) {
-          // If no created_at column, ignore
-          console.log(`No created_at column for ${table.name}`);
+          // If neither column exists, ignore
+          console.log(`No created_at/updated_at column for ${table.name}`);
         }
         
         stats.push({
